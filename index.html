@@ -8,30 +8,87 @@
 <link rel="icon" type="image/svg+xml" href="assets/logo.svg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="assets/css/style.css">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/style.css?v=5">
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"
+  }
+}
+</script>
 </head>
 <body data-page="home">
+
+<div class="intro-splash" id="introSplash">
+  <span class="sr-only">Classic Auto is loading</span>
+  <svg viewBox="0 0 300 300" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
+    <g class="intro-car-group">
+      <path class="intro-car-path" d="M40,180 L40,166 C40,150 54,140 70,140 L98,140 C108,119 130,104 156,104 C182,104 206,118 217,140 L234,140 C254,140 270,150 270,166 L270,180 Z"/>
+      <circle class="intro-car-path intro-wheel" cx="80" cy="180" r="17"/>
+      <circle class="intro-car-path intro-wheel" cx="228" cy="180" r="17"/>
+    </g>
+    <circle class="intro-ring-path" cx="150" cy="150" r="90"/>
+    <g class="intro-mark">
+      <g transform="translate(127,136) scale(0.055)">
+        <path d="M 100 12 L 300 12 L 300 88 L 128 88 Q 96 88 96 120 L 96 238 Q 96 268 128 268 L 688 268 Q 722 268 722 302 L 722 310 Q 722 344 688 344 L 92 344 Q 14 344 14 266 L 14 98 Q 14 12 100 12 Z" fill="#E11B22"/>
+        <g fill="#2B3990">
+          <polygon points="468,6 552,6 372,360 288,360"/>
+          <polygon points="468,6 552,6 758,360 674,360"/>
+          <polygon points="404,212 620,212 650,282 370,282"/>
+        </g>
+      </g>
+    </g>
+  </svg>
+  <button type="button" class="intro-skip" id="introSkip">Skip</button>
+</div>
+<script>
+(function () {
+  var el = document.getElementById("introSplash");
+  if (!el) return;
+  var reduced = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  var seen = false;
+  try { seen = sessionStorage.getItem("ca_intro_seen") === "1"; } catch (e) {}
+  if (reduced || seen) { el.remove(); return; }
+  try { sessionStorage.setItem("ca_intro_seen", "1"); } catch (e) {}
+  el.classList.add("is-playing");
+  function hide() { el.classList.add("is-hidden"); }
+  var hideTimer = window.setTimeout(hide, 1900);
+  var removeTimer = window.setTimeout(function () { el.remove(); }, 2500);
+  var skipBtn = document.getElementById("introSkip");
+  skipBtn.addEventListener("click", function () {
+    window.clearTimeout(hideTimer);
+    window.clearTimeout(removeTimer);
+    hide();
+    window.setTimeout(function () { el.remove(); }, 550);
+  });
+})();
+</script>
+
 <a class="skip-link" href="#main">Skip to main content</a>
 
 <header class="site-header">
   <div class="container">
     <a class="brand" href="index.html" aria-label="Classic Auto — home">
-      <svg viewBox="0 0 840 496" role="img" aria-label="Classic Auto, since 1974">
-        <path d="M 100 12 L 300 12 L 300 88 L 128 88 Q 96 88 96 120 L 96 238 Q 96 268 128 268 L 688 268 Q 722 268 722 302 L 722 310 Q 722 344 688 344 L 92 344 Q 14 344 14 266 L 14 98 Q 14 12 100 12 Z" fill="#F5F1E8"/>
-        <g fill="#F5F1E8" opacity="0.86">
-          <polygon points="468,6 552,6 372,360 288,360"/>
-          <polygon points="468,6 552,6 758,360 674,360"/>
-          <polygon points="404,212 620,212 650,282 370,282"/>
+      <svg viewBox="0 0 900 540" role="img" aria-label="Classic Auto, since 1974">
+        <rect x="8" y="8" width="884" height="524" rx="30" fill="#F5F2EC"/>
+        <g transform="translate(40,32)">
+          <path d="M 100 12 L 300 12 L 300 88 L 128 88 Q 96 88 96 120 L 96 238 Q 96 268 128 268 L 688 268 Q 722 268 722 302 L 722 310 Q 722 344 688 344 L 92 344 Q 14 344 14 266 L 14 98 Q 14 12 100 12 Z" fill="#E11B22"/>
+          <g fill="#2B3990">
+            <polygon points="468,6 552,6 372,360 288,360"/>
+            <polygon points="468,6 552,6 758,360 674,360"/>
+            <polygon points="404,212 620,212 650,282 370,282"/>
+          </g>
+          <text x="712" y="30" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="26" font-weight="bold" font-style="italic" letter-spacing="1" fill="#E11B22">SINCE 1974</text>
+          <g fill="none" stroke="#2B3990" stroke-width="7" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M 540 400 q 30 -6 52 -18 q 40 -22 92 -24 q 56 -2 88 18 q 26 2 44 10 q 10 4 -2 8"/>
+            <path d="M 560 402 q 130 -12 250 -8"/>
+          </g>
+          <circle cx="612" cy="404" r="11" fill="#F5F2EC" stroke="#2B3990" stroke-width="7"/>
+          <circle cx="762" cy="402" r="11" fill="#F5F2EC" stroke="#2B3990" stroke-width="7"/>
+          <text x="420" y="482" text-anchor="middle" font-family="'Arial Black', Arial, sans-serif" font-weight="900" font-style="italic" font-size="88" fill="#E11B22">CLASSIC-AUTO</text>
         </g>
-        <text x="712" y="30" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="26" font-weight="bold" font-style="italic" letter-spacing="1" fill="#C9A667">SINCE 1974</text>
-        <g fill="none" stroke="#F5F1E8" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" opacity="0.7">
-          <path d="M 540 400 q 30 -6 52 -18 q 40 -22 92 -24 q 56 -2 88 18 q 26 2 44 10 q 10 4 -2 8"/>
-          <path d="M 560 402 q 130 -12 250 -8"/>
-        </g>
-        <circle cx="612" cy="404" r="11" fill="none" stroke="#F5F1E8" stroke-width="7" opacity="0.7"/>
-        <circle cx="762" cy="402" r="11" fill="none" stroke="#F5F1E8" stroke-width="7" opacity="0.7"/>
-        <text x="420" y="482" text-anchor="middle" font-family="'Arial Black', Arial, sans-serif" font-weight="900" font-style="italic" font-size="88" fill="#F5F1E8">CLASSIC-AUTO</text>
       </svg>
     </a>
     <nav class="nav-links" aria-label="Primary">
@@ -57,41 +114,83 @@
 
 <main id="main">
 
-  <section class="hero">
-    <div class="hero-media">
-      <img src="assets/photos/showroom.jpg" alt="Classic Auto's showroom floor in Malad West, Mumbai" width="1260" height="840" fetchpriority="high">
+  <section class="hero3d" id="hero">
+    <div class="hero3d-fallback" aria-hidden="true">
+      <img src="assets/photos/showroom.jpg" alt="" loading="eager" fetchpriority="high">
     </div>
-    <div class="hero-scrim"></div>
-    <div class="container hero-content">
-      <span class="eyebrow" data-hero-in>Est. 1974 · Malad West, Mumbai</span>
-      <h1 data-hero-in>Fifty years of cars worth trusting.</h1>
-      <p class="lead" data-hero-in>Real inspected stock, real EMI numbers, and a private 3D Studio to look a car over before you drive in — from a first Swift to a company-maintained Fortuner.</p>
-      <div class="hero-cta-row" data-hero-in>
+    <div class="hero3d-stage" aria-hidden="true"></div>
+    <div class="hero3d-scrim"></div>
+
+    <div class="drag-reveal" id="dragReveal">
+      <div class="drag-reveal-track"></div>
+      <div class="drag-reveal-handle" id="dragHandle">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 19V5M5 12l7-7 7 7M5 16l7 6 7-6"/></svg>
+        <span class="drag-reveal-label">Drag to reveal</span>
+      </div>
+    </div>
+
+    <div class="hero3d-tap-fallback">
+      <button type="button" class="btn btn-primary">Tap to reveal</button>
+    </div>
+
+    <div class="container hero3d-content">
+      <span class="eyebrow">Est. 1974 · Malad West, Mumbai</span>
+      <h1>CLASSIC AUTO<br><span style="color:var(--accent-bright);">— Since 1974</span></h1>
+      <p class="lead">Real inspected stock, real EMI numbers, and a private 3D Studio to look a car over before you drive in — from a first Swift to a company-maintained Fortuner.</p>
+      <div class="hero3d-cta-row">
         <a class="btn btn-primary" href="stock.html">Browse Stock</a>
         <a class="btn btn-outline" href="sell.html">Sell Your Car</a>
       </div>
     </div>
   </section>
 
-  <section class="trust-strip">
-    <div class="container">
-      <div class="trust-row" data-stagger-group>
-        <div class="trust-item stagger-item">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 3l8 4v5c0 5-3.4 8.4-8 9-4.6-.6-8-4-8-9V7l8-4z"/></svg>
-          <span>Family-run since 1974</span>
-        </div>
-        <div class="trust-item stagger-item">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M20 6 9 17l-5-5"/></svg>
-          <span>Every car inspected</span>
-        </div>
-        <div class="trust-item stagger-item">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="2" y="6" width="20" height="13" rx="2"/><path d="M2 11h20"/></svg>
-          <span>Finance arranged in-house</span>
-        </div>
-        <div class="trust-item stagger-item">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M17 3l4 4-4 4M21 7H9M7 21l-4-4 4-4M3 17h12"/></svg>
-          <span>Exchange your current car</span>
-        </div>
+  <div class="search-band">
+    <form class="search-bar" id="heroSearchForm">
+      <div class="search-field">
+        <label for="searchBudget">Budget</label>
+        <select id="searchBudget">
+          <option value="all">Any budget</option>
+          <option value="under10">Under ₹10 L</option>
+          <option value="10to20">₹10 – 20 L</option>
+          <option value="20to30">₹20 – 30 L</option>
+          <option value="over30">Above ₹30 L</option>
+        </select>
+      </div>
+      <div class="search-field">
+        <label for="searchBody">Body type</label>
+        <select id="searchBody">
+          <option value="all">Any body type</option>
+          <option value="hatchback">Hatchback</option>
+          <option value="sedan">Sedan</option>
+          <option value="suv">SUV</option>
+          <option value="luxury-sedan">Luxury Sedan</option>
+        </select>
+      </div>
+      <div class="search-field">
+        <label for="searchFuel">Fuel</label>
+        <select id="searchFuel">
+          <option value="all">Any fuel</option>
+          <option value="Petrol">Petrol</option>
+          <option value="Diesel">Diesel</option>
+        </select>
+      </div>
+      <button class="btn btn-primary" type="submit">Search Stock</button>
+    </form>
+  </div>
+
+  <section class="stat-tile-band">
+    <div class="container stat-tile-grid" data-stagger-group>
+      <div class="stat-tile stagger-item">
+        <span class="stat-tile-num" data-count="1974" data-decimals="0">0</span>
+        <span class="stat-tile-label">Family-run since day one</span>
+      </div>
+      <div class="stat-tile stagger-item">
+        <span class="stat-tile-num"><span data-count="120" data-decimals="0">0</span>-Point</span>
+        <span class="stat-tile-label">Every car inspected before it hits the floor</span>
+      </div>
+      <div class="stat-tile stagger-item">
+        <span class="stat-tile-num">In-House</span>
+        <span class="stat-tile-label">Finance &amp; exchange handled on-site</span>
       </div>
     </div>
   </section>
@@ -101,7 +200,7 @@
       <div class="section-head reveal">
         <span class="eyebrow">Curated Selection</span>
         <h2>Featured this week</h2>
-        <p class="lead">A snapshot of what's currently on the floor — open any car for full specs, an EMI calculator and the Studio 3D viewer.</p>
+        <p class="lead">A snapshot of what's currently on the floor. Tick "Compare" on up to three, heart a shortlist, or open any car for full specs and the Studio 3D viewer.</p>
       </div>
       <div class="grid grid-3" id="featuredGrid" data-stagger-group aria-live="polite"></div>
       <div style="margin-top: var(--space-4); text-align:center;">
@@ -113,27 +212,106 @@
   <section style="background: var(--bg-elevated); border-block: 1px solid var(--border);">
     <div class="container">
       <div class="section-head section-head--center reveal">
-        <span class="eyebrow">How It Works</span>
-        <h2>Browse, inspect, drive home</h2>
-        <p class="lead" style="margin-inline:auto;">The same straightforward process we've used since 1974 — now with real numbers and a 3D look before you visit.</p>
+        <span class="eyebrow">Why Classic Auto</span>
+        <h2>Every car passes a 120-point check before it goes on the floor</h2>
+        <p class="lead" style="margin-inline:auto;">The same straightforward standard we've used since 1974 — now with real numbers, a 3D Studio look and the paperwork done in-house.</p>
       </div>
-      <div class="step-row" data-stagger-group>
-        <div class="step tag-card stagger-item">
-          <span class="step-num" aria-hidden="true">01</span>
-          <h3>Browse</h3>
-          <p>Filter stock by budget, body type and fuel, check the EMI on any listing, or ask Anita on WhatsApp-style chat to shortlist for you.</p>
+      <div class="grid" data-stagger-group style="grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));">
+        <div class="tag-card stagger-item">
+          <svg class="icon" style="width:24px;height:24px; color:var(--accent-bright); margin-bottom: var(--space-2);" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M20 6 9 17l-5-5"/></svg>
+          <h3 style="font-size:1.05rem;">120-point inspection</h3>
+          <p style="font-size:var(--fs-small);">Vehicle history, road test, underhood, exterior, interior and underbody — before it's ever listed.</p>
         </div>
-        <div class="step tag-card stagger-item">
-          <span class="step-num" aria-hidden="true">02</span>
-          <h3>Inspect</h3>
-          <p>Every car passes a multi-point mechanical and paint check before it's listed. Spin it in the Studio, then bring your own mechanic if you like.</p>
+        <div class="tag-card stagger-item">
+          <svg class="icon" style="width:24px;height:24px; color:var(--accent-bright); margin-bottom: var(--space-2);" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 3l8 4v5c0 5-3.4 8.4-8 9-4.6-.6-8-4-8-9V7l8-4z"/></svg>
+          <h3 style="font-size:1.05rem;">Warranty options</h3>
+          <p style="font-size:var(--fs-small);">Extended coverage plans available on eligible cars at the time of sale.</p>
         </div>
-        <div class="step tag-card stagger-item">
-          <span class="step-num" aria-hidden="true">03</span>
-          <h3>Drive home</h3>
-          <p>Paperwork, RC transfer and insurance handled in-house, so you leave with the keys and nothing left to chase.</p>
+        <div class="tag-card stagger-item">
+          <svg class="icon" style="width:24px;height:24px; color:var(--accent-bright); margin-bottom: var(--space-2);" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M9 12h6M9 16h6M9 8h6M5 4h14a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1z"/></svg>
+          <h3 style="font-size:1.05rem;">RC transfer handled</h3>
+          <p style="font-size:var(--fs-small);">We manage the ownership paperwork end to end, typically 2–4 weeks in-state.</p>
+        </div>
+        <div class="tag-card stagger-item">
+          <svg class="icon" style="width:24px;height:24px; color:var(--accent-bright); margin-bottom: var(--space-2);" viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="2" y="6" width="20" height="13" rx="2"/><path d="M2 11h20"/></svg>
+          <h3 style="font-size:1.05rem;">Finance partners</h3>
+          <p style="font-size:var(--fs-small);">In-house EMI estimates, with lender partners for the final approval.</p>
+        </div>
+        <div class="tag-card stagger-item">
+          <svg class="icon" style="width:24px;height:24px; color:var(--accent-bright); margin-bottom: var(--space-2);" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M17 3l4 4-4 4M21 7H9M7 21l-4-4 4-4M3 17h12"/></svg>
+          <h3 style="font-size:1.05rem;">Exchange</h3>
+          <p style="font-size:var(--fs-small);">Trade in your current car against anything on the floor.</p>
         </div>
       </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="container split">
+      <div class="reveal-up">
+        <a href="studio.html" aria-label="Enter the Studio" style="display:block; border:1px solid var(--border); aspect-ratio:4/3; overflow:hidden; position:relative; background: radial-gradient(120% 90% at 50% 0%, #14274f 0%, #0a1633 60%, #060b1a 100%);">
+          <img src="assets/photos/bmw-3-series.jpg" alt="A preview of Classic Auto's 3D Studio viewing bay" loading="lazy" style="width:100%; height:100%; object-fit:cover; opacity:0.55; mix-blend-mode:luminosity;">
+          <span style="position:absolute; inset:0; display:flex; align-items:center; justify-content:center; flex-direction:column; gap:0.5rem; text-align:center; padding: var(--space-3); background:linear-gradient(180deg, rgba(10,22,51,0.2), rgba(10,22,51,0.75));">
+            <span class="eyebrow" style="margin:0;">The Studio</span>
+            <span style="font-family:var(--font-display); font-size:2rem; color:var(--text);">Real light. Real paint.</span>
+          </span>
+        </a>
+      </div>
+      <div class="reveal-up">
+        <span class="eyebrow">3D Viewing Bay</span>
+        <h2>Look the car over before you drive in</h2>
+        <p class="lead">Every listing opens in a private 3D bay lit by a real sky HDRI, on a paved road floor, with physically-based paint that actually looks like paint. Try your colour, switch to Evening light, or step inside for the interior view.</p>
+        <a class="btn btn-primary" href="studio.html">Enter the Studio</a>
+      </div>
+    </div>
+  </section>
+
+  <section id="testDriveSection" style="background: var(--bg-elevated); border-block: 1px solid var(--border);">
+    <div class="container">
+      <div class="section-head reveal">
+        <span class="eyebrow">Next Step</span>
+        <h2>Book a test drive</h2>
+        <p class="lead">Pick a day and a 30-minute slot — at the showroom, or we bring the car to you.</p>
+      </div>
+      <form class="reveal-up tag-card" id="homeTestDriveForm" novalidate style="max-width: 42rem;">
+        <div class="visit-mode-row" role="radiogroup" aria-label="Test drive location">
+          <label class="visit-mode-option">
+            <input type="radio" name="tdMode" value="showroom" checked>
+            <span><span class="vmo-title">At the showroom</span><span class="vmo-sub">Malad West, Mumbai</span></span>
+          </label>
+          <label class="visit-mode-option">
+            <input type="radio" name="tdMode" value="home">
+            <span><span class="vmo-title">Home test drive</span><span class="vmo-sub">Mumbai western suburbs</span></span>
+          </label>
+        </div>
+        <div class="form-grid cols-2">
+          <div class="field">
+            <label for="tdName">Name <span class="req">*</span></label>
+            <input type="text" id="tdName" required autocomplete="name">
+            <span class="field-error">Please enter your name.</span>
+          </div>
+          <div class="field">
+            <label for="tdPhone">Phone <span class="req">*</span></label>
+            <input type="tel" id="tdPhone" required autocomplete="tel" inputmode="tel">
+            <span class="field-error">Please enter a valid phone number.</span>
+          </div>
+          <div class="field">
+            <label for="tdDate">Preferred date <span class="req">*</span></label>
+            <input type="date" id="tdDate" required>
+            <span class="field-error">Please pick a date.</span>
+          </div>
+          <div class="field">
+            <label for="tdCar">Car (optional)</label>
+            <select id="tdCar"><option value="">Not sure yet</option></select>
+          </div>
+        </div>
+        <div class="field" style="margin-top: var(--space-2);">
+          <label id="tdSlotsLabel">Preferred time slot <span class="req">*</span></label>
+          <div class="slot-grid" id="tdSlots" role="radiogroup" aria-labelledby="tdSlotsLabel"></div>
+        </div>
+        <button class="btn btn-primary" type="submit" style="margin-top: var(--space-3);">Request This Slot</button>
+        <p class="form-status" id="tdStatus" role="status"></p>
+      </form>
     </div>
   </section>
 
@@ -206,22 +384,25 @@
   <div class="container">
     <div class="footer-grid">
       <div class="footer-brand">
-        <svg viewBox="0 0 840 496" role="img" aria-label="Classic Auto, since 1974" style="width:150px; margin-bottom: var(--space-2);">
-          <path d="M 100 12 L 300 12 L 300 88 L 128 88 Q 96 88 96 120 L 96 238 Q 96 268 128 268 L 688 268 Q 722 268 722 302 L 722 310 Q 722 344 688 344 L 92 344 Q 14 344 14 266 L 14 98 Q 14 12 100 12 Z" fill="#F5F1E8"/>
-          <g fill="#F5F1E8" opacity="0.86">
+        <svg viewBox="0 0 900 540" role="img" aria-label="Classic Auto, since 1974">
+        <rect x="8" y="8" width="884" height="524" rx="30" fill="#F5F2EC"/>
+        <g transform="translate(40,32)">
+          <path d="M 100 12 L 300 12 L 300 88 L 128 88 Q 96 88 96 120 L 96 238 Q 96 268 128 268 L 688 268 Q 722 268 722 302 L 722 310 Q 722 344 688 344 L 92 344 Q 14 344 14 266 L 14 98 Q 14 12 100 12 Z" fill="#E11B22"/>
+          <g fill="#2B3990">
             <polygon points="468,6 552,6 372,360 288,360"/>
             <polygon points="468,6 552,6 758,360 674,360"/>
             <polygon points="404,212 620,212 650,282 370,282"/>
           </g>
-          <text x="712" y="30" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="26" font-weight="bold" font-style="italic" letter-spacing="1" fill="#C9A667">SINCE 1974</text>
-          <g fill="none" stroke="#F5F1E8" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" opacity="0.7">
+          <text x="712" y="30" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="26" font-weight="bold" font-style="italic" letter-spacing="1" fill="#E11B22">SINCE 1974</text>
+          <g fill="none" stroke="#2B3990" stroke-width="7" stroke-linecap="round" stroke-linejoin="round">
             <path d="M 540 400 q 30 -6 52 -18 q 40 -22 92 -24 q 56 -2 88 18 q 26 2 44 10 q 10 4 -2 8"/>
             <path d="M 560 402 q 130 -12 250 -8"/>
           </g>
-          <circle cx="612" cy="404" r="11" fill="none" stroke="#F5F1E8" stroke-width="7" opacity="0.7"/>
-          <circle cx="762" cy="402" r="11" fill="none" stroke="#F5F1E8" stroke-width="7" opacity="0.7"/>
-          <text x="420" y="482" text-anchor="middle" font-family="'Arial Black', Arial, sans-serif" font-weight="900" font-style="italic" font-size="88" fill="#F5F1E8">CLASSIC-AUTO</text>
-        </svg>
+          <circle cx="612" cy="404" r="11" fill="#F5F2EC" stroke="#2B3990" stroke-width="7"/>
+          <circle cx="762" cy="402" r="11" fill="#F5F2EC" stroke="#2B3990" stroke-width="7"/>
+          <text x="420" y="482" text-anchor="middle" font-family="'Arial Black', Arial, sans-serif" font-weight="900" font-style="italic" font-size="88" fill="#E11B22">CLASSIC-AUTO</text>
+        </g>
+      </svg>
         <p>Mumbai's family-run pre-owned car dealership since 1974. Inspected cars, real financing numbers, every segment from hatchback to luxury sedan.</p>
         <div class="social-row">
           <a href="https://instagram.com/classicauto_1974" target="_blank" rel="noopener" aria-label="Classic Auto on Instagram">
@@ -237,7 +418,9 @@
         <ul>
           <li><a href="stock.html">Stock</a></li>
           <li><a href="catalogue.html">Catalogue</a></li>
+          <li><a href="compare.html">Compare</a></li>
           <li><a href="sell.html">Sell Your Car</a></li>
+          <li><a href="studio.html">The Studio</a></li>
           <li><a href="privacy.html">Privacy Policy</a></li>
           <li><a href="terms.html">Terms of Service</a></li>
         </ul>
@@ -257,10 +440,17 @@
         </ul>
       </div>
     </div>
+    <div class="footer-brand-strip">
+      <span>Finance partners</span>
+      <span class="fbs-word">HDFC Bank</span>
+      <span class="fbs-word">ICICI Bank</span>
+      <span class="fbs-word">Axis Bank</span>
+      <span class="fbs-word">Bajaj Finserv</span>
+    </div>
     <div class="footer-bottom">
       <span>© <span data-year>2026</span> Classic Auto. All rights reserved.</span>
       <span>Est. 1974 · Malad West, Mumbai</span>
-      <span>3D model: <a href="models/LICENSE.txt">Ferrari 458 Italia by vicent091036, CC BY 4.0</a></span>
+      <span>3D &amp; studio credits: <a href="models/LICENSE.txt">model, HDRI &amp; texture sources</a></span>
     </div>
   </div>
 </footer>
@@ -269,12 +459,17 @@
 
 <script src="assets/js/config.js"></script>
 <script src="assets/js/cars.js"></script>
+<script src="assets/js/studio-previews.js"></script>
 <script src="assets/js/main.js" defer></script>
 <script src="assets/js/cards.js" defer></script>
 <script src="assets/js/featured.js" defer></script>
+<script src="assets/js/compare-shortlist.js" defer></script>
+<script src="assets/js/hero-search.js" defer></script>
+<script src="assets/js/testdrive.js" defer></script>
 <script src="assets/js/anita.js" defer></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js" defer></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js" defer></script>
 <script src="assets/js/anim-run.js" defer></script>
+<script type="module" src="assets/js/hero3d.js"></script>
 </body>
 </html>

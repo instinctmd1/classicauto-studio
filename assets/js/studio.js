@@ -1,17 +1,29 @@
 /* =========================================================================
-   Classic Auto — The Studio — dark reflective-floor 3D viewing bay.
-   ES module (three.js r170 via jsdelivr + an import map in studio.html).
-   One shared model (models/car.glb — see models/LICENSE.txt, CC BY 4.0)
-   is reused for every car; per-car distinction comes from the paint
-   swatch (driven by each car's `paint` hex) applied to the "body" mesh's
-   material only.
+   Classic Auto — website-v5 — The Studio: a REAL road floor under a real
+   sky. Image-based lighting from a captured HDRI (RGBELoader +
+   PMREMGenerator), ACES tone mapping + sRGB output, a physically-based
+   car paint (MeshPhysicalMaterial with clearcoat), and an asphalt PBR
+   road with painted lane lines. See models/LICENSE.txt for every asset's
+   source and licence (all Poly Haven, CC0).
+
+   One shared model (models/car.glb — Ferrari 458 Italia, CC BY 4.0, see
+   models/LICENSE.txt) is reused for every car; per-car distinction comes
+   from the paint swatch (driven by each car's `paint` hex) applied to
+   the "body" mesh's material only.
    ========================================================================= */
 import * as THREE from "three";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { DRACOLoader } from "three/addons/loaders/DRACOLoader.js";
+import { RGBELoader } from "three/addons/loaders/RGBELoader.js";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 
 var MODEL_URL = "models/car.glb";
+var HDRI = { daylight: "assets/hdri/daylight.hdr", evening: "assets/hdri/evening.hdr" };
+var ROAD_TEX = {
+  diff: "assets/textures/asphalt/asphalt_diff.jpg",
+  nor: "assets/textures/asphalt/asphalt_nor.jpg",
+  rough: "assets/textures/asphalt/asphalt_rough.jpg"
+};
 
 var params = new URLSearchParams(window.location.search);
 var id = params.get("id");
@@ -43,7 +55,7 @@ function initSidePanel(car) {
   document.getElementById("studioVisitBtn").href = "car.html?id=" + encodeURIComponent(car.id) + "#visitSection";
   document.getElementById("studioWaBtn").href = fmt.waLink("Hi, I just looked at the " + fmt.carFullLabel(car) + " in the Studio — is it available for a visit?");
 
-  var swatches = [car.paint, "#101010", "#c9ccd0", "#7a1f1f", "#1b3a6b", "#f5f1e8"];
+  var swatches = [car.paint, "#e11b22", "#101010", "#c9ccd0", "#2b3990", "#f5f1e8"];
   var seen = {};
   var paintRow = document.getElementById("paintRow");
   swatches.forEach(function (hex, i) {
@@ -61,16 +73,45 @@ function initSidePanel(car) {
   });
 }
 
+function buildLaneLineTexture() {
+  var c = document.createElement("canvas");
+  c.width = 128; c.height = 512;
+  var ctx = c.getContext("2d");
+  ctx.fillStyle = "rgba(0,0,0,0)";
+  ctx.fillRect(0, 0, c.width, c.height);
+  ctx.fillStyle = "rgba(255,255,255,0.85)";
+  var dashH = 70, gap = 46;
+  for (var y = 0; y < c.height; y += dashH + gap) {
+    ctx.fillRect(c.width / 2 - 6, y, 12, dashH);
+  }
+  var tex = new THREE.CanvasTexture(c);
+  tex.wrapS = THREE.RepeatWrapping;
+  tex.wrapT = THREE.RepeatWrapping;
+  tex.repeat.set(1, 6);
+  return tex;
+}
+
+function buildContactShadowTexture() {
+  var c = document.createElement("canvas");
+  c.width = 256; c.height = 256;
+  var ctx = c.getContext("2d");
+  var g = ctx.createRadialGradient(128, 128, 10, 128, 128, 128);
+  g.addColorStop(0, "rgba(0,0,0,0.55)");
+  g.addColorStop(0.7, "rgba(0,0,0,0.25)");
+  g.addColorStop(1, "rgba(0,0,0,0)");
+  ctx.fillStyle = g;
+  ctx.fillRect(0, 0, 256, 256);
+  return new THREE.CanvasTexture(c);
+}
+
 function initStudio(car) {
   var bay = document.getElementById("studioBay");
   var loadingEl = document.getElementById("studioLoading");
   var prefersReducedMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
   var scene = new THREE.Scene();
-  scene.background = new THREE.Color(0x0a120d);
-  scene.fog = new THREE.Fog(0x0a120d, 8, 22);
 
-  var camera = new THREE.PerspectiveCamera(35, bay.clientWidth / Math.max(bay.clientHeight, 1), 0.1, 100);
+  var camera = new THREE.PerspectiveCamera(35, bay.clientWidth / Math.max(bay.clientHeight, 1), 0.05, 100);
 
   // preserveDrawingBuffer: true — a small cost, but it means the canvas can
   // be screenshotted/pixel-sampled from outside the render loop (devtools,
@@ -85,69 +126,125 @@ function initStudio(car) {
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
   bay.insertBefore(renderer.domElement, bay.firstChild);
 
-  // ---- Reflective floor -----------------------------------------------
-  var floorGeo = new THREE.CircleGeometry(9, 64);
-  var floorMat = new THREE.MeshStandardMaterial({ color: 0x0c130f, roughness: 0.38, metalness: 0.5 });
+  var pmrem = new THREE.PMREMGenerator(renderer);
+  pmrem.compileEquirectangularShader();
+
+  // ---- Real road floor: asphalt PBR triplet + painted lane lines --------
+  var texLoader = new THREE.TextureLoader();
+  var diffMap = texLoader.load(ROAD_TEX.diff);
+  var norMap = texLoader.load(ROAD_TEX.nor);
+  var roughMap = texLoader.load(ROAD_TEX.rough);
+  [diffMap, norMap, roughMap].forEach(function (t) {
+    t.wrapS = t.wrapT = THREE.RepeatWrapping;
+    t.repeat.set(5, 5);
+    t.colorSpace = t === diffMap ? THREE.SRGBColorSpace : THREE.NoColorSpace;
+  });
+
+  var floorGeo = new THREE.CircleGeometry(11, 72);
+  var floorMat = new THREE.MeshStandardMaterial({
+    map: diffMap, normalMap: norMap, roughnessMap: roughMap,
+    roughness: 1, metalness: 0
+  });
   var floor = new THREE.Mesh(floorGeo, floorMat);
   floor.rotation.x = -Math.PI / 2;
   floor.receiveShadow = true;
   scene.add(floor);
 
-  var ring = new THREE.Mesh(new THREE.RingGeometry(3.1, 3.14, 64), new THREE.MeshBasicMaterial({ color: 0xc9a667, transparent: true, opacity: 0.35, side: THREE.DoubleSide }));
+  var laneTex = buildLaneLineTexture();
+  var laneLines = new THREE.Mesh(
+    new THREE.PlaneGeometry(0.28, 9),
+    new THREE.MeshBasicMaterial({ map: laneTex, transparent: true, depthWrite: false })
+  );
+  laneLines.rotation.x = -Math.PI / 2;
+  laneLines.position.set(0, 0.003, -1.2);
+  scene.add(laneLines);
+
+  var ring = new THREE.Mesh(new THREE.RingGeometry(3.1, 3.14, 64), new THREE.MeshBasicMaterial({ color: 0xe11b22, transparent: true, opacity: 0.32, side: THREE.DoubleSide }));
   ring.rotation.x = -Math.PI / 2;
-  ring.position.y = 0.002;
+  ring.position.y = 0.004;
   scene.add(ring);
 
-  // ---- Lighting rig ------------------------------------------------------
-  var ambient = new THREE.AmbientLight(0x8fa89a, 0.55);
+  var contactShadow = new THREE.Mesh(
+    new THREE.PlaneGeometry(4.6, 4.6),
+    new THREE.MeshBasicMaterial({ map: buildContactShadowTexture(), transparent: true, depthWrite: false })
+  );
+  contactShadow.rotation.x = -Math.PI / 2;
+  contactShadow.position.y = 0.005;
+  scene.add(contactShadow);
+
+  // ---- Lighting rig — a directional "sun" matched roughly to each HDRI,
+  // topped up by the HDRI itself via scene.environment for IBL. ------------
+  var ambient = new THREE.AmbientLight(0x8fa8c9, 0.25);
   scene.add(ambient);
 
-  var key = new THREE.DirectionalLight(0xfff1d8, 2.3);
-  key.position.set(3.2, 5.2, 3.6);
+  var key = new THREE.DirectionalLight(0xfff1d8, 2.1);
+  key.position.set(3.4, 5.6, 3.2);
   key.castShadow = true;
-  key.shadow.mapSize.set(1024, 1024);
+  key.shadow.mapSize.set(1536, 1536);
   key.shadow.camera.near = 1;
-  key.shadow.camera.far = 15;
+  key.shadow.camera.far = 16;
+  key.shadow.camera.left = -6; key.shadow.camera.right = 6;
+  key.shadow.camera.top = 6; key.shadow.camera.bottom = -6;
+  key.shadow.bias = -0.0015;
   scene.add(key);
 
-  var rim = new THREE.DirectionalLight(0x8fd3ff, 1.6);
+  var rim = new THREE.DirectionalLight(0x8fd3ff, 1.1);
   rim.position.set(-3.5, 3, -4.5);
   scene.add(rim);
 
-  var fill = new THREE.PointLight(0x4f9a77, 0.35, 14, 2);
-  fill.position.set(-2, 1.8, 2.5);
-  scene.add(fill);
-
-  var lightingState = { evening: false };
+  // ---- HDRI environments (Daylight / Evening) ----------------------------
+  var envMaps = {};
+  var rgbeLoader = new RGBELoader();
+  var lightingState = { evening: false, hdriReady: false };
 
   function applyLighting() {
+    var envMap = lightingState.evening ? envMaps.evening : envMaps.daylight;
+    if (envMap) {
+      scene.environment = envMap;
+      scene.background = envMap;
+    }
     if (lightingState.evening) {
-      scene.background.set(0x05080a);
-      scene.fog.color.set(0x05080a);
-      ambient.intensity = 0.25;
-      key.intensity = 1.3;
+      ambient.intensity = 0.12;
+      key.intensity = 0.55;
       key.color.set(0xffd8a0);
-      rim.intensity = 2.0;
+      key.position.set(-4, 2.4, -3);
+      rim.intensity = 1.8;
       rim.color.set(0x5aa8ff);
-      fill.intensity = 0.45;
+      renderer.toneMappingExposure = 0.85;
     } else {
-      scene.background.set(0x0a120d);
-      scene.fog.color.set(0x0a120d);
-      ambient.intensity = 0.55;
-      key.intensity = 1.7;
+      ambient.intensity = 0.25;
+      key.intensity = 2.1;
       key.color.set(0xfff1d8);
-      rim.intensity = 1.6;
+      key.position.set(3.4, 5.6, 3.2);
+      rim.intensity = 1.1;
       rim.color.set(0x8fd3ff);
-      fill.intensity = 0.35;
+      renderer.toneMappingExposure = 1.05;
     }
   }
+
+  function loadHDR(name, url) {
+    return new Promise(function (resolve) {
+      rgbeLoader.load(url, function (tex) {
+        var envMap = pmrem.fromEquirectangular(tex).texture;
+        tex.dispose();
+        envMaps[name] = envMap;
+        resolve();
+      }, undefined, function () { resolve(); }); // never block the scene on a failed HDRI fetch
+    });
+  }
+  Promise.all([loadHDR("daylight", HDRI.daylight), loadHDR("evening", HDRI.evening)]).then(function () {
+    lightingState.hdriReady = true;
+    applyLighting();
+  });
+  // Fallback flat background so the bay isn't black while the ~1.4MB HDRIs stream in.
+  scene.background = new THREE.Color(0x0a1220);
   applyLighting();
 
   // ---- Controls ------------------------------------------------------------
   var controls = new OrbitControls(camera, renderer.domElement);
-  controls.enableDamping = true;
+  controls.enableDamping = true;      // gives the orbit drag its inertial "glide"
   controls.dampingFactor = 0.08;
-  controls.minDistance = 2.6;
+  controls.minDistance = 1.2;
   controls.maxDistance = 9;
   controls.maxPolarAngle = Math.PI / 2 - 0.02;
   controls.target.set(0, 0.55, 0);
@@ -157,7 +254,12 @@ function initStudio(car) {
     front: { pos: [0.01, 1.05, 4.3], look: [0, 0.6, 0] },
     profile: { pos: [4.5, 1.05, 0.01], look: [0, 0.6, 0] },
     rear: { pos: [0.01, 1.05, -4.3], look: [0, 0.6, 0] },
-    above: { pos: [0.01, 5.6, 0.02], look: [0, 0, 0] }
+    above: { pos: [0.01, 5.6, 0.02], look: [0, 0, 0] },
+    // Measured against this model's actual "steering_wheel"/"leather" node
+    // positions (~x -0.25, y 0.56-0.6, z -0.24) — see the temp debug block
+    // in the model-load callback below. Seated slightly behind/above the
+    // wheel, looking forward (+z) through the windscreen.
+    interior: { pos: [-0.15, 0.74, -0.18], look: [-0.1, 0.58, 3] }
   };
   camera.position.set.apply(camera.position, CAM_PRESETS.overview.pos);
   camera.lookAt(new THREE.Vector3(0, 0.55, 0));
@@ -173,6 +275,7 @@ function initStudio(car) {
     var duration = prefersReducedMotion ? 1 : 700;
     var start = performance.now();
     controls.enabled = false;
+    controls.minDistance = name === "interior" ? 0.02 : 1.2;
     camTween = function (now) {
       var t = Math.min(1, (now - start) / duration);
       var e = 1 - Math.pow(1 - t, 3); // ease-out cubic
@@ -216,6 +319,7 @@ function initStudio(car) {
 
   // ---- Load model ---------------------------------------------------------
   var bodyMaterial = null;
+  var currentFinish = "gloss";
   // The three.js example car.glb uses KHR_draco_mesh_compression — a
   // DRACOLoader (pointed at three.js's own hosted decoder) is required or
   // GLTFLoader fails to parse the (Draco-compressed) mesh geometry.
@@ -228,14 +332,26 @@ function initStudio(car) {
     function (gltf) {
       var root = gltf.scene;
       // three.js's own "webgl_materials_car" example car: the mesh named
-      // "body" carries the paintable "Body_Color" material; "glass",
-      // "rim_fl"/"rim_fr"/"rim_rl"/"rim_rr" (wheels) and "trim" keep their
-      // own materials untouched — only the body takes the paint swatch.
+      // "body" carries the paintable "Body_Color" material. Everything
+      // else (glass, wheels/rims, interior trim) keeps its own material.
       root.traverse(function (node) {
         if (node.isMesh) {
           node.castShadow = true;
           node.receiveShadow = false;
-          if (node.name === "body" && node.material) bodyMaterial = node.material;
+          if (node.name === "body" && node.material) {
+            // Upgrade the flat Standard material to a physically-based
+            // clearcoat paint so it actually reads as automotive paint
+            // under the HDRI (brief: clearcoat 1, clearcoatRoughness 0.03,
+            // metalness 0.55, roughness 0.35).
+            var old = node.material;
+            var physical = new THREE.MeshPhysicalMaterial({
+              color: old.color ? old.color.clone() : new THREE.Color(car.paint),
+              metalness: 0.55, roughness: 0.35,
+              clearcoat: 1, clearcoatRoughness: 0.03
+            });
+            node.material = physical;
+            bodyMaterial = physical;
+          }
         }
       });
 
@@ -267,9 +383,6 @@ function initStudio(car) {
 
   function applyPaint(hex) {
     if (!bodyMaterial) return;
-    // Body_Color is a flat baseColorFactor with no texture map, so a
-    // straight colour swap reads as true paint (matches three.js's own
-    // webgl_materials_car example, which recolors this same material).
     bodyMaterial.color.set(hex);
   }
 
@@ -279,18 +392,33 @@ function initStudio(car) {
     document.querySelectorAll(".paint-swatch").forEach(function (b) { b.setAttribute("aria-pressed", "false"); });
     btn.setAttribute("aria-pressed", "true");
     applyPaint(btn.getAttribute("data-hex"));
+    var picker = document.getElementById("paintCustom");
+    if (picker) picker.value = btn.getAttribute("data-hex");
   });
 
+  // Native <input type="color"> — full custom colour, alongside the swatches.
+  var paintCustom = document.getElementById("paintCustom");
+  if (paintCustom) {
+    paintCustom.addEventListener("input", function () {
+      document.querySelectorAll(".paint-swatch").forEach(function (b) { b.setAttribute("aria-pressed", "false"); });
+      applyPaint(paintCustom.value);
+    });
+  }
+
+  function setFinish(finish) {
+    currentFinish = finish;
+    if (!bodyMaterial) return;
+    if (finish === "matte") {
+      bodyMaterial.roughness = 0.85; bodyMaterial.clearcoat = 0; bodyMaterial.metalness = 0.2;
+    } else {
+      bodyMaterial.roughness = 0.35; bodyMaterial.clearcoat = 1; bodyMaterial.clearcoatRoughness = 0.03; bodyMaterial.metalness = 0.55;
+    }
+  }
   document.querySelectorAll("[data-finish]").forEach(function (btn) {
     btn.addEventListener("click", function () {
       document.querySelectorAll("[data-finish]").forEach(function (b) { b.setAttribute("aria-pressed", "false"); });
       btn.setAttribute("aria-pressed", "true");
-      if (!bodyMaterial) return;
-      if (btn.getAttribute("data-finish") === "matte") {
-        bodyMaterial.roughness = 0.85; bodyMaterial.clearcoat = 0;
-      } else {
-        bodyMaterial.roughness = 0.25; bodyMaterial.clearcoat = 1;
-      }
+      setFinish(btn.getAttribute("data-finish"));
     });
   });
 
@@ -314,4 +442,17 @@ function initStudio(car) {
     renderer.render(scene, camera);
   }
   requestAnimationFrame(animate);
+
+  // Exposed for the automated QA pass (Playwright) to confirm HDRI state
+  // without needing to read pixels, and to snap the turntable back to a
+  // canonical 0° heading before capturing the "Studio preview" card
+  // renders (scripts/gen-studio-previews) so front/profile/rear line up
+  // consistently across every car.
+  window.__studioState = {
+    get hdriReady() { return lightingState.hdriReady; },
+    get evening() { return lightingState.evening; },
+    get bodyColorHex() { return bodyMaterial ? "#" + bodyMaterial.color.getHexString() : null; },
+    resetHeading: function () { carGroup.rotation.y = 0; },
+    stopAutoRotate: function () { autoRotate = false; autoRotateBtn.setAttribute("aria-pressed", "false"); }
+  };
 }

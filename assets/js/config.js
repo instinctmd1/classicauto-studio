@@ -1,5 +1,5 @@
 /* =========================================================================
-   Classic Auto — website-v4 — shared config + lead-capture contract.
+   Classic Auto — website-v5 — shared config + lead-capture contract. (unchanged from v4)
    Loaded first, before cars.js/main.js, on every page.
    ========================================================================= */
 window.CA_ENDPOINT = window.CA_ENDPOINT || "";

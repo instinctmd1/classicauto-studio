@@ -1,5 +1,5 @@
 /* =========================================================================
-   Classic Auto — website-v4 — shared behaviour (nav, formatting, footer).
+   Classic Auto — website-v5 — shared behaviour (nav, formatting, footer). (logic unchanged from v4)
    Adapted from website-v3/assets/js/main.js. Content-rendering: runs
    immediately as a deferred script, never depends on GSAP. Animation is
    optional and queued onto window.__anim, drained by anim-run.js.

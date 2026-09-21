@@ -110,6 +110,135 @@
   }
 
   /* ------------------------------------------------------------------
+     Hero stat chips (year / km / fuel / EMI from) — Audi-style hero.
+     ------------------------------------------------------------------ */
+  var chipsEl = document.querySelector("[data-f=chips]");
+  if (chipsEl) {
+    var chips = [
+      ["Year", car.year],
+      ["KM", fmt.formatKm(car.kms)],
+      ["Fuel", car.fuel],
+      ["EMI from", fmt.rupees(fmt.emi(car.price)) + "/mo*"]
+    ];
+    chipsEl.innerHTML = chips.map(function (c) {
+      return '<div class="hero-chip"><span class="k">' + c[0] + '</span><span class="v">' + c[1] + '</span></div>';
+    }).join("");
+  }
+
+  /* ------------------------------------------------------------------
+     WhatsApp share (distinct from the "WhatsApp Enquiry" lead button —
+     this one is meant for forwarding the listing to someone else).
+     ------------------------------------------------------------------ */
+  var shareBtn = document.getElementById("shareWhatsapp");
+  if (shareBtn) {
+    shareBtn.href = fmt.waLink("Check out this " + fmt.carFullLabel(car) + " (" + fmt.money(car.price) + ") on Classic Auto: " + window.location.href);
+  }
+
+  /* ------------------------------------------------------------------
+     120-point inspection report — deterministic per-car sample data
+     (never random on reload), clearly labelled as sample/illustrative.
+     ------------------------------------------------------------------ */
+  function seedOf(id) {
+    var h = 7;
+    for (var i = 0; i < id.length; i++) h = (h * 31 + id.charCodeAt(i)) % 9973;
+    return h;
+  }
+  function pick(seed, salt, min, max) {
+    return min + ((seed + salt) % (max - min + 1));
+  }
+  function buildInspectionHTML(c) {
+    var seed = seedOf(c.id);
+    var tyres = pick(seed, 7, 58, 92);
+    var brakePads = pick(seed, 13, 55, 95);
+    var battery = pick(seed, 19, 70, 98);
+    var dayOffset = pick(seed, 29, 3, 40);
+    var checkDate = new Date();
+    checkDate.setDate(checkDate.getDate() - dayOffset);
+    var checkDateLabel = checkDate.toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" });
+
+    var groups = [
+      ["Vehicle history", [
+        "RC, insurance and service book verified against chassis/engine number",
+        c.owners + " registered owner(s), ownership chain checked",
+        "No hypothecation / loan pending on record"
+      ]],
+      ["Road test", [
+        "Cold start, idle and highway-speed test drive completed",
+        "Steering, suspension and braking checked for play and noise",
+        "Gearbox/clutch (or torque converter) shift quality checked"
+      ]],
+      ["Underhood", [
+        "Engine oil, coolant and belts inspected — no active leaks",
+        "Battery health " + battery + "%",
+        "OBD scan run for stored fault codes"
+      ]],
+      ["Exterior", [
+        "Paint-depth checked panel by panel for repaint/accident signs",
+        "Tyres at " + tyres + "% tread remaining across all four",
+        "Glass, lights and body panel alignment checked"
+      ]],
+      ["Interior", [
+        "AC, infotainment, power windows and central lock tested",
+        "Upholstery, dashboard and odometer consistency checked",
+        "Airbags and seatbelt pre-tensioners checked for prior deployment"
+      ]],
+      ["Underbody", [
+        "Brake pads at " + brakePads + "% remaining",
+        "Chassis and underbody checked for rust or accident repair",
+        "Exhaust and driveshaft inspected for leaks or play"
+      ]]
+    ];
+
+    var groupsHtml = groups.map(function (g) {
+      return '<div class="insp-group"><h4>' + g[0] + '</h4><ul>' + g[1].map(function (item) {
+        return '<li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M20 6 9 17l-5-5"/></svg><span>' + item + '</span></li>';
+      }).join("") + '</ul></div>';
+    }).join("");
+
+    var ownershipHtml =
+      '<div class="ownership-strip">' +
+        '<div class="ownership-chip"><span class="k">Owners</span><span class="v">' + c.owners + '</span></div>' +
+        '<div class="ownership-chip"><span class="k">Accident-free</span><span class="v">Declared, yes</span></div>' +
+        '<div class="ownership-chip"><span class="k">Service records</span><span class="v">On file</span></div>' +
+        '<div class="ownership-chip"><span class="k">Insurance</span><span class="v">' + c.insurance + '</span></div>' +
+      '</div>';
+
+    return (
+      '<div class="inspection-head">' +
+        '<div class="inspection-score"><span class="num">120</span><span class="lbl">points checked</span></div>' +
+        '<span class="inspection-date">Checked ' + checkDateLabel + '</span>' +
+      '</div>' +
+      '<div class="inspection-groups">' + groupsHtml + '</div>' +
+      ownershipHtml +
+      '<p class="inspection-sample-tag">Sample inspection data shown for illustration — ask us for this car’s actual signed inspection sheet.</p>'
+    );
+  }
+  var inspEl = document.querySelector("[data-f=inspection]");
+  if (inspEl) inspEl.innerHTML = buildInspectionHTML(car);
+
+  /* ------------------------------------------------------------------
+     EMI eligibility quick check — income + existing EMI -> rough
+     eligible loan amount. Estimate only, same 11.5%/5yr assumption as
+     the EMI calculator above.
+     ------------------------------------------------------------------ */
+  var eligBtn = document.getElementById("eligCheckBtn");
+  if (eligBtn) {
+    eligBtn.addEventListener("click", function () {
+      var income = parseFloat(document.getElementById("eligIncome").value) || 0;
+      var existing = parseFloat(document.getElementById("eligExisting").value) || 0;
+      var freeEmi = Math.max(0, income * 0.5 - existing);
+      var rate = 0.115 / 12, n = 60;
+      var factor = Math.pow(1 + rate, n);
+      var eligibleLoan = freeEmi * (factor - 1) / (rate * factor);
+      var resultEl = document.getElementById("eligResult");
+      var amtEl = document.getElementById("eligAmt");
+      resultEl.hidden = false;
+      amtEl.textContent = fmt.money(eligibleLoan);
+      amtEl.title = "At an estimated " + fmt.rupees(Math.round(freeEmi)) + "/mo";
+    });
+  }
+
+  /* ------------------------------------------------------------------
      EMI calculator
      ------------------------------------------------------------------ */
   var downPct = document.getElementById("downPct");
@@ -171,36 +300,74 @@
   }
 
   /* ------------------------------------------------------------------
-     Schedule-a-visit form -> shared lead contract (config.js)
+     Schedule-a-visit form -> shared lead contract (config.js). Date +
+     30-minute slot chips (10:00–19:30), plus an At the showroom / Home
+     test drive toggle — mirrors the home page "Book a test drive"
+     widget in assets/js/testdrive.js.
      ------------------------------------------------------------------ */
   var visitForm = document.getElementById("visitForm");
   var visitStatus = document.getElementById("visitStatus");
+  var vSlotsEl = document.getElementById("vSlots");
+  var vSelectedTime = "";
+  if (vSlotsEl) {
+    var vStart = 10 * 60, vEnd = 19 * 60 + 30;
+    for (var vm = vStart; vm <= vEnd; vm += 30) {
+      (function (m) {
+        var h = Math.floor(m / 60), mi = m % 60;
+        var ampm = h >= 12 ? "pm" : "am";
+        var h12 = h % 12 === 0 ? 12 : h % 12;
+        var label = h12 + ":" + (mi === 0 ? "00" : mi) + " " + ampm;
+        var value = (h < 10 ? "0" + h : h) + ":" + (mi === 0 ? "00" : mi);
+        var btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "slot-chip";
+        btn.setAttribute("aria-pressed", "false");
+        btn.setAttribute("data-value", value);
+        btn.textContent = label;
+        btn.addEventListener("click", function () {
+          vSlotsEl.querySelectorAll(".slot-chip").forEach(function (b) { b.setAttribute("aria-pressed", "false"); });
+          btn.setAttribute("aria-pressed", "true");
+          vSelectedTime = value;
+        });
+        vSlotsEl.appendChild(btn);
+      })(vm);
+    }
+  }
+  var vDateInput = document.getElementById("vDate");
+  if (vDateInput) vDateInput.min = new Date().toISOString().slice(0, 10);
+
   if (visitForm) {
     visitForm.addEventListener("submit", function (e) {
       e.preventDefault();
       var name = document.getElementById("vName").value.trim();
       var phone = document.getElementById("vPhone").value.trim();
       var date = document.getElementById("vDate").value;
-      var time = document.getElementById("vTime").value;
+      var modeInput = visitForm.querySelector('input[name="vMode"]:checked');
+      var mode = modeInput ? modeInput.value : "showroom";
       var ok = true;
-      [["vName", name], ["vPhone", phone], ["vDate", date], ["vTime", time]].forEach(function (pair) {
+      [["vName", name], ["vPhone", phone], ["vDate", date]].forEach(function (pair) {
         var field = document.getElementById(pair[0]).closest(".field");
         if (!pair[1]) { field.classList.add("has-error"); ok = false; }
         else field.classList.remove("has-error");
       });
-      if (!ok) { visitStatus.textContent = "Please fill in every field."; visitStatus.className = "form-status is-error"; return; }
+      if (!vSelectedTime) ok = false;
+      if (!ok) { visitStatus.textContent = "Please fill in every field, including a time slot."; visitStatus.className = "form-status is-error"; return; }
 
-      var visitAt = humanizeVisit(date, time);
+      var visitAt = humanizeVisit(date, vSelectedTime);
       visitStatus.textContent = "Sending your request…";
       visitStatus.className = "form-status";
       window.ClassicAutoLeads.submitLead({
         name: name, phone: phone, car: fmt.carFullLabel(car),
-        message: "Schedule a visit request from the car detail page.",
+        message: mode === "home"
+          ? "Home test drive requested (Mumbai western suburbs)."
+          : "Showroom visit requested (Malad West).",
         budget: "", visit_at: visitAt, page: "car.html?id=" + car.id
       }).then(function () {
         visitStatus.textContent = "Thanks! We'll confirm your visit on WhatsApp shortly.";
         visitStatus.className = "form-status is-ok";
         visitForm.reset();
+        vSlotsEl.querySelectorAll(".slot-chip").forEach(function (b) { b.setAttribute("aria-pressed", "false"); });
+        vSelectedTime = "";
       });
     });
   }

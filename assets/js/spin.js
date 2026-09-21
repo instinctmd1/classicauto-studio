@@ -1,24 +1,28 @@
-/* Photo-360 spin component. Auto-detects whether frames/<car-id>/001.jpg
-   exists (HEAD request); if not, stays hidden entirely and the page's
-   normal photo gallery is the only viewer. No frames ship with this build
-   — see frames/README.md. */
+/* Photo-360 spin component. Mounts only for car ids listed in
+   window.CA_FRAMES_AVAILABLE (empty by default — no frames ship with this
+   build, see frames/README.md). v4 used a HEAD-request probe instead, but
+   that guarantees a logged 404 on every car page with no frames on disk;
+   this explicit allow-list gets the same "stays hidden when absent"
+   behaviour with zero failed network requests. To add real 360 frames
+   for a car later: drop frames/<car-id>/001.jpg..024.jpg in place and add
+   the id to CA_FRAMES_AVAILABLE below. */
 (function () {
   "use strict";
   var mount = document.getElementById("spinMount");
   if (!mount || typeof CARS === "undefined") return;
 
+  var CA_FRAMES_AVAILABLE = window.CA_FRAMES_AVAILABLE || [];
+
   var params = new URLSearchParams(window.location.search);
   var id = params.get("id");
   var car = CARS.filter(function (c) { return c.id === id; })[0];
   if (!car) return;
+  if (CA_FRAMES_AVAILABLE.indexOf(car.id) === -1) return;
 
   var FRAME_COUNT = 24;
   var base = "frames/" + car.id + "/";
-  var firstFrame = base + "001.jpg";
 
-  fetch(firstFrame, { method: "HEAD" }).then(function (res) {
-    if (res.ok) mountSpin();
-  }).catch(function () { /* frames folder absent/blocked — stay hidden */ });
+  mountSpin();
 
   function frameUrl(n) {
     var s = String(n);

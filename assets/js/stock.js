@@ -56,10 +56,12 @@
     apply();
   });
 
-  // Deep link support: stock.html?body=suv or ?budget=under10 from Anita chat.
+  // Deep link support: stock.html?body=suv, ?budget=under10, ?fuel=Diesel —
+  // from Anita chat and the home page search bar.
   var params = new URLSearchParams(window.location.search);
   if (params.get("body")) bodySel.value = params.get("body");
   if (params.get("budget")) budgetSel.value = params.get("budget");
+  if (params.get("fuel")) fuelSel.value = params.get("fuel");
 
   apply();
 })();

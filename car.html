@@ -8,8 +8,8 @@
 <link rel="icon" type="image/svg+xml" href="assets/logo.svg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="assets/css/style.css">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/style.css?v=5">
 <script type="application/ld+json" id="carJsonLd"></script>
 </head>
 <body data-page="stock">
@@ -18,21 +18,24 @@
 <header class="site-header">
   <div class="container">
     <a class="brand" href="index.html" aria-label="Classic Auto — home">
-      <svg viewBox="0 0 840 496" role="img" aria-label="Classic Auto, since 1974">
-        <path d="M 100 12 L 300 12 L 300 88 L 128 88 Q 96 88 96 120 L 96 238 Q 96 268 128 268 L 688 268 Q 722 268 722 302 L 722 310 Q 722 344 688 344 L 92 344 Q 14 344 14 266 L 14 98 Q 14 12 100 12 Z" fill="#F5F1E8"/>
-        <g fill="#F5F1E8" opacity="0.86">
-          <polygon points="468,6 552,6 372,360 288,360"/>
-          <polygon points="468,6 552,6 758,360 674,360"/>
-          <polygon points="404,212 620,212 650,282 370,282"/>
+      <svg viewBox="0 0 900 540" role="img" aria-label="Classic Auto, since 1974">
+        <rect x="8" y="8" width="884" height="524" rx="30" fill="#F5F2EC"/>
+        <g transform="translate(40,32)">
+          <path d="M 100 12 L 300 12 L 300 88 L 128 88 Q 96 88 96 120 L 96 238 Q 96 268 128 268 L 688 268 Q 722 268 722 302 L 722 310 Q 722 344 688 344 L 92 344 Q 14 344 14 266 L 14 98 Q 14 12 100 12 Z" fill="#E11B22"/>
+          <g fill="#2B3990">
+            <polygon points="468,6 552,6 372,360 288,360"/>
+            <polygon points="468,6 552,6 758,360 674,360"/>
+            <polygon points="404,212 620,212 650,282 370,282"/>
+          </g>
+          <text x="712" y="30" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="26" font-weight="bold" font-style="italic" letter-spacing="1" fill="#E11B22">SINCE 1974</text>
+          <g fill="none" stroke="#2B3990" stroke-width="7" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M 540 400 q 30 -6 52 -18 q 40 -22 92 -24 q 56 -2 88 18 q 26 2 44 10 q 10 4 -2 8"/>
+            <path d="M 560 402 q 130 -12 250 -8"/>
+          </g>
+          <circle cx="612" cy="404" r="11" fill="#F5F2EC" stroke="#2B3990" stroke-width="7"/>
+          <circle cx="762" cy="402" r="11" fill="#F5F2EC" stroke="#2B3990" stroke-width="7"/>
+          <text x="420" y="482" text-anchor="middle" font-family="'Arial Black', Arial, sans-serif" font-weight="900" font-style="italic" font-size="88" fill="#E11B22">CLASSIC-AUTO</text>
         </g>
-        <text x="712" y="30" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="26" font-weight="bold" font-style="italic" letter-spacing="1" fill="#C9A667">SINCE 1974</text>
-        <g fill="none" stroke="#F5F1E8" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" opacity="0.7">
-          <path d="M 540 400 q 30 -6 52 -18 q 40 -22 92 -24 q 56 -2 88 18 q 26 2 44 10 q 10 4 -2 8"/>
-          <path d="M 560 402 q 130 -12 250 -8"/>
-        </g>
-        <circle cx="612" cy="404" r="11" fill="none" stroke="#F5F1E8" stroke-width="7" opacity="0.7"/>
-        <circle cx="762" cy="402" r="11" fill="none" stroke="#F5F1E8" stroke-width="7" opacity="0.7"/>
-        <text x="420" y="482" text-anchor="middle" font-family="'Arial Black', Arial, sans-serif" font-weight="900" font-style="italic" font-size="88" fill="#F5F1E8">CLASSIC-AUTO</text>
       </svg>
     </a>
     <nav class="nav-links" aria-label="Primary">
@@ -88,6 +91,7 @@
             <h1 data-f="title" style="font-size: var(--fs-h3);">Car Name</h1>
             <p class="lead" data-f="variant" style="margin-bottom: var(--space-2);">Variant</p>
             <div class="detail-price" data-f="price">₹0 L</div>
+            <div class="car-hero-chips" data-f="chips"></div>
             <p data-f="desc">Description.</p>
 
             <div class="spec-grid" data-f="specs"></div>
@@ -102,7 +106,15 @@
                 WhatsApp Enquiry
               </a>
               <a class="btn btn-outline" href="tel:+919588990000">Call Showroom</a>
+              <a class="btn btn-outline wa-share-btn" id="shareWhatsapp" href="https://wa.me/" target="_blank" rel="noopener" aria-label="Share this car on WhatsApp">
+                <svg class="icon" style="width:18px;height:18px;" viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4"/></svg>
+                Share
+              </a>
             </div>
+            <p class="provenance-line">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 2 3 6v6c0 5 3.8 9.2 9 10 5.2-.8 9-5 9-10V6l-9-4z"/><path d="M9 12l2 2 4-4"/></svg>
+              Since 1974 — sold and serviced by the same family.
+            </p>
             <p class="form-note">Prices are indicative and subject to on-site inspection. Message us for the latest availability.</p>
           </div>
         </div>
@@ -116,6 +128,37 @@
           <h2 style="font-size: var(--fs-h3);">Why this one</h2>
         </div>
         <ul class="highlight-list" data-f="highlights" style="max-width:44rem;"></ul>
+      </div>
+    </section>
+
+    <section style="border-top: 1px solid var(--border);">
+      <div class="container">
+        <div class="section-head reveal">
+          <span class="eyebrow">Before It Went On The Floor</span>
+          <h2 style="font-size: var(--fs-h3);">120-point inspection report</h2>
+          <p class="lead">Vehicle history, road test, underhood, exterior, interior and underbody — every car is checked against the same list before it's listed.</p>
+        </div>
+        <div class="inspection-block reveal-up" data-f="inspection"></div>
+      </div>
+    </section>
+
+    <section style="background: var(--bg-elevated); border-top: 1px solid var(--border);">
+      <div class="container">
+        <div class="detail-layout">
+          <div class="reveal-up">
+            <span class="eyebrow">See It Move</span>
+            <h2 style="font-size: var(--fs-h3);">Video walkaround</h2>
+            <p class="lead">A 60–90 second phone walkaround of this exact car — exterior first, then the cabin.</p>
+          </div>
+          <div class="reveal-up">
+            <div class="walkaround-block">
+              <div class="walkaround-empty">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><circle cx="12" cy="12" r="10"/><path d="M10 8.5l6 3.5-6 3.5z"/></svg>
+                <p>Walkaround video coming for this car — we're filming a short exterior + interior clip.</p>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </section>
 
@@ -156,6 +199,26 @@
               <h2 style="font-size: var(--fs-h4); font-family: var(--font-body); font-weight:600; margin-bottom: var(--space-2);">RTO Transfer</h2>
               <p style="margin:0;">Ownership (RC) transfer typically takes <strong style="color:var(--text);">2–4 weeks</strong> for an intra-state (within Maharashtra) sale. We handle the paperwork in-house.</p>
             </div>
+            <div class="tag-card">
+              <span class="estimate-tag">Estimate</span>
+              <h2 style="font-size: var(--fs-h4); font-family: var(--font-body); font-weight:600; margin-bottom: var(--space-2);">EMI Eligibility Quick Check</h2>
+              <div class="elig-grid">
+                <div class="field">
+                  <label for="eligIncome">Monthly income (₹)</label>
+                  <input type="number" id="eligIncome" placeholder="e.g. 80000" min="0" inputmode="numeric">
+                </div>
+                <div class="field">
+                  <label for="eligExisting">Existing EMIs (₹/mo)</label>
+                  <input type="number" id="eligExisting" placeholder="e.g. 0" min="0" inputmode="numeric">
+                </div>
+              </div>
+              <button type="button" class="btn btn-outline" id="eligCheckBtn" style="margin-top: var(--space-2);">Check eligibility</button>
+              <div class="elig-result" id="eligResult" hidden>
+                <span class="lbl">Rough eligible loan</span>
+                <span class="amt" id="eligAmt">₹0</span>
+              </div>
+              <p class="calc-note" style="margin-top: var(--space-2);">Assumes ~50% of income is free for EMIs, at 11.5% p.a. over 5 years. An estimate only — not a loan offer.</p>
+            </div>
           </div>
         </div>
       </div>
@@ -170,6 +233,16 @@
             <p class="lead">See it, sit in it, and take it for a test drive. We'll hold a slot for you.</p>
           </div>
           <form class="reveal-up tag-card" id="visitForm" novalidate>
+            <div class="visit-mode-row" role="radiogroup" aria-label="Test drive location">
+              <label class="visit-mode-option">
+                <input type="radio" name="vMode" value="showroom" checked>
+                <span><span class="vmo-title">At the showroom</span><span class="vmo-sub">Malad West, Mumbai</span></span>
+              </label>
+              <label class="visit-mode-option">
+                <input type="radio" name="vMode" value="home">
+                <span><span class="vmo-title">Home test drive</span><span class="vmo-sub">Mumbai western suburbs</span></span>
+              </label>
+            </div>
             <div class="form-grid cols-2">
               <div class="field">
                 <label for="vName">Name <span class="req">*</span></label>
@@ -186,11 +259,10 @@
                 <input type="date" id="vDate" name="date" required>
                 <span class="field-error">Please pick a date.</span>
               </div>
-              <div class="field">
-                <label for="vTime">Preferred time <span class="req">*</span></label>
-                <input type="time" id="vTime" name="time" required>
-                <span class="field-error">Please pick a time.</span>
-              </div>
+            </div>
+            <div class="field" style="margin-top: var(--space-2);">
+              <label id="vSlotsLabel">Preferred time slot <span class="req">*</span></label>
+              <div class="slot-grid" id="vSlots" role="radiogroup" aria-labelledby="vSlotsLabel"></div>
             </div>
             <button class="btn btn-primary" type="submit" style="margin-top: var(--space-3);">Request This Slot</button>
             <p class="form-status" id="visitStatus" role="status"></p>
@@ -216,22 +288,25 @@
   <div class="container">
     <div class="footer-grid">
       <div class="footer-brand">
-        <svg viewBox="0 0 840 496" role="img" aria-label="Classic Auto, since 1974" style="width:150px; margin-bottom: var(--space-2);">
-          <path d="M 100 12 L 300 12 L 300 88 L 128 88 Q 96 88 96 120 L 96 238 Q 96 268 128 268 L 688 268 Q 722 268 722 302 L 722 310 Q 722 344 688 344 L 92 344 Q 14 344 14 266 L 14 98 Q 14 12 100 12 Z" fill="#F5F1E8"/>
-          <g fill="#F5F1E8" opacity="0.86">
+        <svg viewBox="0 0 900 540" role="img" aria-label="Classic Auto, since 1974">
+        <rect x="8" y="8" width="884" height="524" rx="30" fill="#F5F2EC"/>
+        <g transform="translate(40,32)">
+          <path d="M 100 12 L 300 12 L 300 88 L 128 88 Q 96 88 96 120 L 96 238 Q 96 268 128 268 L 688 268 Q 722 268 722 302 L 722 310 Q 722 344 688 344 L 92 344 Q 14 344 14 266 L 14 98 Q 14 12 100 12 Z" fill="#E11B22"/>
+          <g fill="#2B3990">
             <polygon points="468,6 552,6 372,360 288,360"/>
             <polygon points="468,6 552,6 758,360 674,360"/>
             <polygon points="404,212 620,212 650,282 370,282"/>
           </g>
-          <text x="712" y="30" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="26" font-weight="bold" font-style="italic" letter-spacing="1" fill="#C9A667">SINCE 1974</text>
-          <g fill="none" stroke="#F5F1E8" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" opacity="0.7">
+          <text x="712" y="30" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="26" font-weight="bold" font-style="italic" letter-spacing="1" fill="#E11B22">SINCE 1974</text>
+          <g fill="none" stroke="#2B3990" stroke-width="7" stroke-linecap="round" stroke-linejoin="round">
             <path d="M 540 400 q 30 -6 52 -18 q 40 -22 92 -24 q 56 -2 88 18 q 26 2 44 10 q 10 4 -2 8"/>
             <path d="M 560 402 q 130 -12 250 -8"/>
           </g>
-          <circle cx="612" cy="404" r="11" fill="none" stroke="#F5F1E8" stroke-width="7" opacity="0.7"/>
-          <circle cx="762" cy="402" r="11" fill="none" stroke="#F5F1E8" stroke-width="7" opacity="0.7"/>
-          <text x="420" y="482" text-anchor="middle" font-family="'Arial Black', Arial, sans-serif" font-weight="900" font-style="italic" font-size="88" fill="#F5F1E8">CLASSIC-AUTO</text>
-        </svg>
+          <circle cx="612" cy="404" r="11" fill="#F5F2EC" stroke="#2B3990" stroke-width="7"/>
+          <circle cx="762" cy="402" r="11" fill="#F5F2EC" stroke="#2B3990" stroke-width="7"/>
+          <text x="420" y="482" text-anchor="middle" font-family="'Arial Black', Arial, sans-serif" font-weight="900" font-style="italic" font-size="88" fill="#E11B22">CLASSIC-AUTO</text>
+        </g>
+      </svg>
         <p>Mumbai's family-run pre-owned car dealership since 1974. Inspected cars, real financing numbers, every segment from hatchback to luxury sedan.</p>
         <div class="social-row">
           <a href="https://instagram.com/classicauto_1974" target="_blank" rel="noopener" aria-label="Classic Auto on Instagram">
@@ -270,7 +345,7 @@
     <div class="footer-bottom">
       <span>© <span data-year>2026</span> Classic Auto. All rights reserved.</span>
       <span>Est. 1974 · Malad West, Mumbai</span>
-      <span>3D model: <a href="models/LICENSE.txt">Ferrari 458 Italia by vicent091036, CC BY 4.0</a></span>
+      <span>3D &amp; studio credits: <a href="models/LICENSE.txt">model, HDRI &amp; texture sources</a></span>
     </div>
   </div>
 </footer>
@@ -279,8 +354,10 @@
 
 <script src="assets/js/config.js"></script>
 <script src="assets/js/cars.js"></script>
+<script src="assets/js/studio-previews.js"></script>
 <script src="assets/js/main.js" defer></script>
 <script src="assets/js/cards.js" defer></script>
+<script src="assets/js/compare-shortlist.js" defer></script>
 <script src="assets/js/spin.js" defer></script>
 <script src="assets/js/car-page.js" defer></script>
 <script src="assets/js/anita.js" defer></script>

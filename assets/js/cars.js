@@ -1,5 +1,5 @@
 /* =========================================================================
-   Classic Auto — website-v4 — inventory data.
+   Classic Auto — website-v5 — inventory data. (unchanged from v4)
    Field names mirror business-lab/website/inventory.csv 1:1
    (id,make,model,variant,year,price,kms,fuel,trans,owners,colour,reg_city,
    insurance,photos,status,notes) plus two v4 additions used by the Studio:
