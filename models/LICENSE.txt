@@ -1,0 +1,51 @@
+Classic Auto — website-v4 — Studio 3D model sourcing notes
+============================================================
+
+Requested source order (per build spec): Kenney "Car Kit" -> Quaternius
+Cars pack -> poly.pizza CC0 models -> generated CC0 primitive fallback.
+
+What was actually used: car.glb (Ferrari 458 Italia)
+------------------------------------------------------
+Kenney's asset page (https://kenney.nl/assets/car-kit) and Quaternius
+(https://quaternius.com) both render their download buttons via
+client-side JavaScript with no stable direct-download URL reachable from
+a script environment, and poly.pizza's model pages are likewise
+JS-rendered — none were scriptable from this network. An earlier pass of
+this build shipped a CC0 Khronos glTF-Sample-Assets "ToyCar" as a
+stand-in, but that model renders as a stylized 1950s toy car (posed on a
+velvet-draped pedestal) and reads wrong under real listing titles like
+"2021 Hyundai Creta" — it has been removed and replaced with a proper car
+body:
+
+  Source:   three.js's own bundled example asset
+            (three.js repo, tag r170: examples/models/gltf/ferrari.glb)
+  Fetched:  https://raw.githubusercontent.com/mrdoob/three.js/r170/examples/models/gltf/ferrari.glb
+  Used in:  three.js example "webgl_materials_car"
+            (examples/webgl_materials_car.html)
+  Model:    Ferrari 458 Italia, by vicent091036 on Sketchfab
+            https://sketchfab.com/models/57bf6cc56931426e87494f554df1dab6
+  Licence:  CC BY 4.0 (Creative Commons Attribution 4.0 International)
+            — attribution required; credited here, in this file, and via
+            a "3D model credits" link in the site footer on every page.
+
+File size: 1,681,572 bytes (~1.6 MB), single glTF-Binary (.glb).
+
+This single model is reused for every car in the Studio, across all body
+types (hatchback / sedan / suv / luxury-sedan) — the Studio does not show
+a different silhouette per body type. Per-car distinction comes from the
+paint swatch (driven by each car's `paint` hex in assets/js/cars.js),
+applied to the mesh named "body" (material "Body_Color") only — glass,
+wheels/rims ("rim_fl"/"rim_fr"/"rim_rl"/"rim_rr") and interior "trim" are
+left untouched, mirroring how three.js's own webgl_materials_car example
+recolors this same model.
+
+This is disclosed to the buyer on every Studio page: the badge reads
+"STUDIO PREVIEW — ILLUSTRATIVE MODEL" and the caption under the viewer
+reads "This is a preview model, not the car for sale — the photos and the
+360° spin (when available) show the exact car." — consistent with the
+hard rule that 3D models are always labelled illustrative.
+
+If real Kenney/Quaternius/poly.pizza assets become reachable later (e.g.
+downloaded manually and dropped in this folder), studio.js's MODEL_URL
+constant and the body/glass/rim/trim mesh-name mapping are the only
+places that need updating.

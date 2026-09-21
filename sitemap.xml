@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url><loc>https://www.classicauto.example/website-v4/index.html</loc><changefreq>weekly</changefreq><priority>1.0</priority></url>
+  <url><loc>https://www.classicauto.example/website-v4/stock.html</loc><changefreq>daily</changefreq><priority>0.9</priority></url>
+  <url><loc>https://www.classicauto.example/website-v4/catalogue.html</loc><changefreq>daily</changefreq><priority>0.6</priority></url>
+  <url><loc>https://www.classicauto.example/website-v4/sell.html</loc><changefreq>monthly</changefreq><priority>0.5</priority></url>
+  <url><loc>https://www.classicauto.example/website-v4/car.html?id=hyundai-creta-2021</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://www.classicauto.example/website-v4/car.html?id=toyota-fortuner-2021</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://www.classicauto.example/website-v4/car.html?id=innova-crysta-2020</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://www.classicauto.example/website-v4/car.html?id=honda-city-2020</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://www.classicauto.example/website-v4/car.html?id=hyundai-verna-2021</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://www.classicauto.example/website-v4/car.html?id=kia-seltos-2022</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://www.classicauto.example/website-v4/car.html?id=mahindra-thar-2022</loc><changefreq>weekly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://www.classicauto.example/website-v4/car.html?id=mahindra-xuv700-2023</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://www.classicauto.example/website-v4/car.html?id=tata-nexon-2022</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://www.classicauto.example/website-v4/car.html?id=maruti-swift-2019</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://www.classicauto.example/website-v4/car.html?id=maruti-baleno-2021</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://www.classicauto.example/website-v4/car.html?id=bmw-3-series-2019</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://www.classicauto.example/website-v4/car.html?id=mercedes-c-class-2020</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://www.classicauto.example/website-v4/car.html?id=audi-a4-2019</loc><changefreq>weekly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://www.classicauto.example/website-v4/car.html?id=kia-sonet-2022</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://www.classicauto.example/website-v4/privacy.html</loc><changefreq>yearly</changefreq><priority>0.3</priority></url>
+  <url><loc>https://www.classicauto.example/website-v4/terms.html</loc><changefreq>yearly</changefreq><priority>0.3</priority></url>
+</urlset>

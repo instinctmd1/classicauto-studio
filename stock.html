@@ -1,0 +1,206 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Stock — Classic Auto</title>
+<meta name="description" content="Browse Classic Auto's full inspected pre-owned car stock in Mumbai. Filter by budget, body type, fuel and transmission.">
+<link rel="icon" type="image/svg+xml" href="assets/logo.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body data-page="stock">
+<a class="skip-link" href="#main">Skip to main content</a>
+
+<header class="site-header">
+  <div class="container">
+    <a class="brand" href="index.html" aria-label="Classic Auto — home">
+      <svg viewBox="0 0 840 496" role="img" aria-label="Classic Auto, since 1974">
+        <path d="M 100 12 L 300 12 L 300 88 L 128 88 Q 96 88 96 120 L 96 238 Q 96 268 128 268 L 688 268 Q 722 268 722 302 L 722 310 Q 722 344 688 344 L 92 344 Q 14 344 14 266 L 14 98 Q 14 12 100 12 Z" fill="#F5F1E8"/>
+        <g fill="#F5F1E8" opacity="0.86">
+          <polygon points="468,6 552,6 372,360 288,360"/>
+          <polygon points="468,6 552,6 758,360 674,360"/>
+          <polygon points="404,212 620,212 650,282 370,282"/>
+        </g>
+        <text x="712" y="30" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="26" font-weight="bold" font-style="italic" letter-spacing="1" fill="#C9A667">SINCE 1974</text>
+        <g fill="none" stroke="#F5F1E8" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" opacity="0.7">
+          <path d="M 540 400 q 30 -6 52 -18 q 40 -22 92 -24 q 56 -2 88 18 q 26 2 44 10 q 10 4 -2 8"/>
+          <path d="M 560 402 q 130 -12 250 -8"/>
+        </g>
+        <circle cx="612" cy="404" r="11" fill="none" stroke="#F5F1E8" stroke-width="7" opacity="0.7"/>
+        <circle cx="762" cy="402" r="11" fill="none" stroke="#F5F1E8" stroke-width="7" opacity="0.7"/>
+        <text x="420" y="482" text-anchor="middle" font-family="'Arial Black', Arial, sans-serif" font-weight="900" font-style="italic" font-size="88" fill="#F5F1E8">CLASSIC-AUTO</text>
+      </svg>
+    </a>
+    <nav class="nav-links" aria-label="Primary">
+      <a href="index.html" data-nav="home">Home</a>
+      <a href="stock.html" data-nav="stock">Stock</a>
+      <a href="catalogue.html" data-nav="catalogue">Catalogue</a>
+      <a href="sell.html" data-nav="sell">Sell Your Car</a>
+    </nav>
+    <a class="btn btn-primary header-cta" href="https://wa.me/919588990000" target="_blank" rel="noopener">WhatsApp Us</a>
+    <button class="nav-toggle" aria-label="Open menu" aria-expanded="false" aria-controls="mobileNav">
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+    </button>
+  </div>
+</header>
+
+<nav class="mobile-nav" id="mobileNav" aria-label="Mobile">
+  <a href="index.html" data-nav="home">Home</a>
+  <a href="stock.html" data-nav="stock">Stock</a>
+  <a href="catalogue.html" data-nav="catalogue">Catalogue</a>
+  <a href="sell.html" data-nav="sell">Sell Your Car</a>
+  <a class="btn btn-primary" href="https://wa.me/919588990000" target="_blank" rel="noopener">WhatsApp Us</a>
+</nav>
+
+<main id="main">
+  <section style="padding-top: calc(var(--space-7) + 1rem); padding-bottom: var(--space-4);">
+    <div class="container">
+      <span class="eyebrow">Full Stock</span>
+      <h1 style="font-size: var(--fs-h3);">Every inspected car on the floor</h1>
+      <p class="lead" style="margin-top: var(--space-2);">Filter by budget, body type, fuel or transmission. Prices and EMI figures update instantly.</p>
+    </div>
+  </section>
+
+  <div class="filter-bar">
+    <div class="container filter-row">
+      <div class="filter-group">
+        <label for="filterBudget">Budget</label>
+        <select id="filterBudget">
+          <option value="all">Any budget</option>
+          <option value="under10">Under ₹10 L</option>
+          <option value="10to20">₹10 – 20 L</option>
+          <option value="20to30">₹20 – 30 L</option>
+          <option value="over30">Above ₹30 L</option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <label for="filterBody">Body Type</label>
+        <select id="filterBody">
+          <option value="all">Any body type</option>
+          <option value="hatchback">Hatchback</option>
+          <option value="sedan">Sedan</option>
+          <option value="suv">SUV</option>
+          <option value="luxury-sedan">Luxury Sedan</option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <label for="filterFuel">Fuel</label>
+        <select id="filterFuel">
+          <option value="all">Any fuel</option>
+          <option value="Petrol">Petrol</option>
+          <option value="Diesel">Diesel</option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <label for="filterTrans">Transmission</label>
+        <select id="filterTrans">
+          <option value="all">Any transmission</option>
+          <option value="Manual">Manual</option>
+          <option value="Automatic">Automatic</option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <label for="filterSort">Sort</label>
+        <select id="filterSort">
+          <option value="featured">Featured</option>
+          <option value="price-asc">Price: Low to High</option>
+          <option value="price-desc">Price: High to Low</option>
+          <option value="year-desc">Year: Newest First</option>
+        </select>
+      </div>
+      <span class="filter-count" id="filterCount"></span>
+      <button class="filter-reset" id="filterReset" type="button">Reset filters</button>
+    </div>
+  </div>
+
+  <section style="padding-top: var(--space-4);">
+    <div class="container">
+      <div class="grid grid-3" id="stockGrid" data-stagger-group aria-live="polite"></div>
+      <div class="empty-state" id="stockEmpty" style="display:none;">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.5l5 5M14.5 9.5l-5 5"/></svg>
+        <h2 style="font-size: var(--fs-h4); margin-bottom: var(--space-1);">No cars match those filters</h2>
+        <p style="margin-inline:auto;">Try widening your budget or body-type filter, or ask Anita — she knows the full floor.</p>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="site-footer">
+  <div class="container">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <svg viewBox="0 0 840 496" role="img" aria-label="Classic Auto, since 1974" style="width:150px; margin-bottom: var(--space-2);">
+          <path d="M 100 12 L 300 12 L 300 88 L 128 88 Q 96 88 96 120 L 96 238 Q 96 268 128 268 L 688 268 Q 722 268 722 302 L 722 310 Q 722 344 688 344 L 92 344 Q 14 344 14 266 L 14 98 Q 14 12 100 12 Z" fill="#F5F1E8"/>
+          <g fill="#F5F1E8" opacity="0.86">
+            <polygon points="468,6 552,6 372,360 288,360"/>
+            <polygon points="468,6 552,6 758,360 674,360"/>
+            <polygon points="404,212 620,212 650,282 370,282"/>
+          </g>
+          <text x="712" y="30" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="26" font-weight="bold" font-style="italic" letter-spacing="1" fill="#C9A667">SINCE 1974</text>
+          <g fill="none" stroke="#F5F1E8" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" opacity="0.7">
+            <path d="M 540 400 q 30 -6 52 -18 q 40 -22 92 -24 q 56 -2 88 18 q 26 2 44 10 q 10 4 -2 8"/>
+            <path d="M 560 402 q 130 -12 250 -8"/>
+          </g>
+          <circle cx="612" cy="404" r="11" fill="none" stroke="#F5F1E8" stroke-width="7" opacity="0.7"/>
+          <circle cx="762" cy="402" r="11" fill="none" stroke="#F5F1E8" stroke-width="7" opacity="0.7"/>
+          <text x="420" y="482" text-anchor="middle" font-family="'Arial Black', Arial, sans-serif" font-weight="900" font-style="italic" font-size="88" fill="#F5F1E8">CLASSIC-AUTO</text>
+        </svg>
+        <p>Mumbai's family-run pre-owned car dealership since 1974. Inspected cars, real financing numbers, every segment from hatchback to luxury sedan.</p>
+        <div class="social-row">
+          <a href="https://instagram.com/classicauto_1974" target="_blank" rel="noopener" aria-label="Classic Auto on Instagram">
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="3" width="18" height="18" rx="4"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1"/></svg>
+          </a>
+          <a href="https://wa.me/919588990000" target="_blank" rel="noopener" aria-label="Chat with Classic Auto on WhatsApp">
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+          </a>
+        </div>
+      </div>
+      <div class="footer-col">
+        <h2 class="footer-heading">Explore</h2>
+        <ul>
+          <li><a href="stock.html">Stock</a></li>
+          <li><a href="catalogue.html">Catalogue</a></li>
+          <li><a href="sell.html">Sell Your Car</a></li>
+          <li><a href="privacy.html">Privacy Policy</a></li>
+          <li><a href="terms.html">Terms of Service</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h2 class="footer-heading">Contact</h2>
+        <ul>
+          <li><a href="tel:+919588990000">+91 95889 90000</a></li>
+          <li><a href="https://wa.me/919588990000" target="_blank" rel="noopener">WhatsApp</a></li>
+          <li><a href="https://instagram.com/classicauto_1974" target="_blank" rel="noopener">@classicauto_1974</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h2 class="footer-heading">Showroom</h2>
+        <ul>
+          <li>[Street address], Malad West, Mumbai</li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>© <span data-year>2026</span> Classic Auto. All rights reserved.</span>
+      <span>Est. 1974 · Malad West, Mumbai</span>
+      <span>3D model: <a href="models/LICENSE.txt">Ferrari 458 Italia by vicent091036, CC BY 4.0</a></span>
+    </div>
+  </div>
+</footer>
+
+<div id="anitaRoot"></div>
+
+<script src="assets/js/config.js"></script>
+<script src="assets/js/cars.js"></script>
+<script src="assets/js/main.js" defer></script>
+<script src="assets/js/cards.js" defer></script>
+<script src="assets/js/stock.js" defer></script>
+<script src="assets/js/anita.js" defer></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js" defer></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js" defer></script>
+<script src="assets/js/anim-run.js" defer></script>
+</body>
+</html>
