@@ -1138,3 +1138,9 @@ body[data-page="studio"] .site-header { background: linear-gradient(to bottom, r
 @keyframes intro-swirl { to { transform: rotate(300deg) scale(0.35); opacity: 0; } }
 @keyframes intro-ring { to { stroke-dashoffset: 0; } }
 @keyframes intro-mark-in { to { opacity: 1; transform: scale(1); } }
+
+/* car page — hero stat chips (label above value); added 22 Sep after QA found label+value running together */
+.car-hero-chips{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin:18px 0 22px}
+.car-hero-chips .hero-chip{display:flex;flex-direction:column;gap:4px;padding:10px 12px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.04)}
+.car-hero-chips .hero-chip .k{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:rgba(247,245,240,.62)}
+.car-hero-chips .hero-chip .v{font-family:"Bebas Neue","Arial Narrow",sans-serif;font-size:22px;line-height:1;color:#F7F5F0}
