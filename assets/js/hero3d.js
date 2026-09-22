@@ -121,15 +121,18 @@
       scene.add(redRing);
 
       // ---- Lighting -----------------------------------------------------------
+      // Key + a strong rim from behind-left (the fabric's actual crease
+      // shadows come from here) + a soft frontal fill so those shadows read
+      // as creases, not crushed-black holes.
       scene.add(new THREE.AmbientLight(0x445088, 0.55));
-      var key = new THREE.DirectionalLight(0xfff2e0, 2.4);
+      var key = new THREE.DirectionalLight(0xfff2e0, 2.7);
       key.position.set(4, 6, 4);
       key.castShadow = true;
       key.shadow.mapSize.set(1024, 1024);
       key.shadow.camera.near = 1; key.shadow.camera.far = 16;
       scene.add(key);
-      var rim = new THREE.DirectionalLight(0xe11b22, 1.7);
-      rim.position.set(-5, 3, -3);
+      var rim = new THREE.DirectionalLight(0xe11b22, 1.9);
+      rim.position.set(-5, 3, -3); // behind-left
       scene.add(rim);
       // Second, cooler rim placed low and behind so folds in the fabric
       // catch a rim highlight from the far side too (Ford-reference look).
@@ -139,6 +142,12 @@
       var blueFill = new THREE.PointLight(0x2b3990, 0.7, 16, 2);
       blueFill.position.set(-2, 2, 3);
       scene.add(blueFill);
+      // Soft frontal fill, low intensity, wide falloff — lifts crease
+      // shadows just enough to stay readable as soft rolls instead of
+      // black gashes, without flattening the fold shading from the key/rim.
+      var softFill = new THREE.PointLight(0xfff6ea, 0.4, 12, 2);
+      softFill.position.set(1.5, 2.2, 4.5);
+      scene.add(softFill);
 
       // ---- Car group ------------------------------------------------------
       var carGroup = new THREE.Group();
@@ -193,6 +202,7 @@
         var carBox = new THREE.Box3().setFromObject(carGroup);
         cloth = new ClothSheet(THREE, carBox, isMobileLayout);
         scene.add(cloth.mesh);
+        scene.add(cloth.meshBack);
         if (cloth.decal) scene.add(cloth.decal);
         // Pre-settle the sheet before the user ever sees it, so it is
         // already draped naturally (folds resting, edges pooled at the
@@ -232,11 +242,23 @@
         // Axis convention for THIS model (models/car.glb — confirmed against
         // studio.js's CAM_PRESETS, whose "front" camera sits at z=+4.3):
         // Z is the nose-to-tail length axis (nose at max z), X is width.
-        var carWidth = size.x * 1.34;   // sheet extent across the car, local X
-        var carLength = size.z * 1.3;   // sheet extent nose-to-tail, local Z
-        this.cols = mobile ? 20 : 36;   // grid columns run across width (X)
-        this.rows = mobile ? 14 : 26;   // grid rows run nose->tail (Z)
-        this.solverIterations = mobile ? 4 : 7;
+        // Sheet size: a real dust cover overhangs by roughly a hand's width
+        // past the wheels, not by a third of the car's own size — v1 sized
+        // the sheet as size * ~1.3, which reads as a huge flat rectangle
+        // lying on the ground well beyond the car. Anchor the margin to the
+        // car's own roof height (a scale-independent proxy for "metres per
+        // world unit") instead: ~28% of body height on every side, which
+        // for this model works out to roughly 30-35cm of overhang.
+        var marginProxy = size.y * 0.28;
+        var carWidth = size.x + marginProxy * 2;   // sheet extent across the car, local X
+        var carLength = size.z + marginProxy * 2;  // sheet extent nose-to-tail, local Z
+        this.cols = mobile ? 28 : 56;   // grid columns run across width (X)
+        this.rows = mobile ? 21 : 42;   // grid rows run nose->tail (Z)
+        // Live per-frame relaxation stays cheap; presettle (run once, before
+        // the page is ever shown) uses a much higher count so the resting
+        // drape is fully converged and smooth before anyone sees it.
+        this.solverIterations = mobile ? 3 : 5;
+        this.presettleIterations = mobile ? 10 : 16;
         var cols = this.cols, rows = this.rows;
 
         this.w = carWidth; this.d = carLength;
@@ -304,18 +326,29 @@
           }
         }
 
-        // ---- Distance constraints: structural (grid) + shear (diagonal) ----
+        // ---- Distance constraints: structural (grid) + shear (diagonal) +
+        // bend (skip-one neighbour, both axes). Structural/shear alone give
+        // a sheet zero resistance to folding sharply in half — cheap to
+        // simulate, but it creases like paper/a tent rather than cloth.
+        // Bend constraints (particle i <-> i+2) resist that fold, and at a
+        // LOW stiffness (not the ~full correction structural constraints
+        // get) they don't stiffen the sheet into cardboard — they just turn
+        // a sharp crease into a soft rolled fold, which is what real fabric
+        // does. stiffness is stored as each constraint's 4th value and
+        // scales the correction in satisfyConstraints().
         this.constraints = [];
-        function addC(a, b) {
+        function addC(a, b, stiffness) {
           var dx = self.px[a] - self.px[b], dy = self.py[a] - self.py[b], dz = self.pz[a] - self.pz[b];
-          self.constraints.push(a, b, Math.sqrt(dx * dx + dy * dy + dz * dz));
+          self.constraints.push(a, b, Math.sqrt(dx * dx + dy * dy + dz * dz), stiffness);
         }
         for (var jj = 0; jj <= rows; jj++) {
           for (var ii = 0; ii <= cols; ii++) {
             var id = jj * (cols + 1) + ii;
-            if (ii < cols) addC(id, id + 1);
-            if (jj < rows) addC(id, id + (cols + 1));
-            if (ii < cols && jj < rows) { addC(id, id + cols + 2); addC(id + 1, id + cols + 1); }
+            if (ii < cols) addC(id, id + 1, 1.0);
+            if (jj < rows) addC(id, id + (cols + 1), 1.0);
+            if (ii < cols && jj < rows) { addC(id, id + cols + 2, 0.9); addC(id + 1, id + cols + 1, 0.9); }
+            if (ii < cols - 1) addC(id, id + 2, 0.28);
+            if (jj < rows - 1) addC(id, id + (cols + 1) * 2, 0.28);
           }
         }
 
@@ -341,7 +374,13 @@
             uvs[pi * 2] = c / cols; uvs[pi * 2 + 1] = r / rows;
             if (r < rows && c < cols) {
               var a2 = pi, b2 = pi + 1, cIdx = pi + cols + 1, d2 = pi + cols + 2;
-              indices.push(a2, cIdx, b2, b2, cIdx, d2);
+              // Winding matters now that front/back use separate materials
+              // (FrontSide/BackSide) instead of one DoubleSide material —
+              // get it backwards and the dark "underside" material faces
+              // the camera instead of the warm cover tone. Given this grid's
+              // row->Z, column->X mapping (Z decreases as the row index
+              // increases), this order is the one whose normal points up.
+              indices.push(a2, b2, cIdx, b2, d2, cIdx);
             }
           }
         }
@@ -355,33 +394,56 @@
         var diffuse = texLoader.load(base + "diff_1k.jpg");
         var normalMap = texLoader.load(base + "nor_gl_1k.jpg");
         var roughMap = texLoader.load(base + "rough_1k.jpg");
+        // ~7 weave repeats across the sheet's width, matched proportionally
+        // along its length, so the linen reads as fabric up close instead
+        // of one huge smeared texture (v1 tiled so coarsely per-metre it
+        // was effectively invisible).
+        var repeatPerUnit = 7 / carWidth;
         [diffuse, normalMap, roughMap].forEach(function (t) {
           t.wrapS = t.wrapT = THREE.RepeatWrapping;
-          t.repeat.set(carWidth * 2.2, carLength * 2.2);
+          t.repeat.set(carWidth * repeatPerUnit, carLength * repeatPerUnit);
           t.anisotropy = 4;
         });
         diffuse.colorSpace = THREE.SRGBColorSpace;
 
-        var mat = new THREE.MeshPhysicalMaterial({
+        // Front/back tint: real canvas dust sheets read noticeably darker
+        // on the underside (backlit / less direct light + often a duller
+        // backing weave). MeshPhysicalMaterial has no built-in front/back
+        // colour, so the geometry is drawn twice with two materials — a
+        // FrontSide one in the warm cover tone, a BackSide one darker —
+        // sharing the same BufferGeometry (and so the same live vertex
+        // updates each frame) instead of a custom onBeforeCompile shader.
+        var sharedProps = {
           map: diffuse,
           normalMap: normalMap,
-          normalScale: new THREE.Vector2(0.75, 0.75),
+          normalScale: new THREE.Vector2(1.6, 1.6),
           roughnessMap: roughMap,
           roughness: 0.95,
           metalness: 0.0,
-          sheen: 1.0,
-          sheenRoughness: 0.7,
-          sheenColor: new THREE.Color(0xd8cdb8),
-          color: new THREE.Color(0xf1ecdf), // warm off-white dust-sheet tint
-          side: THREE.DoubleSide,
+          sheen: 0.6,
+          sheenRoughness: 0.65,
+          sheenColor: new THREE.Color(0xd9c9a0), // warm sheen colour
           transparent: true,
           opacity: 1
-        });
+        };
+        var mat = new THREE.MeshPhysicalMaterial(Object.assign({}, sharedProps, {
+          color: new THREE.Color(0xede7da), // warm off-white dust-sheet tint
+          side: THREE.FrontSide
+        }));
+        var matBack = new THREE.MeshPhysicalMaterial(Object.assign({}, sharedProps, {
+          color: new THREE.Color(0x554e40), // noticeably darker underside
+          sheen: 0.25,
+          side: THREE.BackSide
+        }));
 
         this.mesh = new THREE.Mesh(geo, mat);
         this.mesh.castShadow = true;
         this.mesh.receiveShadow = true;
         this.mesh.frustumCulled = false;
+        this.meshBack = new THREE.Mesh(geo, matBack);
+        this.meshBack.castShadow = true;
+        this.meshBack.receiveShadow = true;
+        this.meshBack.frustumCulled = false;
 
         // ---- Small embroidered "CA" decal, follows the fabric surface ----
         var dCanvas = document.createElement("canvas");
@@ -465,14 +527,15 @@
         }
       };
 
-      ClothSheet.prototype.satisfyConstraints = function () {
+      ClothSheet.prototype.satisfyConstraints = function (iterations) {
         var c = this.constraints, px = this.px, py = this.py, pz = this.pz, invMass = this.invMass, pinned = this.pinned;
-        for (var pass = 0; pass < this.solverIterations; pass++) {
-          for (var i = 0; i < c.length; i += 3) {
-            var a = c[i], b = c[i + 1], rest = c[i + 2];
+        var passes = iterations || this.solverIterations;
+        for (var pass = 0; pass < passes; pass++) {
+          for (var i = 0; i < c.length; i += 4) {
+            var a = c[i], b = c[i + 1], rest = c[i + 2], stiffness = c[i + 3];
             var dx = px[b] - px[a], dy = py[b] - py[a], dz = pz[b] - pz[a];
             var dist = Math.sqrt(dx * dx + dy * dy + dz * dz) || 0.0001;
-            var diff = (dist - rest) / dist;
+            var diff = ((dist - rest) / dist) * stiffness;
             var im1 = pinned[a] ? 0 : invMass[a], im2 = pinned[b] ? 0 : invMass[b];
             var sum = im1 + im2; if (sum <= 0) continue;
             var k1 = im1 / sum, k2 = im2 / sum;
@@ -484,7 +547,7 @@
         }
       };
 
-      ClothSheet.prototype.step = function (dt, gravityY, windStrength) {
+      ClothSheet.prototype.step = function (dt, gravityY, windStrength, iterations) {
         this.time += dt;
         var damping = 0.985;
         var wx = Math.sin(this.time * 0.8) * windStrength;
@@ -503,33 +566,46 @@
           this.ox[i] = x; this.oy[i] = y; this.oz[i] = z;
           this.px[i] = nx; this.py[i] = ny; this.pz[i] = nz;
         }
-        this.satisfyConstraints();
+        this.satisfyConstraints(iterations);
       };
 
       ClothSheet.prototype.presettle = function (steps) {
         // Pin nothing yet — let the flat sheet fall onto the car under
         // gravity and settle against the colliders, exactly like laying a
-        // real dust sheet over a car by hand and letting it drape.
-        for (var s = 0; s < steps; s++) this.step(1 / 60, -9.8, 0);
+        // real dust sheet over a car by hand and letting it drape. Use the
+        // much higher presettleIterations count here — this runs once,
+        // before the canvas is ever shown, so there's no frame-budget
+        // pressure, and full convergence is what kills the low-res "faceted
+        // paper" look (the live per-frame count stays low for performance).
+        for (var s = 0; s < steps; s++) this.step(1 / 60, -9.8, 0, this.presettleIterations);
       };
 
       ClothSheet.prototype.setRearPull = function (t, wobble) {
         // t: 0..1 reveal progress. The tail-edge row is pulled up and
-        // backward (-Z, away from the car) along an arc; a light per-column
-        // stagger + wobble adds an organic ripple instead of a rigid sheet.
-        var arcT = Math.min(1, Math.max(0, (t - 0.10) / 0.80)); // main pull window
-        var pulled = t > 0.08;
+        // backward (-Z, away from the car) along an arc, and — unlike v1,
+        // which kept every column's target directly above its start point
+        // (so the whole row collapsed into one narrow twisted rope) — the
+        // pins also fan OUT sideways as they lift, each column spreading
+        // further from centre the higher it climbs. That's what turns the
+        // silhouette from a debris-like clump into an open, wind-caught
+        // sail across the top of the frame. Finishes its main travel by
+        // ~t=0.68 (was ~0.9) and covers more ground, so it visibly drifts
+        // out of frame faster; a light per-column stagger + wobble keeps it
+        // from moving as one rigid card.
+        var arcT = Math.min(1, Math.max(0, (t - 0.06) / 0.62)); // main pull window, front-loaded
+        var pulled = t > 0.05;
         this.pulling = pulled;
         for (var k = 0; k < this.rearRow.length; k++) {
           var id = this.rearRow[k];
-          var stagger = (k / this.rearRow.length - 0.5) * 0.12;
+          var colU = k / this.rearRow.length - 0.5; // -0.5 .. 0.5 across the row
+          var stagger = colU * 0.16;
           var localT = Math.max(0, Math.min(1, arcT + stagger));
-          var localLift = Math.pow(localT, 0.7);
+          var localLift = Math.pow(localT, 0.6);
           if (pulled) {
             this.pinned[id] = 1;
-            this.pinX[id] = this.baseX[id];
-            this.pinY[id] = this.baseY[id] + localLift * (this.bodyH * 2.4) + Math.sin(this.time * 3 + k) * 0.02 * wobble;
-            this.pinZ[id] = this.baseZ[id] - localLift * (this.d * 0.55);
+            this.pinX[id] = this.baseX[id] + colU * localLift * (this.w * 2.6);
+            this.pinY[id] = this.baseY[id] + localLift * (this.bodyH * 3.2) + Math.sin(this.time * 3 + k) * 0.025 * wobble;
+            this.pinZ[id] = this.baseZ[id] - localLift * (this.d * 0.85);
           } else {
             this.pinned[id] = 0;
           }
@@ -548,6 +624,14 @@
             this.pinned[fid] = 0;
           }
         }
+      };
+
+      ClothSheet.prototype.setOpacity = function (o) {
+        this.mesh.material.opacity = o;
+        this.meshBack.material.opacity = o;
+        var visible = o > 0.01;
+        this.mesh.visible = visible;
+        this.meshBack.visible = visible;
       };
 
       ClothSheet.prototype.captureRestPose = function () {
@@ -644,12 +728,13 @@
         for (var cm = 0; cm < carMeshNodes.length; cm++) carMeshNodes[cm].castShadow = carShadowsOn;
         carGroup.scale.setScalar(0.95 + t * 0.05);
         if (cloth) {
-          var fadeStart = 0.8;
+          var fadeStart = 0.65; // was 0.8 — the sheet should start dissolving
+          // as soon as it billows open and clears the car, not linger fully
+          // opaque as a debris-like clump right up to the last fifth.
           var fadeT = t > fadeStart ? (t - fadeStart) / (1 - fadeStart) : 0;
           var eased = fadeT * fadeT * (3 - 2 * fadeT); // smoothstep
-          cloth.mesh.material.opacity = Math.max(0, 1 - eased);
-          cloth.mesh.visible = cloth.mesh.material.opacity > 0.01;
-          if (cloth.decal) cloth.decal.visible = cloth.mesh.visible && t < 0.35;
+          cloth.setOpacity(Math.max(0, 1 - eased));
+          if (cloth.decal) cloth.decal.visible = cloth.mesh.visible && t < 0.3;
         }
         if (t > 0.94 && !revealed) {
           revealed = true;
@@ -735,7 +820,7 @@
 
         if (cloth && cloth.mesh.visible) {
           if (!cloth.baseX) cloth.captureRestPose();
-          var windStrength = 0.02 + progress * 0.16; // rising wind as it lifts away
+          var windStrength = 0.045 + progress * 0.2; // gentle idle breathing, rising as it lifts away
           cloth.setRearPull(progress, 1);
           cloth.step(dt, -9.8, windStrength);
           cloth.updateMesh();
