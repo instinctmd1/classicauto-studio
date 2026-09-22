@@ -1,0 +1,12 @@
+{
+ "count": 46,
+ "width": 1280,
+ "height": 720,
+ "credit": "Ferrari 458 Italia model by vicent091036 (three.js examples, CC-BY 4.0)",
+ "pattern": "f_{index:03d}.webp",
+ "first_frame": 70,
+ "last_frame": 160,
+ "frame_step": 2,
+ "poster_draped": "poster_draped.webp",
+ "poster_clean": "poster_clean.webp"
+}

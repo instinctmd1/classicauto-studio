@@ -995,17 +995,26 @@ body[data-page="studio"] .site-header { background: linear-gradient(to bottom, r
   justify-content: flex-end; overflow: hidden; isolation: isolate; background: var(--bg);
 }
 .hero3d-stage { position: absolute; inset: 0; z-index: -2; }
-.hero3d-stage canvas { display: block; width: 100%; height: 100%; touch-action: none; }
+.hero3d-stage canvas { position: absolute; inset: 0; display: block; width: 100%; height: 100%; touch-action: none; }
+/* Frame-scrub canvas sits above the live three.js canvas (appended after it
+   in the DOM) until the final-10%-of-drag cross-fade hands off to the live
+   turntable — see hero3d.js renderProgress(). Both are set to fully opaque
+   by default and animated via direct style.opacity writes each frame. */
+.hero3d-frames-canvas { z-index: 2; }
 .hero3d-scrim {
   position: absolute; inset: 0; z-index: -1; pointer-events: none;
   background:
     linear-gradient(to top, rgba(10,22,51,0.98) 2%, rgba(10,22,51,0.35) 48%, rgba(10,22,51,0.12) 100%),
     linear-gradient(to right, rgba(10,22,51,0.55) 0%, rgba(10,22,51,0.02) 55%);
 }
-.hero3d-fallback {
-  position: absolute; inset: 0; z-index: -2; background-size: cover; background-position: center 38%;
+.hero3d-fallback { position: absolute; inset: 0; z-index: -2; }
+.hero3d-fallback-img {
+  position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: center 42%;
+  transition: opacity 900ms var(--ease-out);
 }
-.hero3d-fallback img { width: 100%; height: 100%; object-fit: cover; filter: saturate(0.7) brightness(0.6); }
+.hero3d-fallback-clean { opacity: 0; }
+.hero3d.is-revealed .hero3d-fallback-draped { opacity: 0; }
+.hero3d.is-revealed .hero3d-fallback-clean { opacity: 1; }
 
 .hero3d-content { padding-block: var(--space-6) var(--space-5); max-width: 46rem; position: relative; }
 .hero3d-content .eyebrow { color: var(--accent-bright); }

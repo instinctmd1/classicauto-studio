@@ -122,9 +122,12 @@
 
   <section class="hero3d" id="hero">
     <div class="hero3d-fallback" aria-hidden="true">
-      <img src="assets/photos/showroom.jpg" alt="" loading="eager" fetchpriority="high">
+      <img class="hero3d-fallback-img hero3d-fallback-draped" src="hero-frames/poster_draped.webp" alt="" width="1280" height="720" loading="eager" fetchpriority="high">
+      <img class="hero3d-fallback-img hero3d-fallback-clean" src="hero-frames/poster_clean.webp" alt="" width="1280" height="720" loading="lazy">
     </div>
-    <div class="hero3d-stage" aria-hidden="true"></div>
+    <div class="hero3d-stage" aria-hidden="true">
+      <canvas class="hero3d-frames-canvas"></canvas>
+    </div>
     <div class="hero3d-scrim"></div>
 
     <div class="drag-reveal" id="dragReveal">
