@@ -1,6 +1,27 @@
 Classic Auto — website-v5 — Studio 3D model, HDRI &amp; texture sourcing notes
 ================================================================================
 
+Hero dust-sheet fabric (hero3d.js Verlet cloth reveal)
+-------------------------------------------------------
+Real woven-linen PBR set from Poly Haven, licensed CC0 (public domain —
+no attribution legally required; credited here anyway):
+
+  rough_linen (1k .jpg, dl.polyhaven.org):
+    https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/rough_linen/rough_linen_diff_1k.jpg
+    https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/rough_linen/rough_linen_nor_gl_1k.jpg
+    https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/rough_linen/rough_linen_rough_1k.jpg
+    Saved to models/textures/fabric/rough_linen_{diff,nor_gl,rough}_1k.jpg.
+    Licence: CC0. The diffuse map ships with a light-blue dye tint on Poly
+    Haven — desaturated to neutral grey locally (Pillow: grayscale +
+    autocontrast) before saving, so it multiplies cleanly with the
+    material's own warm off-white tint (#f1ecdf) instead of fighting it.
+    (First choice was fabric_pattern_07, but its diffuse turned out to be a
+    bold red/cream gingham check — wrong read for a dust sheet — so this
+    build swapped to rough_linen, a plain woven texture, instead.)
+    Used as map/normalMap/roughnessMap on a MeshPhysicalMaterial with
+    sheen, tiled ~2.2x per metre across the sheet's UVs so the weave reads
+    at a believable physical scale.
+
 website-v5 additions: real image-based lighting + a real road floor
 ---------------------------------------------------------------------
 The Studio (studio.html) and the homepage cinematic hero (hero3d.js) now

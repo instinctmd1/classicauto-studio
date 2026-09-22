@@ -6,6 +6,18 @@ window.CA_ENDPOINT = window.CA_ENDPOINT || "";
 window.CA_WHATSAPP_NUMBER = "919588990000";
 
 /* -------------------------------------------------------------------------
+   SOCIAL — dealership social links, rendered as icons in the header (desktop,
+   right of nav) and footer (every page), plus the "Follow us" strip on the
+   home page. Placeholders — the owner will swap these for the real handles.
+   ------------------------------------------------------------------------- */
+window.SOCIAL = {
+  instagram: "https://instagram.com/classicauto_1974",
+  facebook: "https://facebook.com/classicauto1974",
+  youtube: "https://youtube.com/@classicauto1974",
+  whatsapp: "https://wa.me/919588990000"
+};
+
+/* -------------------------------------------------------------------------
    submitLead(lead) — the ONE lead-capture path used by both the car.html
    "Schedule a visit" form and Anita's chat hand-off, so the contract stays
    identical in both places.

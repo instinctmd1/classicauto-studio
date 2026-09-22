@@ -149,6 +149,23 @@
   });
 
   /* ---------------------------------------------------------------------
+     Social links — every [data-social="instagram|facebook|youtube|whatsapp"]
+     anchor (header, footer, home "Follow us" strip) gets its href from the
+     single window.SOCIAL config object (assets/js/config.js), so the owner
+     only ever edits one place. An anchor with no matching entry is hidden.
+     --------------------------------------------------------------------- */
+  var social = window.SOCIAL || {};
+  document.querySelectorAll("[data-social]").forEach(function (a) {
+    var key = a.getAttribute("data-social");
+    var url = social[key];
+    if (url) {
+      a.href = url;
+    } else {
+      a.setAttribute("hidden", "");
+    }
+  });
+
+  /* ---------------------------------------------------------------------
      Motion — hero/reveal/stagger, queued for anim-run.js.
      --------------------------------------------------------------------- */
   window.__anim.push(function () {
