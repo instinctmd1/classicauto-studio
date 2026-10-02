@@ -108,7 +108,7 @@
     var lines = ["Hi Classic Auto, I've shortlisted these cars on your site:"];
     cars.forEach(function (c) { lines.push("• " + fmt.carFullLabel(c) + " — " + fmt.money(c.price)); });
     lines.push("Could someone help me take this further?");
-    window.open(fmt.waLink(lines.join("\n")), "_blank", "noopener");
+    window.ClassicAutoLeads.contact(lines.join("\n"));
   });
 
   // Cards render asynchronously (filters, featured grid) after this script

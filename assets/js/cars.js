@@ -59,7 +59,7 @@ var CARS = [
     owners: "1st", colour: "Gravity Grey", reg_city: "Mumbai (MH-01)",
     insurance: "Valid till Apr 2027", photos: [],
     status: "available", body: "suv", paint: "#4a4d52",
-    notes: "Low-mileage GTX+ with the full Kia Connect suite, ventilated seats and Bose sound. Still comfortably inside the manufacturer's extended warranty window."
+    notes: "Low-mileage GTX+ with the full Kia Connect suite, ventilated seats and Bose sound."
   },
   {
     id: "mahindra-thar-2022", make: "Mahindra", model: "Thar", variant: "LX 4x4 AT",
@@ -75,7 +75,7 @@ var CARS = [
     owners: "1st", colour: "Everest White", reg_city: "Mumbai (MH-02)",
     insurance: "Valid till Aug 2027", photos: [],
     status: "available", body: "suv", paint: "#eef0ee",
-    notes: "Top-of-range AX7L with ADAS, AWD and the 7-seat layout. Near-new condition with the balance of Mahindra's factory warranty carrying over to you."
+    notes: "Top-of-range AX7L with ADAS, AWD and the 7-seat layout. Kept in near-new shape."
   },
   {
     id: "tata-nexon-2022", make: "Tata", model: "Nexon", variant: "XZ+ (S) Petrol",
@@ -107,7 +107,7 @@ var CARS = [
     owners: "1st", colour: "Mineral White Metallic", reg_city: "Mumbai (MH-01)",
     insurance: "Valid till Nov 2026", photos: ["assets/photos/bmw-3-series.jpg"],
     status: "available", body: "luxury-sedan", paint: "#e9e9e6",
-    notes: "Precise, efficient and finished in a showroom-condition shell. Ventilated leather seats, BMW ConnectedDrive, accident-free and dealer-inspected."
+    notes: "Precise, efficient and finished in a showroom-condition shell. Ventilated leather seats and BMW ConnectedDrive."
   },
   {
     id: "mercedes-c-class-2020", make: "Mercedes-Benz", model: "C-Class", variant: "C 220d Progressive",
@@ -131,7 +131,7 @@ var CARS = [
     owners: "1st", colour: "Intense Red", reg_city: "Mumbai (MH-04)",
     insurance: "Valid till Mar 2027", photos: [],
     status: "available", body: "suv", paint: "#9e2020",
-    notes: "Compact SUV with a proper turbo-petrol DCT, ventilated seats and a segment-best boot. Low mileage, single owner, still under Kia's factory warranty."
+    notes: "Compact SUV with a proper turbo-petrol DCT, ventilated seats and a segment-best boot. Low mileage, single owner."
   }
 ];
 

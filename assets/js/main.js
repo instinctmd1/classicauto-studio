@@ -1,5 +1,5 @@
 /* =========================================================================
-   Classic Auto — website-v5 — shared behaviour (nav, formatting, footer). (logic unchanged from v4)
+   Classic Auto — website-v5 — shared behaviour (nav, formatting, footer, contact CTAs).
    Adapted from website-v3/assets/js/main.js. Content-rendering: runs
    immediately as a deferred script, never depends on GSAP. Animation is
    optional and queued onto window.__anim, drained by anim-run.js.
@@ -50,8 +50,9 @@
     return Number(km).toLocaleString("en-IN") + " km";
   }
 
+  // Delegates to config.js: wa.me when CA_PHONE is set, else the Instagram profile.
   function waLink(message) {
-    return "https://wa.me/" + window.CA_WHATSAPP_NUMBER + "?text=" + encodeURIComponent(message);
+    return window.ClassicAutoLeads.waLink(message);
   }
 
   function carLabel(c) {
@@ -164,6 +165,30 @@
       a.setAttribute("hidden", "");
     }
   });
+
+  /* ---------------------------------------------------------------------
+     Contact CTAs — the HTML ships the no-phone fallback (Instagram DM /
+     hidden call links). Only when CA_PHONE is set (config.js) do
+     [data-contact="wa"] switch to WhatsApp (label from data-wa-label) and
+     [data-contact="call"] show as tel: links.
+     --------------------------------------------------------------------- */
+  var phone = window.CA_PHONE;
+  if (phone) {
+    document.querySelectorAll("[data-contact]").forEach(function (el) {
+      var a = el.tagName === "A" ? el : el.querySelector("a");
+      if (!a) return;
+      var kind = el.getAttribute("data-contact");
+      if (kind === "call") {
+        a.href = "tel:+" + phone;
+        if (el.hasAttribute("data-call-number")) a.textContent = "+" + phone;
+      } else if (kind === "wa") {
+        a.href = waLink(el.getAttribute("data-wa-text") || "Hi Classic Auto");
+        var label = el.getAttribute("data-wa-label");
+        if (label) (a.querySelector(".cta-label") || a).textContent = label;
+      }
+      el.removeAttribute("hidden");
+    });
+  }
 
   /* ---------------------------------------------------------------------
      Motion — hero/reveal/stagger, queued for anim-run.js.

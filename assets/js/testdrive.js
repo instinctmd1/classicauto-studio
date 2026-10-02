@@ -102,8 +102,8 @@
         ? "Home test drive requested (Mumbai western suburbs)."
         : "Showroom test drive requested (Malad West).",
       budget: "", visit_at: visitAt, page: "index.html#testDriveSection"
-    }).then(function () {
-      statusEl.textContent = "Thanks! We'll confirm your slot on WhatsApp shortly.";
+    }).then(function (res) {
+      statusEl.textContent = window.ClassicAutoLeads.doneText(res, "Thanks! We'll confirm your slot on WhatsApp shortly.");
       statusEl.className = "form-status is-ok";
       form.reset();
       buildSlots();

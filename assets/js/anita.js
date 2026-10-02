@@ -348,14 +348,22 @@
       state.stage = "idle";
       var visitAt = state.visitDraft.date + ", " + state.visitDraft.time;
       // Submitted synchronously inside this user-initiated send, so the
-      // wa.me fallback (when CA_ENDPOINT is empty) isn't blocked as a popup.
+      // wa.me / Instagram fallback (CA_ENDPOINT empty) isn't blocked as a popup.
+      var carNote = state.car ? (" (" + state.car.make + " " + state.car.model + ")") : "";
       window.ClassicAutoLeads.submitLead({
         name: state.visitDraft.name, phone: state.visitDraft.phone,
         car: state.car ? fmt.carFullLabel(state.car) : "",
         message: "Visit scheduled via Anita chat.",
         budget: state.budgetLabel || "", visit_at: visitAt, page: "chat"
+      }).then(function (res) {
+        if (res && res.mode === "instagram") {
+          pushBot("Perfect — " + visitAt + carNote + " ke liye request ready hai. " +
+            (res.copied ? "Aapki details copy ho gayi hain — " : "") +
+            "Instagram par " + window.CA_INSTAGRAM_HANDLE + " ko DM kar dijiye (naya tab khul gaya hai), team wahin confirm karegi.");
+        } else {
+          pushBot("Perfect — " + visitAt + " ke liye visit book kar diya" + carNote + ". Hamari team WhatsApp par confirm karegi!");
+        }
       });
-      pushBot("Perfect — " + visitAt + " ke liye visit book kar diya" + (state.car ? (" (" + state.car.make + " " + state.car.model + ")") : "") + ". Hamari team WhatsApp par confirm karegi!");
       return;
     }
   }
@@ -393,6 +401,16 @@
           budget: state.budgetLabel, visit_at: "", page: "chat"
         })
       }).catch(function () {});
+    }
+
+    // No phone yet (owner decision) — point to Instagram DM + the showroom,
+    // and don't promise a call-back time.
+    if (!window.CA_WHATSAPP_NUMBER) {
+      pushBotHtml(
+        escapeHtml("Aapke budget (" + state.budgetLabel + ") ke hisaab se hamari " + tier.name + " desk aapki madad karegi. Sabse fast: Instagram par " + window.CA_INSTAGRAM_HANDLE + " ko DM karein, ya showroom aayein — Prabhu Plaza, S.V. Road, Malad West.") +
+        '<a href="' + window.CA_INSTAGRAM_URL + '" target="_blank" rel="noopener" class="btn btn-primary" style="margin-top:0.6rem; min-height:40px; font-size: var(--fs-caption);">DM ' + window.CA_INSTAGRAM_HANDLE + '</a>'
+      );
+      return;
     }
 
     pushBotHtml(

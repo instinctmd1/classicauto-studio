@@ -90,8 +90,7 @@
   var highlights = [
     car.trans + " · " + car.fuel,
     car.owners + " owner, registered " + car.reg_city,
-    car.insurance,
-    "Multi-point inspection completed before listing"
+    car.insurance
   ];
   var highlightsEl = document.querySelector("[data-f=highlights]");
   if (highlightsEl) {
@@ -126,95 +125,35 @@
   }
 
   /* ------------------------------------------------------------------
-     WhatsApp share (distinct from the "WhatsApp Enquiry" lead button —
-     this one is meant for forwarding the listing to someone else).
+     Share (distinct from the enquiry button — this one is for forwarding
+     the listing to someone else). Native share sheet where available,
+     otherwise copy the link. Never routes through the dealer's number.
      ------------------------------------------------------------------ */
   var shareBtn = document.getElementById("shareWhatsapp");
   if (shareBtn) {
-    shareBtn.href = fmt.waLink("Check out this " + fmt.carFullLabel(car) + " (" + fmt.money(car.price) + ") on Classic Auto: " + window.location.href);
+    shareBtn.addEventListener("click", function () {
+      var shareText = "Check out this " + fmt.carFullLabel(car) + " (" + fmt.money(car.price) + ") on Classic Auto";
+      var label = shareBtn.querySelector(".cta-label");
+      if (navigator.share) {
+        navigator.share({ title: document.title, text: shareText, url: window.location.href }).catch(function () {});
+        return;
+      }
+      function done(ok) {
+        if (!label) return;
+        label.textContent = ok ? "Link copied" : "Copy the page link";
+        window.setTimeout(function () { label.textContent = "Share"; }, 2200);
+      }
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(window.location.href).then(function () { done(true); }, function () { done(false); });
+      } else {
+        done(false);
+      }
+    });
   }
 
-  /* ------------------------------------------------------------------
-     120-point inspection report — deterministic per-car sample data
-     (never random on reload), clearly labelled as sample/illustrative.
-     ------------------------------------------------------------------ */
-  function seedOf(id) {
-    var h = 7;
-    for (var i = 0; i < id.length; i++) h = (h * 31 + id.charCodeAt(i)) % 9973;
-    return h;
-  }
-  function pick(seed, salt, min, max) {
-    return min + ((seed + salt) % (max - min + 1));
-  }
-  function buildInspectionHTML(c) {
-    var seed = seedOf(c.id);
-    var tyres = pick(seed, 7, 58, 92);
-    var brakePads = pick(seed, 13, 55, 95);
-    var battery = pick(seed, 19, 70, 98);
-    var dayOffset = pick(seed, 29, 3, 40);
-    var checkDate = new Date();
-    checkDate.setDate(checkDate.getDate() - dayOffset);
-    var checkDateLabel = checkDate.toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" });
-
-    var groups = [
-      ["Vehicle history", [
-        "RC, insurance and service book verified against chassis/engine number",
-        c.owners + " registered owner(s), ownership chain checked",
-        "No hypothecation / loan pending on record"
-      ]],
-      ["Road test", [
-        "Cold start, idle and highway-speed test drive completed",
-        "Steering, suspension and braking checked for play and noise",
-        "Gearbox/clutch (or torque converter) shift quality checked"
-      ]],
-      ["Underhood", [
-        "Engine oil, coolant and belts inspected — no active leaks",
-        "Battery health " + battery + "%",
-        "OBD scan run for stored fault codes"
-      ]],
-      ["Exterior", [
-        "Paint-depth checked panel by panel for repaint/accident signs",
-        "Tyres at " + tyres + "% tread remaining across all four",
-        "Glass, lights and body panel alignment checked"
-      ]],
-      ["Interior", [
-        "AC, infotainment, power windows and central lock tested",
-        "Upholstery, dashboard and odometer consistency checked",
-        "Airbags and seatbelt pre-tensioners checked for prior deployment"
-      ]],
-      ["Underbody", [
-        "Brake pads at " + brakePads + "% remaining",
-        "Chassis and underbody checked for rust or accident repair",
-        "Exhaust and driveshaft inspected for leaks or play"
-      ]]
-    ];
-
-    var groupsHtml = groups.map(function (g) {
-      return '<div class="insp-group"><h4>' + g[0] + '</h4><ul>' + g[1].map(function (item) {
-        return '<li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M20 6 9 17l-5-5"/></svg><span>' + item + '</span></li>';
-      }).join("") + '</ul></div>';
-    }).join("");
-
-    var ownershipHtml =
-      '<div class="ownership-strip">' +
-        '<div class="ownership-chip"><span class="k">Owners</span><span class="v">' + c.owners + '</span></div>' +
-        '<div class="ownership-chip"><span class="k">Accident-free</span><span class="v">Declared, yes</span></div>' +
-        '<div class="ownership-chip"><span class="k">Service records</span><span class="v">On file</span></div>' +
-        '<div class="ownership-chip"><span class="k">Insurance</span><span class="v">' + c.insurance + '</span></div>' +
-      '</div>';
-
-    return (
-      '<div class="inspection-head">' +
-        '<div class="inspection-score"><span class="num">120</span><span class="lbl">points checked</span></div>' +
-        '<span class="inspection-date">Checked ' + checkDateLabel + '</span>' +
-      '</div>' +
-      '<div class="inspection-groups">' + groupsHtml + '</div>' +
-      ownershipHtml +
-      '<p class="inspection-sample-tag">Sample inspection data shown for illustration — ask us for this car’s actual signed inspection sheet.</p>'
-    );
-  }
-  var inspEl = document.querySelector("[data-f=inspection]");
-  if (inspEl) inspEl.innerHTML = buildInspectionHTML(car);
+  /* 120-point inspection report removed (2 Oct 2026): the inspection
+     standard and accident/service claims are unconfirmed — to confirm
+     with Dad before anything like it goes back on the site. */
 
   /* ------------------------------------------------------------------
      EMI eligibility quick check — income + existing EMI -> rough
@@ -362,8 +301,8 @@
           ? "Home test drive requested (Mumbai western suburbs)."
           : "Showroom visit requested (Malad West).",
         budget: "", visit_at: visitAt, page: "car.html?id=" + car.id
-      }).then(function () {
-        visitStatus.textContent = "Thanks! We'll confirm your visit on WhatsApp shortly.";
+      }).then(function (res) {
+        visitStatus.textContent = window.ClassicAutoLeads.doneText(res, "Thanks! We'll confirm your visit on WhatsApp shortly.");
         visitStatus.className = "form-status is-ok";
         visitForm.reset();
         vSlotsEl.querySelectorAll(".slot-chip").forEach(function (b) { b.setAttribute("aria-pressed", "false"); });

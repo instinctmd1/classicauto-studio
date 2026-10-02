@@ -32,8 +32,8 @@
       car: values.sellMake + " (" + values.sellYear + ")",
       message: "Sell/exchange enquiry — KM: " + values.sellKm + ", Expected price: ₹" + values.sellPrice + " Lakh." + (notes ? (" Notes: " + notes) : ""),
       budget: "", visit_at: "", page: "sell.html"
-    }).then(function () {
-      statusEl.textContent = "Thanks! We'll review your car and reply on WhatsApp, usually within a day.";
+    }).then(function (res) {
+      statusEl.textContent = window.ClassicAutoLeads.doneText(res, "Thanks! We'll review your car and reply on WhatsApp.");
       statusEl.className = "form-status is-ok";
       form.reset();
     });

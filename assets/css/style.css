@@ -1201,3 +1201,7 @@ body[data-page="studio"] .site-header { background: linear-gradient(to bottom, r
 .car-hero-chips .hero-chip{display:flex;flex-direction:column;gap:4px;padding:10px 12px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.04)}
 .car-hero-chips .hero-chip .k{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:rgba(247,245,240,.62)}
 .car-hero-chips .hero-chip .v{font-family:"Bebas Neue","Arial Narrow",sans-serif;font-size:22px;line-height:1;color:#F7F5F0}
+
+/* The hidden attribute always wins (contact CTAs and empty social icons
+   are hidden this way while no phone number is set). */
+[hidden] { display: none !important; }
