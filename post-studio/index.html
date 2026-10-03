@@ -1,0 +1,265 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="dark">
+<meta name="theme-color" content="#070E22">
+<title>Classic Auto Post Studio</title>
+<meta name="robots" content="noindex,nofollow">
+<meta name="description" content="Make Instagram posts, stories, reel covers and banners for Classic Auto, Malad West. Everything runs in your browser.">
+<link rel="icon" href="assets/logo.png">
+<link rel="stylesheet" href="css/fonts.css">
+<link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+
+<header class="top">
+  <a class="brand" href="#studio" aria-label="Classic Auto Post Studio, home">
+    <span class="plate"><img src="assets/logo.png" alt="Classic Auto"></span>
+    <span class="brand-t"><b>Post Studio</b><small>Since 1974 · Malad West</small></span>
+  </a>
+  <nav id="nav" class="nav" aria-label="Sections">
+    <a href="#studio" data-view="studio"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="4" width="17" height="16" rx="2.5"/><circle cx="9" cy="10" r="1.8"/><path d="M4 18l5-5 4 4 3-3 4 4"/></svg><span>Studio</span></a>
+    <a href="#batch" data-view="batch"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="7" width="14" height="13" rx="2"/><path d="M7 4h12a2 2 0 0 1 2 2v11"/></svg><span>Batch</span></a>
+    <a href="#calendar" data-view="calendar"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15.5" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg><span>Calendar</span></a>
+    <a href="#brand" data-view="brand"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l2.6 5.6 6 .7-4.5 4.1 1.2 6L12 16.4 6.7 19.4l1.2-6L3.4 9.3l6-.7z"/></svg><span>Brand kit</span></a>
+  </nav>
+  <button id="btnSettings" class="btn ghost" type="button" aria-haspopup="dialog" aria-label="Settings: business phone and defaults">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6.5 3.5h3l1.6 4.6-2.3 1.7c1.1 2.6 2.9 4.4 5.5 5.5l1.7-2.3 4.6 1.6v3c0 1.7-1.4 2.9-3.1 2.9C9.6 20.5 3.5 14.4 3.5 6.6c0-1.7 1.3-3.1 3-3.1z"/></svg>
+    <span id="waState">Phone: not set</span>
+  </button>
+</header>
+<div class="chequer" aria-hidden="true"></div>
+
+<main id="main">
+  <!-- STUDIO -->
+  <section id="view-studio" class="view" aria-label="Studio">
+    <aside class="lib" aria-label="Templates">
+      <h2 class="h-sec">Templates</h2>
+      <button id="libBtn" class="btn lib-btn" type="button" aria-haspopup="true" aria-expanded="false" aria-controls="libSheet"><span class="lbl">Template</span><b id="libCur">Classic Auto — Signature</b><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button>
+      <div id="libSheet" class="lib-sheet">
+        <div class="lib-head"><b>Choose a template</b><button id="libClose" class="btn sm" type="button">Close</button></div>
+        <div id="libList" class="lib-list"></div>
+      </div>
+    </aside>
+
+    <section class="stage" aria-label="Preview">
+      <div class="toolbar">
+        <select id="sizeSel" class="sel-m" aria-label="Size"></select>
+        <div class="seg" id="sizeSeg" role="group" aria-label="Size"></div>
+        <select id="langSel" class="sel-m" aria-label="Text language"><option value="en">English</option><option value="hn">Hinglish</option><option value="hi">हिन्दी</option></select>
+        <div class="seg" id="langSeg" role="group" aria-label="Text language">
+          <button type="button" data-lang="en" aria-pressed="true">English</button>
+          <button type="button" data-lang="hn" aria-pressed="false">Hinglish</button>
+          <button type="button" data-lang="hi" aria-pressed="false" lang="hi">हिन्दी</button>
+        </div>
+        <div class="toggles">
+          <button type="button" id="tgSafe" class="tog" aria-pressed="false" title="Show the areas Instagram covers with its own buttons"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="3.5" width="16" height="17" rx="2"/><rect x="7.5" y="7" width="9" height="10" rx="1" stroke-dasharray="2 2"/></svg><span>Safe zones</span></button>
+          <button type="button" id="tgVar" class="tog" aria-pressed="false" hidden title="Six other looks for this post"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="13.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="3.5" y="13.5" width="7" height="7" rx="1.5"/><rect x="13.5" y="13.5" width="7" height="7" rx="1.5"/></svg><span>Variants</span></button>
+          <button type="button" id="tgGrid" class="tog" aria-pressed="false" title="See the post in the profile grid"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 3.5h17v17h-17zM9.2 3.5v17M14.8 3.5v17M3.5 9.2h17M3.5 14.8h17"/></svg><span>Grid preview</span></button>
+          <button type="button" id="btnFull" class="tog" title="Open the post at a larger size"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg><span>Full size</span></button>
+        </div>
+      </div>
+
+      <div class="canvas-wrap" id="canvasWrap">
+        <div class="frame" id="frame" tabindex="0" aria-label="Post preview. Drag to move the photo, scroll to zoom.">
+          <canvas id="cv" role="img" aria-label="Live preview of the post"></canvas>
+          <svg id="safeSvg" class="safe" aria-hidden="true" preserveAspectRatio="none"></svg>
+          <div id="veil" class="veil" hidden></div>
+          <div id="dropHint" class="drop-hint" hidden>Drop the car photo to use it</div>
+        </div>
+        <div id="gridView" class="grid-view" hidden></div>
+        <div id="varView" class="var-view" hidden></div>
+      </div>
+
+      <div id="slidebar" class="slidebar" hidden></div>
+
+      <div id="notices" class="notices" aria-live="polite"></div>
+
+      <div class="exportbar">
+        <div class="ex-name"><span class="lbl">File</span><code id="fileName">-</code></div>
+        <div class="ex-btns">
+          <button id="btnApprove" class="btn ghost" type="button" title="Mark this post as checked. Batch runs a template after two approved posts.">Approve (0/2)</button>
+          <button id="btnPng" class="btn primary" type="button">Export PNG</button>
+          <button id="btnMore" class="btn ghost ex-more-btn" type="button" aria-expanded="false" aria-controls="exMore">More</button>
+          <div id="exMore" class="ex-more">
+            <button id="btnJpg" class="btn" type="button">JPG</button>
+            <button id="btnZipSlides" class="btn" type="button" hidden>All slides (ZIP)</button>
+            <button id="btnDm" class="btn" type="button" hidden title="Auto-reply text for the comment keyword, ready for ManyChat or Meta's own auto-reply">DM reply file</button>
+            <button id="btnRepurpose" class="btn" type="button" title="One car, five files and five captions in one ZIP">Repurpose (ZIP)</button>
+            <button id="btnPair" class="btn" type="button" hidden title="The guess post and the reveal post, with captions, in one ZIP">Guess + reveal (ZIP)</button>
+            <button id="btnFest" class="btn" type="button" hidden title="This greeting in every size and language, with captions, in one ZIP">Festival pack (ZIP)</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <aside class="insp" aria-label="Inspector">
+      <div class="tabs" role="tablist" aria-label="Inspector">
+        <button role="tab" id="tab-content" aria-selected="true" aria-controls="p-content" type="button">Content</button>
+        <button role="tab" id="tab-photo" aria-selected="false" aria-controls="p-photo" type="button" tabindex="-1">Photo</button>
+        <button role="tab" id="tab-caption" aria-selected="false" aria-controls="p-caption" type="button" tabindex="-1">Caption</button>
+        <button role="tab" id="tab-garage" aria-selected="false" aria-controls="p-garage" type="button" tabindex="-1">Garage</button>
+      </div>
+      <div class="panel" id="p-content" role="tabpanel" aria-labelledby="tab-content"></div>
+      <div class="panel" id="p-photo" role="tabpanel" aria-labelledby="tab-photo" hidden></div>
+      <div class="panel" id="p-caption" role="tabpanel" aria-labelledby="tab-caption" hidden></div>
+      <div class="panel" id="p-garage" role="tabpanel" aria-labelledby="tab-garage" hidden></div>
+    </aside>
+  </section>
+
+  <!-- BATCH -->
+  <section id="view-batch" class="view page" aria-label="Batch" hidden>
+    <div class="page-in">
+      <header class="pg-head"><h1>Batch mode</h1><p>Paste your stock sheet, add the photos, and get one post per car in a ZIP. Nothing is uploaded anywhere.</p></header>
+      <div class="batch-grid">
+        <div class="card">
+          <h2 class="h-sec">1. Your cars</h2>
+          <p class="help">Fastest: download the template, fill one row per car in Excel or Google Sheets, save it as CSV and choose the file. You can also paste rows below, or add cars one at a time in the Studio.</p>
+          <div class="row">
+            <button id="btnTemplate" class="btn" type="button">Download the sheet template</button>
+            <label class="btn" for="csvFile">Choose a CSV file</label>
+            <button id="btnOneByOne" class="btn ghost" type="button">Add cars one by one</button>
+          </div>
+          <details class="more"><summary>What each column means</summary>
+            <p class="help">Columns: <code id="csvCols"></code>. Price accepts 15.5L, 1550000 or 15,50,000. Put file names in <code>photos</code> (separate several with |).</p>
+          </details>
+          <label class="lbl" for="csvText">Or paste the rows here</label>
+          <textarea id="csvText" rows="9" spellcheck="false" placeholder="id,make,model,variant,year,price,kms,..."></textarea>
+          <div class="row">
+            <input id="csvFile" type="file" accept=".csv,.tsv,.txt,text/csv" hidden>
+            <button id="btnSample" class="btn ghost" type="button">Load the 7 stock cars</button>
+          </div>
+        </div>
+        <div class="card">
+          <h2 class="h-sec">2. Photos</h2>
+          <p class="help">Add all the car photos at once. They are matched by file name to the <code>photos</code> column, or by <code>id</code> (CA-201.jpg, CA-201-1.jpg).</p>
+          <label class="drop" id="batchDrop" for="batchPhotos"><b>Drop photos here</b><span>or tap to choose</span></label>
+          <input id="batchPhotos" type="file" accept="image/*,.json,.csv" multiple hidden>
+          <p class="help" id="photoCount">No photos added yet.</p>
+          <h3 class="h-sub">From the one-photo listing kit</h3>
+          <p class="help">Made cars with <code>classic-auto/listing-kit</code>? Drop its output folder here, or choose it below. Each car's <code>cutout.png</code> is the photo (a transparent PNG is placed on the showroom stage of the Signature post) and its <code>listing.json</code> or <code>cars-entry.csv</code> adds the car to the sheet. The kit's website, Instagram and WhatsApp images are ignored.</p>
+          <div class="row"><label class="btn" for="kitFolder">Choose a listing-kit folder</label><input id="kitFolder" type="file" webkitdirectory multiple hidden></div>
+        </div>
+        <div class="card">
+          <h2 class="h-sec">3. Output</h2>
+          <div class="fgrid">
+            <label class="f"><span class="lbl">Template</span><select id="bTpl"></select></label>
+            <label class="f"><span class="lbl">Size</span><select id="bSize"></select></label>
+            <label class="f"><span class="lbl">Text language</span><select id="bLang"><option value="en">English</option><option value="hn">Hinglish</option><option value="hi">Hindi</option></select></label>
+            <label class="f"><span class="lbl">Format</span><select id="bType"><option value="png">PNG</option><option value="jpg">JPG (smaller)</option></select></label>
+          </div>
+          <label class="chk"><input type="checkbox" id="bSold"> Include cars marked sold or booked</label>
+          <label class="chk"><input type="checkbox" id="bSample"> Include rows whose notes say sample or placeholder (test entries from the kit)</label>
+          <label class="chk"><input type="checkbox" id="bCaps" checked> Add captions.txt with a caption for every car</label>
+          <div class="row"><button id="btnGarage" class="btn" type="button">Use as Garage (for carousels)</button><button id="btnZip" class="btn primary" type="button">Generate ZIP</button></div>
+          <div class="prog" id="prog" hidden><div class="bar"><i id="progBar"></i></div><span id="progTxt" role="status"></span></div>
+        </div>
+      </div>
+      <div class="card wide">
+        <h2 class="h-sec">Preview of the sheet</h2>
+        <div class="tbl-wrap"><table class="tbl" id="batchTable"><caption class="sr">Cars found in the sheet</caption></table></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CALENDAR -->
+  <section id="view-calendar" class="view page" aria-label="Content calendar" hidden>
+    <div class="page-in">
+      <header class="pg-head"><h1>Content calendar</h1><p>Festival dates and the 12 Oct to 10 Nov plan come from the Instagram growth plan. Tap a day to open the matching template.</p></header>
+      <ul class="cadence" id="cadence"></ul>
+      <div class="cal-tools">
+        <div class="seg" id="calFilter" role="group" aria-label="Highlight">
+          <button type="button" data-f="all" aria-pressed="true">All</button><button type="button" data-f="reel" aria-pressed="false">Reels</button><button type="button" data-f="trial" aria-pressed="false">Test-first reels</button><button type="button" data-f="carousel" aria-pressed="false">Carousels</button><button type="button" data-f="festival" aria-pressed="false">Greetings</button>
+        </div>
+        <button id="calCsv" class="btn sm" type="button">Download this month (CSV)</button>
+      </div>
+      <p class="help" id="calSummary" role="status"></p>
+      <p class="help legend"><b>Reel types:</b> walkaround &middot; delivery day (needs the customer&rsquo;s consent) &middot; the Since 1974 series &middot; price game &middot; buyer tips. <b>Test first</b> means publish it as a Trial Reel (shown to non-followers) and check it before sharing it with followers.</p>
+      <details class="card trial-box">
+        <summary>How a Trial Reel works</summary>
+        <ol>
+          <li>Publish it as a Trial Reel. Instagram shows it to non-followers only, and you can schedule it.</li>
+          <li>Wait 24 to 72 hours, then read completion, sends per reach and the share of views from non-followers.</li>
+          <li>Share it to your followers only if it beats your own median. Otherwise leave it.</li>
+          <li>Write down the reel type, the hook, the length and the time. After six weeks, keep the three formats with the most sends per reach.</li>
+        </ol>
+        <p class="help">Marked &ldquo;test first&rdquo; here: the reel types with the weakest evidence so far (the Since 1974 series and price games) and anything the plan marks to test first. Delivery-day reels need a customer&rsquo;s consent first.</p>
+      </details>
+      <div class="cal-nav">
+        <button id="calPrev" class="btn" type="button" aria-label="Previous month">&larr;</button>
+        <h2 id="calTitle" aria-live="polite"></h2>
+        <button id="calNext" class="btn" type="button" aria-label="Next month">&rarr;</button>
+      </div>
+      <div class="cal" id="cal" role="group" aria-label="Days of the month"></div>
+      <section class="card plan" aria-labelledby="planH">
+        <h2 class="h-sec" id="planH">One video, five posts</h2>
+        <p class="help">Pick a car and the hook of the video. The helper lays out five posts from it over five days: the reel, the feed post, the stories, a carousel and a status. It plans only; each button opens the post in the studio.</p>
+        <div class="fgrid">
+          <label class="f"><span class="lbl">Car</span><select id="planCar"></select></label>
+          <label class="f"><span class="lbl">Hook of the video</span><input id="planHook" type="text" list="planHooks" autocomplete="off" placeholder="Guess the price"><datalist id="planHooks"></datalist></label>
+          <label class="f"><span class="lbl">Reel goes out on</span><input id="planDate" type="date"></label>
+          <label class="f"><span class="lbl">Comment keyword (optional)</span><input id="planKw" type="text" autocomplete="off" placeholder="PRICE"></label>
+        </div>
+        <div class="row"><button id="planGo" class="btn primary" type="button">Make the plan</button></div>
+        <div id="planOut" aria-live="polite"></div>
+      </section>
+      <p class="help">Kharmas (16 Dec to 14 Jan) is a buying lull: lean on trust and education posts. Eid and Makar Sankranti dates depend on moon sighting and sun transit, so check them nearer the day.</p>
+    </div>
+  </section>
+
+  <!-- BRAND KIT -->
+  <section id="view-brand" class="view page" aria-label="Brand kit" hidden>
+    <div class="page-in" id="brandRoot"></div>
+  </section>
+</main>
+
+<dialog id="dlgFull" class="dlg-full" aria-label="The post at full size">
+  <form method="dialog"><button class="btn" value="x" autofocus>Close</button></form>
+  <canvas id="cvFull" role="img" aria-label="The post at a larger size"></canvas>
+</dialog>
+
+<dialog id="dlgSettings" aria-labelledby="dlgT">
+  <form method="dialog" class="dlg">
+    <h2 id="dlgT">Settings</h2>
+    <label class="f"><span class="lbl">Business phone, one number (shows CALL NOW on posts)</span>
+      <input id="setPhone" type="tel" inputmode="tel" autocomplete="off" placeholder="Leave empty until the new number arrives"></label>
+    <p class="help" id="setPhoneHelp">Typed here, saved only in this browser. While it is empty, posts say &ldquo;DM @classicauto_1974&rdquo; with the showroom address and look complete. Once you type it, CALL NOW and the number appear on every post that has a contact line.</p>
+    <label class="chk"><input type="checkbox" id="setWaSame"> WhatsApp is on the same number</label>
+    <label class="f" id="setWaRow"><span class="lbl">WhatsApp number (only if different)</span>
+      <input id="setWa" type="tel" inputmode="tel" autocomplete="off" placeholder="Leave empty if the showroom is not on WhatsApp"></label>
+    <label class="f"><span class="lbl">Car-page base URL (for comment-reply links)</span>
+      <input id="setSite" type="text" inputmode="url" autocomplete="off" placeholder="Leave empty until the website is live"></label>
+    <label class="f"><span class="lbl">Price style</span>
+      <select id="setPrice"><option value="full">Full: &#8377;25,50,000</option><option value="short">Short: &#8377;25.50 L (never rounded up)</option></select></label>
+    <label class="f"><span class="lbl">Lender EMI rate, % a year (the rate your lender confirmed; EMI lines stay off until then)</span>
+      <input id="setEmi" type="text" inputmode="decimal" autocomplete="off" placeholder="Leave empty to show no EMI"></label>
+    <label class="chk"><input type="checkbox" id="setAdj"> Show an honesty label on posts when a photo is edited (blur backdrop, brightness, plate blur)</label>
+    <label class="chk"><input type="checkbox" id="setInsp"> Every car is inspected before sale (lets captions and the Trust post say so). Leave off until the checklist is confirmed.</label>
+    <div class="row"><button class="btn primary" value="ok">Save</button><button class="btn ghost" value="cancel">Cancel</button></div>
+  </form>
+</dialog>
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+<script src="assets/jszip.min.js"></script>
+<script src="assets/qrcode-generator.js"></script>
+<script src="js/core.js"></script>
+<script src="js/draw.js"></script>
+<script src="js/classic.js"></script>
+<script src="js/sigcarousel.js"></script>
+<script src="js/templates.js"></script>
+<script src="js/fields.js"></script>
+<script src="js/templates2.js"></script>
+<script src="js/templates3.js"></script>
+<script src="js/festivals.js"></script>
+<script src="js/engine.js"></script>
+<script src="js/captions.js"></script>
+<script src="js/channels.js"></script>
+<script src="js/calendar.js"></script>
+<script src="js/batch.js"></script>
+<script src="js/sting.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>

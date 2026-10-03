@@ -1,0 +1,10 @@
+Third-party files shipped with Classic Auto Post Studio
+
+Fonts (SIL Open Font License 1.1, https://openfontlicense.org), self-hosted in assets/fonts:
+  Bebas Neue (Dharma Type), Manrope (Mikhail Sharanda), Noto Sans Devanagari (Google / Noto Project), Instrument Serif (Rodrigo Fuenzalida, Jordan Egstad; licence text in assets/fonts/instrument-serif-OFL.txt)
+Scripts (MIT licence):
+  JSZip (assets/jszip.min.js), qrcode-generator (assets/qrcode-generator.js, Kazuhiko Arase)
+Icons: the BUY glyph in js/draw.js follows the path data of Lucide's "handshake" (ISC licence). All other icons are drawn in js/draw.js.
+
+Pictures: assets/cars/* are crops of Classic Auto's own Instagram listing posts (@classicauto_1974). assets/logo.png is the Classic Auto logo, cropped from the live @classicauto_1974 posts by tools/prep_logo.py (replace it with the owner's master file when it arrives).
+No other photographs are included.

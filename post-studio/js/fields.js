@@ -1,0 +1,65 @@
+/* Classic Auto Post Studio — template-specific input fields (stored in state.x).
+   A field with `defs` has one default per language [English, Hinglish, Hindi]; it follows the language switch until the owner types in it. */
+(function () {
+  'use strict';
+  const PS = window.PS;
+  PS.FESTIVAL_IDS = ['navratri', 'dussehra', 'dhanteras', 'diwali', 'bestuvaras', 'christmas', 'newyear', 'sankranti', 'republic', 'holi', 'eid', 'ganesh', 'independence'];
+  PS.XF = {
+    // Classic Listing (New Arrival)
+    listStyle: { label: 'Style', type: 'select', def: 'classic', options: [['classic', 'Classic Listing (light)'], ['navy', 'Dark navy']] },
+    carStyle: { label: 'Style', type: 'select', def: 'sig', options: [['sig', 'Signature (light, like the post)'], ['navy', 'Dark navy']] },
+    photoStyle: { label: 'Photo style', type: 'select', def: 'bleed', options: [['bleed', 'Photo-forward (the car runs to the edge and fades into the white)'], ['frame', 'Framed (a rounded frame; cut-outs stand on a showroom floor)']] },
+    accent: { label: 'Accent colour', type: 'select', def: 'auto', options: [['auto', 'Match the car (navy by default)'], ['navy', 'Navy'], ['green', 'Racing green'], ['maroon', 'Maroon'], ['black', 'Black']] },
+    luxury: { label: 'Header line', type: 'select', def: 'auto', options: [['auto', 'Automatic (luxury from ₹35 L)'], ['yes', 'Pre-owned luxury cars'], ['no', 'Pre-owned cars']] },
+    stamp: { label: 'Corner stamp', type: 'select', def: 'none', options: [['none', 'No stamp'], ['just', 'Just in (repeated outline)'], ['new', 'New price (hazard stripe)'], ['booked', 'Booked (ring)'], ['sold', 'Sold (concentric rings)'], ['soon', 'Coming soon (ribbon)'], ['inspected', 'Inspected (only when switched on in Settings)']] },
+    tagline: { label: 'Your own tagline (optional)', type: 'text', def: '', ph: 'Your words. Not the manufacturer’s slogan.' },
+    recItems: { label: 'What’s included (one per line)', type: 'textarea', rows: 6, def: '', ph: 'Only things that are really included, e.g. Free first service' },
+    recTitle: { label: 'Heading', type: 'text', defs: ['What’s included', 'Isme kya milega', 'इसमें क्या शामिल है'], ph: 'What’s included' },
+    csWhen: { label: 'When (your own words, optional)', type: 'text', def: '', ph: 'e.g. Next week. Leave blank to print no timing.' },
+    kw: { label: 'Comment keyword (optional)', type: 'text', def: '', ph: 'e.g. PRICE' },
+    // New Price
+    validity: { label: 'Offer valid till (optional)', type: 'text', def: '', ph: 'A date, e.g. 31 Dec 2026. Blank prints no deadline.' },
+    oldPosted: { label: 'Old price was posted on', type: 'text', def: '', ph: 'e.g. 12 Sep 2026. Needed to show the old price.' },
+    showSave: { label: 'Show “You save” (only if the old price really was posted)', type: 'check', def: false },
+    guessReveal: { label: 'Answer revealed in', type: 'text', def: '', ph: 'tomorrow’s story' },
+    soldKind: { label: 'Stamp', type: 'select', def: 'delivered', options: [['delivered', 'Delivered (with the customer)'], ['sold', 'Sold']] },
+    custName: { label: 'Customer first name', type: 'text', def: '', ph: 'First name only' },
+    custMonth: { label: 'Month (optional)', type: 'text', def: '', ph: 'e.g. November 2026' },
+    custQuote: { label: 'Quote (optional)', type: 'textarea', def: '', ph: 'The customer’s own words' },
+    consentSold: { label: 'The customer gave consent to post this photo', type: 'check', def: false, consent: true },
+    reelTitle: { label: 'Reel title (short)', type: 'text', defs: ['First look', 'First look', 'पहली झलक'], ph: 'First look', list: ['First look', 'Walkaround', 'Guess the price', 'Delivered', '5 checks', 'Since 1974'] },
+    reelPrice: { label: 'Price on the cover', type: 'select', def: 'show', options: [['show', 'Show the price'], ['hide', 'Hide it: “Price at the end” (reveal in the video)'], ['none', 'No price line']] },
+    guessMode: { label: 'Post', type: 'select', def: 'guess', options: [['guess', 'The guess (price hidden)'], ['reveal', 'The reveal (real asking price)']] },
+    festival: { label: 'Festival', type: 'select', def: 'diwali', options: [] },
+    festLayout: { label: 'Layout', type: 'select', def: 'greeting', options: [['greeting', 'Greeting only'], ['car', 'Greeting + car']] },
+    festDate: { label: 'Date line (optional)', type: 'text', def: '', ph: 'Optional. Leave blank to print no date.' },
+    festWish: { label: 'Wish line (optional)', type: 'textarea', def: '', ph: 'Leave blank for the default wish' },
+    festYear: { label: 'Year (New Year)', type: 'text', def: '2027', ph: '2027' },
+    tQuote: { label: 'Quote', type: 'textarea', def: '', ph: 'The customer’s own words' },
+    tName: { label: 'Customer first name', type: 'text', def: '', ph: 'First name and initial' },
+    tCar: { label: 'Car bought (optional)', type: 'text', def: '', ph: 'Make, model, year' },
+    tStars: { label: 'Stars (1 to 5)', type: 'number', def: 5, min: 1, max: 5 },
+    consentTesti: { label: 'The customer agreed to be quoted', type: 'check', def: false, consent: true },
+    trustHead: { label: 'Headline', type: 'text', def: '', ph: 'Trusted always. Since 1974.' },
+    tr1: { label: 'Row 1 (title | detail)', type: 'text', def: '', ph: 'Since 1974 | 52 years of buying and selling cars.' },
+    tr2: { label: 'Row 2', type: 'text', def: '', ph: 'Budget to luxury | Budget hatchbacks to luxury SUVs.' },
+    tr3: { label: 'Row 3', type: 'text', def: '', ph: 'Easy finance | Ask us how car finance works.' },
+    tr4: { label: 'Row 4', type: 'text', def: '', ph: 'Buy · Sell · Exchange · Upgrade | Trade in your old car with us.' },
+    sellKind: { label: 'Headline', type: 'select', def: 'buy', options: [['buy', 'We buy cars'], ['park', 'Park-n-sell']] },
+    finDp: { label: 'Down payment %', type: 'number', def: 20, min: 0, max: 90 },
+    finTenure: { label: 'Tenure (months)', type: 'number', def: 60, min: 6, max: 96 },
+    finRate: { label: 'Interest rate % p.a.', type: 'number', def: 11.5, min: 5, max: 24, step: 0.1 },
+    hireRole: { label: 'Role', type: 'text', defs: ['Sales Executive', 'Sales Executive', 'सेल्स एक्ज़ीक्यूटिव'], ph: 'Sales Executive' },
+    hireBullets: { label: 'Three bullets (one per line)', type: 'textarea', rows: 4,
+      defs: ['Meet and guide walk-in buyers\nPhotograph and list new stock\nFollow up on enquiries',
+        'Walk-in buyers se milein aur guide karein\nNayi gaadiyon ki photo lein aur list karein\nEnquiries par follow up karein',
+        'आने वाले ग्राहकों से मिलें और उनका मार्गदर्शन करें\nनई गाड़ियों की फ़ोटो खींचें और सूची बनाएँ\nपूछताछ पर फ़ॉलो-अप करें'], ph: '' },
+    hireLoc: { label: 'Location', type: 'text', defs: ['Malad West, Mumbai', 'Malad West, Mumbai', 'मलाड वेस्ट, मुंबई'], ph: '' },
+    hireApply: { label: 'How to apply', type: 'text', def: '', ph: 'Leave blank for the default' },
+    ytText: { label: 'Thumbnail words (3 max)', type: 'text', defs: ['First look', 'First look', 'पहली झलक'], ph: 'FIRST LOOK' },
+    heroHead: { label: 'Headline', type: 'text', def: '', ph: 'Pre-owned cars you can trust.' },
+    heroSub: { label: 'Sub line', type: 'text', def: '', ph: 'Budget hatchbacks to luxury SUVs.' },
+    capText: { label: 'Caption words (2 lines)', type: 'textarea', rows: 3, def: 'Walk around the car\nThen the price', ph: 'Two short lines' },
+    capKey: { label: 'Red word', type: 'text', def: 'price', ph: 'One word from the caption' }
+  };
+})();
