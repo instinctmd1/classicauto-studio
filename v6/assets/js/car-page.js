@@ -145,6 +145,54 @@
   calc();
   function emiSummary() { return "EMI, " + downEl.value + "% down, " + tenEl.value + " months, " + rateEl.value + "% assumed (" + out.textContent + ")"; }
 
+  /* ---- estimates: insurance range + loan eligibility (v5's logic, restyled). Planning numbers only: never a quote, an offer or a lender's rate ---- */
+  var INS = { idv: 0.9, low: 0.02, high: 0.04 };   // insured value about 90% of the asking price; comprehensive cover about 2% to 4% of it a year
+  var FOIR = 0.5;                                   // about half of take-home income can go to EMIs, minus the EMIs already paid
+  function approx(n) { n = Math.max(0, Math.round(n / 100) * 100); return n >= 100000 ? fmt.money(n) : fmt.rupees(n); }
+  function pct(x) { return Math.round(x * 1000) / 10 + "%"; }
+  if (car.status === "SOLD") $("#estimates").hidden = true;
+  set("insNow", ins.text === "Not stated" ? "Current policy on this car: not stated in the listing. Ask us." : "Current policy on this car: " + ins.text + ".");
+  if (onRequest) {
+    f("insResult").hidden = true; f("insLines").hidden = true;
+    set("insNow", f("insNow").textContent + " The price is on request, so message us for an insurance estimate.");
+  } else {
+    var idv = car.price * INS.idv;
+    set("insRange", approx(idv * INS.low) + " to " + approx(idv * INS.high));
+    set("insIdv", "About " + approx(idv) + " (" + pct(INS.idv) + " of the asking price)");
+    set("insRate", pct(INS.low) + " to " + pct(INS.high) + " of that value a year");
+  }
+
+  var eIncome = $("#eligIncome"), eExisting = $("#eligExisting"), eRate = $("#eligRate"), eTenure = $("#eligTenure"), eAmt = $("#eligAmt"), eNote = $("#eligCompare");
+  var defaultRate = parseFloat(eRate.getAttribute("value")) || 11.5;
+  function eligCalc() {
+    var income = parseFloat(eIncome.value) || 0, existing = Math.max(0, parseFloat(eExisting.value) || 0), rate = parseFloat(eRate.value), n = +eTenure.value;
+    if (!(rate >= 0)) rate = defaultRate;
+    if (!(income > 0)) { eAmt.textContent = "-"; eNote.textContent = "Add your monthly take-home income to see a rough figure."; return; }
+    var free = Math.max(0, income * FOIR - existing), r = rate / 1200, k = Math.pow(1 + r, n);
+    var loan = Math.floor((r === 0 ? free * n : free * (k - 1) / (r * k)) / 1000) * 1000;
+    eAmt.textContent = approx(loan);
+    if (free <= 0) { eNote.textContent = "The EMIs you already pay take up about half your income, so a lender may not offer a new loan on these numbers."; return; }
+    var at = "At an EMI of about " + fmt.rupees(Math.round(free / 100) * 100) + " a month over " + n / 12 + " years. ";
+    if (onRequest) eNote.textContent = at + "Ask us for this car's price to compare.";
+    else if (loan >= car.price) eNote.textContent = at + "On these numbers a loan could cover this car's price of " + fmt.rupees(car.price) + ". The lender sets the final amount and down payment.";
+    else eNote.textContent = at + "This car is " + fmt.rupees(car.price) + ", so the rest, about " + approx(car.price - loan) + ", would be your down payment.";
+  }
+  [eIncome, eExisting, eRate, eTenure].forEach(function (el) { el.addEventListener("input", eligCalc); el.addEventListener("change", eligCalc); });
+  // one assumed rate on the page: the EMI calculator in step 1 and the eligibility check follow each other
+  eRate.addEventListener("input", function () { rateEl.value = eRate.value; calc(); });
+  rateEl.addEventListener("input", function () { eRate.value = rateEl.value; eligCalc(); });
+
+  var estMsg = f("estMsg"), estVisit = f("estVisit"), estChat = f("estChat"), mCta = window.CA.messageCta(), vCta = window.CA.visitCta();
+  var finText = "Hi Classic Auto, I'd like help with insurance and a car loan for the " + label + " (" + priceText + "). " + pageUrl;
+  estMsg.textContent = mCta.label; estMsg.href = S.whatsapp ? window.CA.waLink(finText) : mCta.href;
+  estMsg.setAttribute("data-ca-msg", finText); estMsg.setAttribute("data-via", mCta.via);
+  estVisit.textContent = vCta.label; estVisit.href = vCta.href;
+  if (!(S.features && S.features.anita)) estChat.hidden = true;
+  estChat.addEventListener("click", function () {
+    var l = document.getElementById("anitaLauncher");
+    if (l && l.getAttribute("aria-expanded") !== "true") l.click();
+  });
+
   /* ---- validation ---- */
   var baseRules = { bkName: F.req("Enter your name."), bkPhone: F.phone };
   var bookRules = { bkDate: F.req("Pick a date.") };
@@ -190,7 +238,7 @@
     var msg = window.CA.buildMessage({ intent: intent, parts: parts, licence: (td && state.pay !== "exchange") ? true : null, marketing: marketing });
     F.send(carForm, statusEl, carLead({ message: msg }),
       intent === "EXCHANGE" ? "Exchange details sent. We'll ask for photos by message." : "Request sent. We'll confirm by message.").then(function (r) {
-      if (r && r.ok) { carForm.reset(); slots.reset(); state.pay = "full"; state.book = "test-drive"; syncUi(); calc(); started = {}; }
+      if (r && r.ok) { carForm.reset(); slots.reset(); state.pay = "full"; state.book = "test-drive"; syncUi(); rateEl.value = eRate.value; calc(); started = {}; }
     });
   });
 

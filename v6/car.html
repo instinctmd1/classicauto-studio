@@ -129,6 +129,45 @@
       </div>
     </section>
 
+    <section class="section" id="estimates" aria-labelledby="estTitle">
+      <div class="container">
+        <div class="section-head" data-reveal><span class="eyebrow">Estimates</span><h2 id="estTitle">Insurance and loan, roughly</h2>
+          <p>Two quick numbers to plan with. Both are estimates, not quotes or offers: the insurer and the lender set the real figures.</p></div>
+        <div class="est-grid" data-reveal>
+          <div class="panel est-card" id="insEstimate">
+            <div class="est-head"><h3>Insurance estimate</h3><span class="est-tag">Estimate</span></div>
+            <p class="est-sub" data-f="insNow"></p>
+            <div class="calc-result est-result" data-f="insResult"><span class="lbl">Comprehensive cover, a year</span><span class="amt" data-f="insRange">-</span></div>
+            <dl class="est-lines" data-f="insLines">
+              <div><dt>Insured value used</dt><dd data-f="insIdv">-</dd></div>
+              <div><dt>Premium range used</dt><dd data-f="insRate">-</dd></div>
+            </dl>
+            <p class="calc-note">An indicative range, not a quote. The real premium depends on the insurer, the insured value (IDV) agreed, the add-ons you choose and any no-claim bonus you carry over.</p>
+          </div>
+          <div class="panel est-card" id="loanCheck">
+            <div class="est-head"><h3>Loan eligibility check</h3><span class="est-tag">Estimate</span></div>
+            <div class="form-grid cols-2">
+              <div class="field"><label for="eligIncome">Monthly take-home income</label><div class="input-prefix"><span aria-hidden="true">₹</span><input type="number" id="eligIncome" min="0" step="1000" inputmode="numeric" placeholder="e.g. 80000"></div></div>
+              <div class="field"><label for="eligExisting">EMIs you already pay a month</label><div class="input-prefix"><span aria-hidden="true">₹</span><input type="number" id="eligExisting" min="0" step="500" inputmode="numeric" placeholder="0"></div></div>
+              <div class="field"><label for="eligRate">Interest rate, % a year</label><input type="number" id="eligRate" min="0" max="30" step="0.1" value="11.5" inputmode="decimal" aria-describedby="eligRateHint"><span class="field-hint" id="eligRateHint">Our assumption, not a lender's rate. Change it to any rate you have been quoted.</span></div>
+              <div class="field"><label for="eligTenure">Loan tenure</label><select id="eligTenure"><option value="36">3 years</option><option value="48">4 years</option><option value="60" selected>5 years</option><option value="72">6 years</option><option value="84">7 years</option></select></div>
+            </div>
+            <div class="calc-result est-result"><span class="lbl">Rough loan you could get</span><span class="amt" id="eligAmt" aria-live="polite">-</span></div>
+            <p class="est-sub" id="eligCompare" aria-live="polite">Add your monthly take-home income to see a rough figure.</p>
+            <p class="calc-note">Assumes about half your take-home income can go to EMIs, after the EMIs you already pay. An estimate only, not a loan offer or approval: the lender decides the amount, rate and tenure after checking your documents and credit history.</p>
+          </div>
+        </div>
+        <div class="est-cta" data-reveal>
+          <p>Want real numbers for this car? Message us or come to the showroom and we'll take you through insurance and finance.</p>
+          <div class="est-cta-row">
+            <a class="btn btn-primary" data-f="estMsg" href="#" target="_blank" rel="noopener" data-cta="message" data-at="car_page"></a>
+            <a class="btn btn-outline" data-f="estVisit" href="#" target="_blank" rel="noopener" data-cta="visit" data-at="car_page" data-via="maps"></a>
+            <button type="button" class="link-btn" data-f="estChat">Or ask Anita in the chat</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <section class="trust" aria-label="About Classic Auto">
       <div class="container trust-row">
         <div class="trust-item"><span class="trust-k"><span class="red">Since 1974</span></span><span class="trust-v"><span data-bind="years">52</span> years in business</span></div>

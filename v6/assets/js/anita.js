@@ -132,7 +132,7 @@
   }
   function pushBot(text, chips, extraHtml) {
     var el = document.createElement("div"); el.className = "anita-msg from-bot";
-    el.innerHTML = esc(text) + (extraHtml || "");
+    el.innerHTML = esc(text) + (extraHtml ? window.CA.rootify(extraHtml) : "");   // car-mini links resolve from cars/<id>/ pages too
     body.appendChild(el); renderChips(chips || []); scrollDown();
   }
   function pushBotHtml(html, chips) {
@@ -174,6 +174,20 @@
     }
     if (/catalogue|catalog|price list|sab dikhao|list bhejo/.test(lower)) {
       pushBotHtml('Poora stock ek page par: <a href="catalogue.html">Open the catalogue</a>', ["Talk to the team"]);
+      return;
+    }
+    // 3D / Studio: link straight to the Studio for the car being talked about (named now, earlier in the chat, or the car page open), else the Studio
+    if (/\b3\s?-?d\b|three[\s-]?d|\bstudio\b|\b360\b|virtual (tour|view|showroom)/.test(lower)) {
+      var pageId = window.CA_CAR_ID || new URLSearchParams(window.location.search).get("id");   // cars/<id>/ pages set CA_CAR_ID; car.html and studio.html use ?id=
+      var sc = findCarInText(text) || state.car || (pageId ? CARS.filter(function (c) { return c.id === pageId; })[0] : null);
+      if (sc) {
+        state.car = sc;
+        pushBotHtml(esc(sc.make + " " + sc.model) + " ko 3D Studio mein dekhiye: " +
+          '<a href="studio.html?id=' + encodeURIComponent(sc.id) + '" data-cta="studio" data-at="anita">Open the ' + esc(sc.make + " " + sc.model) + ' in the 3D Studio</a>' +
+          (sc.scan ? "" : "\nStudio ka 3D model illustrative hai, yeh exact gaadi nahi. Asli gaadi ke photos car page par hain."), ["Book a visit", "Talk to the team"]);
+      } else {
+        pushBotHtml('Hamara 3D Studio yahan hai: <a href="studio.html" data-cta="studio" data-at="anita">Open the 3D Studio</a>\nKisi gaadi ka naam batayein toh seedha uska Studio link de doongi.', BODY_CHIPS);
+      }
       return;
     }
     if (/test drive|schedule|visit|showroom aana|dekhna hai/.test(lower)) {
