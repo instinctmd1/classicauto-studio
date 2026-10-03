@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="en-IN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Request a car: tell Classic Auto what you want, Malad West</title>
+<meta name="description" content="Want a car that is not on the floor? Tell Classic Auto the make, budget and fuel you want, and we'll message you about it. Electric and ex-demo requests welcome.">
+<meta name="theme-color" content="#0A1633">
+<link rel="icon" type="image/svg+xml" href="assets/logo.svg">
+<link rel="preload" href="assets/fonts/bebas-neue-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="assets/fonts/manrope-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="assets/vendor/lenis/lenis.css">
+<link rel="stylesheet" href="assets/css/style.css">
+<script>(function(){var d=document.documentElement,r=false;try{r=matchMedia("(prefers-reduced-motion: reduce)").matches}catch(e){}d.classList.add(r?"reduce":"motion");setTimeout(function(){if(!(window.CA_MOTION&&window.CA_MOTION.ready))d.classList.remove("motion")},5000)})();</script>
+<script src="assets/js/config.js"></script>
+<script src="assets/js/track.js" defer></script>
+</head>
+<body data-page="request">
+<script src="assets/js/chrome.js"></script>
+<div class="progress-rail" aria-hidden="true"><i></i></div>
+
+<main id="main">
+  <section class="page-head">
+    <div class="container">
+      <span class="eyebrow" data-hero-in>Request a car</span>
+      <h1 data-hero-in>Not on the floor? Tell us what you want.</h1>
+      <p class="lead" data-hero-in>Describe the car you have in mind. We'll message you about it. Electric and ex-demo requests are welcome.</p>
+    </div>
+  </section>
+
+  <section class="section section--tight">
+    <div class="container sell-layout">
+      <div data-reveal>
+        <h2 style="font-size: clamp(2rem, 1.6rem + 1.6vw, 3rem);">How a request works</h2>
+        <ul class="sell-points">
+          <li><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h10"/></svg><div><b>You describe it</b><span>Make, budget and the few things that matter. Everything except the budget and your number is optional.</span></div></li>
+          <li><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 21l-4.3-4.3M10.5 18a7.5 7.5 0 1 1 0-15 7.5 7.5 0 0 1 0 15z"/></svg><div><b>We check the floor first</b><span>As soon as you send it, you see the closest cars we already have.</span></div></li>
+          <li><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v11H9l-5 4z"/></svg><div><b>Then we message you</b><span>No call unless you ask for one. A request is not a booking, and nothing is charged.</span></div></li>
+        </ul>
+      </div>
+
+      <form class="panel" id="requestForm" novalidate data-reveal>
+        <div class="form-grid cols-2">
+          <div class="field"><label for="rqMake">Make</label><input type="text" id="rqMake" autocomplete="off" placeholder="e.g. Hyundai, or leave blank"></div>
+          <div class="field"><label for="rqModel">Model</label><input type="text" id="rqModel" autocomplete="off" placeholder="e.g. i20, or leave blank"></div>
+          <div class="field"><label for="rqFuel">Fuel</label>
+            <select id="rqFuel"><option value="">Any fuel</option><option value="Petrol">Petrol</option><option value="Diesel">Diesel</option><option value="Electric">Electric</option></select></div>
+          <div class="field"><label for="rqBudget">Budget up to, in ₹ lakh <span class="req" aria-hidden="true">*</span></label><input type="number" id="rqBudget" min="1" max="500" step="0.5" inputmode="decimal" placeholder="e.g. 18" aria-describedby="rqBudgetHint"><span class="field-hint" id="rqBudgetHint">Your maximum. 18 means ₹18 lakh.</span><span class="field-error" role="alert">Enter your budget in lakh.</span></div>
+        </div>
+        <div class="check-field"><label class="check"><input type="checkbox" id="rqDemo"><span>An ex-demo car is fine</span></label></div>
+        <span class="field-error" id="rqNeedCar" role="alert" style="display:none; margin-top: 8px;">Tell us a make or model, or pick a fuel type, so we know where to look.</span>
+        <details class="more-fields" id="rqMore">
+          <summary>Add more details <span>(optional: body type, gearbox, year, kms, colour, timeline)</span></summary>
+          <div class="form-grid cols-2">
+          <div class="field"><label for="rqBody">Body type</label>
+            <select id="rqBody"><option value="">Any body type</option><option value="hatchback">Hatchback</option><option value="sedan">Sedan</option><option value="suv">SUV</option><option value="mpv">MPV</option><option value="luxury-sedan">Luxury sedan</option><option value="luxury-suv">Luxury SUV</option></select></div>
+          <div class="field"><label for="rqTrans">Gearbox</label>
+            <select id="rqTrans"><option value="">Any gearbox</option><option value="Automatic">Automatic</option><option value="Manual">Manual</option></select></div>
+          <div class="field"><label for="rqYear">Registered in or after</label><input type="number" id="rqYear" min="1990" max="2027" inputmode="numeric" placeholder="e.g. 2021"></div>
+          <div class="field"><label for="rqKm">Driven up to (km)</label><input type="number" id="rqKm" min="0" step="1000" inputmode="numeric" placeholder="e.g. 40000"></div>
+          <div class="field"><label for="rqColour">Colour (optional)</label><input type="text" id="rqColour" autocomplete="off" placeholder="e.g. white, dark blue"></div>
+          <div class="field"><label for="rqWhen">When do you want to buy?</label>
+            <select id="rqWhen"><option value="">Not decided</option><option>This week</option><option>This month</option><option>In the next three months</option><option>Just exploring</option></select></div>
+          </div>
+        <div class="field" style="margin-top:16px;"><label for="rqNotes">Anything else? (features, must-haves, a car to exchange)</label><textarea id="rqNotes" rows="3"></textarea></div>
+        </details>
+        <div class="form-grid cols-2" style="margin-top:16px;">
+          <div class="field"><label for="rqName">Name <span class="req" aria-hidden="true">*</span></label><input type="text" id="rqName" autocomplete="name"><span class="field-error" role="alert">Enter your name.</span></div>
+          <div class="field"><label for="rqPhone">Mobile number <span class="req" aria-hidden="true">*</span></label><input type="tel" id="rqPhone" autocomplete="tel" inputmode="tel"><span class="field-error" role="alert">Enter a 10-digit mobile number.</span></div>
+        </div>
+        <div data-extras></div>
+        <div class="form-actions"><button class="btn btn-primary btn-lg" type="submit" data-cta="request_car" data-at="request_page">Send my request</button></div>
+        <p class="form-status" id="rqStatus" role="status"></p>
+      </form>
+    </div>
+  </section>
+
+  <section class="section section--tight section--panel" id="closeMatches" hidden aria-labelledby="closeTitle">
+    <div class="container">
+      <div class="section-head"><span class="eyebrow">On the floor now</span><h2 id="closeTitle">The closest cars we already have</h2><p id="closeLead"></p></div>
+      <div class="grid grid-cars" id="closeGrid"></div>
+      <p class="emi-note">*EMI is indicative: 20% down, 60 months, 11.5% a year assumed. Final EMI depends on the lender's approval and rate.</p>
+    </div>
+  </section>
+</main>
+
+<div id="siteFooter"></div>
+<script src="assets/vendor/gsap/gsap.min.js" defer></script>
+<script src="assets/vendor/gsap/ScrollTrigger.min.js" defer></script>
+<script src="assets/vendor/lenis/lenis.min.js" defer></script>
+<script src="assets/js/cars.js" defer></script>
+<script src="assets/js/main.js" defer></script>
+<script src="assets/js/motion.js" defer></script>
+<script src="assets/js/forms.js" defer></script>
+<script src="assets/js/cards.js" defer></script>
+<script src="assets/js/compare-shortlist.js" defer></script>
+<script src="assets/js/match.js" defer></script>
+<script src="assets/js/request.js" defer></script>
+<script src="assets/js/anita.js" defer></script>
+</body>
+</html>

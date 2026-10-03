@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en-IN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Find your car: a 17-question match, Classic Auto Malad West</title>
+<meta name="description" content="Answer 17 quick questions about budget, family, driving and taste, and see which of Classic Auto's real cars fit you best. No sign-up needed to see your matches.">
+<meta name="theme-color" content="#0A1633">
+<link rel="icon" type="image/svg+xml" href="assets/logo.svg">
+<link rel="preload" href="assets/fonts/bebas-neue-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="assets/fonts/manrope-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="assets/vendor/lenis/lenis.css">
+<link rel="stylesheet" href="assets/css/style.css">
+<script>(function(){var d=document.documentElement,r=false;try{r=matchMedia("(prefers-reduced-motion: reduce)").matches}catch(e){}d.classList.add(r?"reduce":"motion");setTimeout(function(){if(!(window.CA_MOTION&&window.CA_MOTION.ready))d.classList.remove("motion")},5000)})();</script>
+<script src="assets/js/config.js"></script>
+<script src="assets/js/track.js" defer></script>
+</head>
+<body data-page="quiz">
+<script src="assets/js/chrome.js"></script>
+<div class="progress-rail" aria-hidden="true"><i></i></div>
+
+<main id="main">
+  <section class="page-head">
+    <div class="container">
+      <span class="eyebrow" data-hero-in>Find your car</span>
+      <h1 data-hero-in>Tell us how you drive. We'll show what fits.</h1>
+      <p class="lead" data-hero-in>Seventeen short questions, about three minutes. You see your matches before we ask for any contact details.</p>
+    </div>
+  </section>
+
+  <section class="section section--tight" aria-labelledby="quizTitle">
+    <div class="container quiz">
+      <h2 id="quizTitle" class="sr-only">Find your car quiz</h2>
+
+      <div class="quiz-stage" id="quizStage">
+        <div class="quiz-meter" aria-hidden="true"><i id="quizBar"></i></div>
+        <form id="quizForm" novalidate>
+          <p class="quiz-count" id="quizCount" role="status" aria-live="polite"></p>
+          <fieldset class="quiz-q" id="quizQ">
+            <legend id="quizLegend"></legend>
+            <p class="quiz-hint" id="quizHint"></p>
+            <div class="quiz-options" id="quizOptions"></div>
+            <p class="field-error quiz-error" id="quizErr" role="alert" hidden>Pick an answer to continue.</p>
+          </fieldset>
+          <div class="quiz-nav">
+            <button type="button" class="btn btn-outline" id="quizBack">Back</button>
+            <button type="submit" class="btn btn-primary btn-lg" id="quizNext">Next</button>
+          </div>
+        </form>
+      </div>
+
+      <div class="quiz-results" id="quizResults" hidden>
+        <div class="quiz-results-head">
+          <span class="eyebrow">Your matches</span>
+          <h2 id="quizResultsTitle">Here is what fits you best</h2>
+          <p class="lead" id="quizResultsLead"></p>
+        </div>
+        <ol class="match-list" id="matchList"></ol>
+
+        <div class="match-none" id="matchNone" hidden>
+          <h3>Nothing on the floor is a close fit</h3>
+          <p>That happens. Tell us what you want and we'll look for it, or share your answers and we'll message you with ideas.</p>
+          <a class="btn btn-primary" id="matchRequestLink" href="request.html" data-cta="request_car" data-at="quiz">Request this car</a>
+        </div>
+
+        <form class="panel quiz-lead" id="quizLeadForm" novalidate>
+          <h3>Want to see your top match in person?</h3>
+          <p style="margin-bottom: 20px;" id="quizLeadLead">Leave your name and mobile number. We'll message you to fix a time. No call before you ask for one.</p>
+          <div class="form-grid cols-2">
+            <div class="field"><label for="qlName">Name <span class="req" aria-hidden="true">*</span></label><input type="text" id="qlName" autocomplete="name"><span class="field-error" role="alert">Enter your name.</span></div>
+            <div class="field"><label for="qlPhone">Mobile number <span class="req" aria-hidden="true">*</span></label><input type="tel" id="qlPhone" autocomplete="tel" inputmode="tel"><span class="field-error" role="alert">Enter a 10-digit mobile number.</span></div>
+            <div class="field"><label for="qlCar">Car you'd like to see</label><select id="qlCar"></select></div>
+          </div>
+          <div data-extras></div>
+          <div class="form-actions"><button class="btn btn-primary btn-lg" type="submit" data-cta="book_test_drive" data-at="quiz">Request a test drive</button></div>
+          <p class="form-status" id="qlStatus" role="status"></p>
+        </form>
+        <p class="quiz-restart"><button type="button" class="link-btn" id="quizRestart">Start again</button></p>
+      </div>
+    </div>
+  </section>
+</main>
+
+<div id="siteFooter"></div>
+<script src="assets/vendor/gsap/gsap.min.js" defer></script>
+<script src="assets/vendor/gsap/ScrollTrigger.min.js" defer></script>
+<script src="assets/vendor/lenis/lenis.min.js" defer></script>
+<script src="assets/js/cars.js" defer></script>
+<script src="assets/js/main.js" defer></script>
+<script src="assets/js/motion.js" defer></script>
+<script src="assets/js/forms.js" defer></script>
+<script src="assets/js/cards.js" defer></script>
+<script src="assets/js/compare-shortlist.js" defer></script>
+<script src="assets/js/match.js" defer></script>
+<script src="assets/js/quiz.js" defer></script>
+<script src="assets/js/anita.js" defer></script>
+</body>
+</html>

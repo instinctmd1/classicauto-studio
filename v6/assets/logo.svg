@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 840 496">
+  <!-- Classic Auto — crisp vector retrace of the REAL logo (source: classicauto.net.in + @classicauto_1974) -->
+  <!-- Geometry mapped 1:1 against the official artwork at 840x496 -->
+
+  <!-- ===== Red C with elongated base bar ===== -->
+  <path d="M 100 12
+           L 300 12
+           L 300 88
+           L 128 88
+           Q 96 88 96 120
+           L 96 238
+           Q 96 268 128 268
+           L 688 268
+           Q 722 268 722 302
+           L 722 310
+           Q 722 344 688 344
+           L 92 344
+           Q 14 344 14 266
+           L 14 98
+           Q 14 12 100 12 Z" fill="#E11B22"/>
+
+  <!-- ===== Navy italic A (drawn over the red base bar) ===== -->
+  <g fill="#2B3990">
+    <!-- left leg -->
+    <polygon points="468,6 552,6 372,360 288,360"/>
+    <!-- right leg (kicks past the base bar) -->
+    <polygon points="468,6 552,6 758,360 674,360"/>
+    <!-- crossbar -->
+    <polygon points="404,212 620,212 650,282 370,282"/>
+  </g>
+
+  <!-- ===== SINCE 1974 (small, top right) ===== -->
+  <text x="712" y="30" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="26" font-weight="bold" font-style="italic" letter-spacing="1" fill="#E11B22">SINCE 1974</text>
+
+  <!-- ===== Blue car outline swoosh (above AUTO) ===== -->
+  <g fill="none" stroke="#2B3990" stroke-width="7" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M 540 400 q 30 -6 52 -18 q 40 -22 92 -24 q 56 -2 88 18 q 26 2 44 10 q 10 4 -2 8"/>
+    <path d="M 560 402 q 130 -12 250 -8"/>
+  </g>
+  <circle cx="612" cy="404" r="11" fill="#FFFFFF" stroke="#2B3990" stroke-width="7"/>
+  <circle cx="762" cy="402" r="11" fill="#FFFFFF" stroke="#2B3990" stroke-width="7"/>
+
+  <!-- ===== CLASSIC-AUTO wordmark ===== -->
+  <text x="420" y="482" text-anchor="middle" font-family="'Arial Black', Arial, sans-serif" font-weight="900" font-style="italic" font-size="88" fill="#E11B22" letter-spacing="0">CLASSIC-AUTO</text>
+</svg>

@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="en-IN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Stock: pre-owned cars at Classic Auto, Malad West</title>
+<meta name="description" content="Browse Classic Auto's pre-owned cars with real prices, kilometres, owners and EMI estimates. Filter by price band, body type, fuel and gearbox.">
+<meta name="theme-color" content="#0A1633">
+<link rel="icon" type="image/svg+xml" href="assets/logo.svg">
+<link rel="preload" href="assets/fonts/bebas-neue-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="assets/fonts/manrope-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="assets/vendor/lenis/lenis.css">
+<link rel="stylesheet" href="assets/css/style.css">
+<script>(function(){var d=document.documentElement,r=false;try{r=matchMedia("(prefers-reduced-motion: reduce)").matches}catch(e){}d.classList.add(r?"reduce":"motion");setTimeout(function(){if(!(window.CA_MOTION&&window.CA_MOTION.ready))d.classList.remove("motion")},5000)})();</script>
+<script src="assets/js/config.js"></script>
+<script src="assets/js/track.js" defer></script>
+</head>
+<body data-page="stock">
+<script src="assets/js/chrome.js"></script>
+<div class="progress-rail" aria-hidden="true"><i></i></div>
+
+<main id="main">
+  <section class="page-head">
+    <div class="container">
+      <span class="eyebrow" data-hero-in>Full stock</span>
+      <h1 data-hero-in>Every car on the floor</h1>
+      <p class="lead" data-hero-in>Filter by price band, body type, fuel or gearbox. Prices and EMI estimates update as you filter.<span data-bind="stock-count" hidden></span></p>
+    </div>
+  </section>
+
+  <div class="filter-bar">
+    <div class="container filter-row">
+      <div class="filter-group"><label for="filterBand">Price</label>
+        <select id="filterBand"><option value="all">Any price</option><option value="u20">Under ₹20 L</option><option value="20to50">₹20-50 L</option><option value="50plus">₹50 L and above</option></select></div>
+      <div class="filter-group"><label for="filterBody">Body type</label>
+        <select id="filterBody"><option value="all">Any body type</option><option value="hatchback">Hatchback</option><option value="sedan">Sedan</option><option value="suv">SUV</option><option value="mpv">MPV</option><option value="luxury-sedan">Luxury sedan</option><option value="luxury-suv">Luxury SUV</option></select></div>
+      <div class="filter-group"><label for="filterMake">Make</label>
+        <select id="filterMake"><option value="all">Any make</option></select></div>
+      <div class="filter-group"><label for="filterFuel">Fuel</label>
+        <select id="filterFuel"><option value="all">Any fuel</option><option value="Petrol">Petrol</option><option value="Diesel">Diesel</option><option value="Electric">Electric</option></select></div>
+      <div class="filter-group"><label for="filterTrans">Gearbox</label>
+        <select id="filterTrans"><option value="all">Any gearbox</option><option value="Manual">Manual</option><option value="Automatic">Automatic</option></select></div>
+      <div class="filter-group"><label for="filterSort">Sort</label>
+        <select id="filterSort"><option value="featured">Featured</option><option value="price-asc">Price: low to high</option><option value="price-desc">Price: high to low</option><option value="year-desc">Year: newest first</option></select></div>
+      <div class="filter-toggles" role="group" aria-label="Quick filters">
+        <button type="button" class="toggle-chip" id="toggleElectric" aria-pressed="false">Electric</button>
+        <button type="button" class="toggle-chip" id="toggleDemo" aria-pressed="false">Ex-demo</button>
+      </div>
+      <span class="filter-count" id="filterCount" role="status"></span>
+      <button class="filter-reset" id="filterReset" type="button">Reset filters</button>
+    </div>
+  </div>
+
+  <section class="section section--tight">
+    <div class="container">
+      <h2 class="sr-only">Cars on the floor</h2>
+      <div class="grid grid-cars" id="stockGrid" data-pending aria-live="polite"></div>
+      <div class="empty-state" id="stockEmpty" style="display:none;">
+        <h2 id="emptyTitle">No cars match those filters</h2>
+        <p id="emptyText">Widen the price band or clear the body type, or tell us what you're looking for.</p>
+        <div class="cta-row" style="justify-content:center;">
+          <a class="btn btn-primary" id="emptyRequest" href="request.html" data-cta="request_car" data-at="stock">Request this car</a>
+          <button class="btn btn-outline" id="emptyReset" type="button">Reset filters</button>
+        </div>
+      </div>
+      <div class="request-band" id="requestBand">
+        <div><h2>Not on the floor?</h2><span class="serif">Tell us what you want and we'll look for it.</span></div>
+        <div class="cta-row"><a class="btn btn-primary btn-lg" href="request.html" data-cta="request_car" data-at="stock">Request a car</a><a class="btn btn-outline btn-lg" href="quiz.html" data-cta="see_stock" data-at="stock">Find your car</a></div>
+      </div>
+      <p class="emi-note">*EMI is indicative: 20% down, 60 months, 11.5% a year assumed. Final EMI depends on the lender's approval and rate.</p>
+    </div>
+  </section>
+</main>
+
+<div id="siteFooter"></div>
+<script src="assets/vendor/gsap/gsap.min.js" defer></script>
+<script src="assets/vendor/gsap/ScrollTrigger.min.js" defer></script>
+<script src="assets/vendor/lenis/lenis.min.js" defer></script>
+<script src="assets/js/cars.js" defer></script>
+<script src="assets/js/main.js" defer></script>
+<script src="assets/js/motion.js" defer></script>
+<script src="assets/js/forms.js" defer></script>
+<script src="assets/js/cards.js" defer></script>
+<script src="assets/js/compare-shortlist.js" defer></script>
+<script src="assets/js/stock.js" defer></script>
+<script src="assets/js/anita.js" defer></script>
+</body>
+</html>

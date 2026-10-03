@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en-IN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sell or exchange your car: Classic Auto, Malad West</title>
+<meta name="description" content="Sell your car to Classic Auto or part-exchange it against a car on the floor. Share the details and we'll message you to arrange an inspection.">
+<meta name="theme-color" content="#0A1633">
+<link rel="icon" type="image/svg+xml" href="assets/logo.svg">
+<link rel="preload" href="assets/fonts/bebas-neue-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="assets/fonts/manrope-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="assets/vendor/lenis/lenis.css">
+<link rel="stylesheet" href="assets/css/style.css">
+<script>(function(){var d=document.documentElement,r=false;try{r=matchMedia("(prefers-reduced-motion: reduce)").matches}catch(e){}d.classList.add(r?"reduce":"motion");setTimeout(function(){if(!(window.CA_MOTION&&window.CA_MOTION.ready))d.classList.remove("motion")},5000)})();</script>
+<script src="assets/js/config.js"></script>
+<script src="assets/js/track.js" defer></script>
+</head>
+<body data-page="sell">
+<script src="assets/js/chrome.js"></script>
+<div class="progress-rail" aria-hidden="true"><i></i></div>
+
+<main id="main">
+  <section class="page-head">
+    <div class="container">
+      <span class="eyebrow" data-hero-in>Sell or exchange</span>
+      <h1 data-hero-in>Your car, our floor</h1>
+      <p class="lead" data-hero-in>Tell us about your car and we'll message you to arrange an inspection.</p>
+    </div>
+  </section>
+
+  <section class="section section--tight" id="exchange">
+    <div class="container sell-layout">
+      <div data-reveal>
+        <h2 style="font-size: clamp(2rem, 1.6rem + 1.6vw, 3rem);">Two ways to go</h2>
+        <ul class="sell-points">
+          <li><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg><div><b>Sell it to us</b><span>Share the make, model, year and kilometres. We'll message you to arrange an inspection.</span></div></li>
+          <li><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M17 3l4 4-4 4M21 7H9M7 21l-4-4 4-4M3 17h12"/></svg><div><b>Exchange it</b><span>Part-exchange your current car against any car on the floor, or move up to your next one.</span></div></li>
+          <li><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 12h6M9 16h6M9 8h6M5 4h14a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1z"/></svg><div><b>Paperwork</b><span>We handle the RC transfer paperwork.</span></div></li>
+        </ul>
+      </div>
+
+      <form class="panel" id="sellForm" novalidate data-reveal>
+        <div class="seg" role="radiogroup" aria-label="What would you like to do?" style="margin-bottom: 24px;">
+          <label><input type="radio" name="slMode" value="sell" checked>Sell my car</label>
+          <label><input type="radio" name="slMode" value="exchange">Exchange my car</label>
+        </div>
+        <div class="form-grid cols-2">
+          <div class="field"><label for="slMake">Make <span class="req" aria-hidden="true">*</span></label><input type="text" id="slMake" autocomplete="off" placeholder="e.g. Hyundai"><span class="field-error" role="alert">Enter the make.</span></div>
+          <div class="field"><label for="slModel">Model <span class="req" aria-hidden="true">*</span></label><input type="text" id="slModel" autocomplete="off" placeholder="e.g. Creta SX"><span class="field-error" role="alert">Enter the model.</span></div>
+          <div class="field"><label for="slYear">Year <span class="req" aria-hidden="true">*</span></label><input type="number" id="slYear" min="1990" max="2027" inputmode="numeric" placeholder="e.g. 2021"><span class="field-error" role="alert">Enter a year.</span></div>
+          <div class="field"><label for="slKm">Kilometres driven <span class="req" aria-hidden="true">*</span></label><input type="number" id="slKm" min="0" inputmode="numeric" placeholder="e.g. 32000"><span class="field-error" role="alert">Enter the kilometres.</span></div>
+          <div class="field"><label for="slRto">RTO (optional)</label><input type="text" id="slRto" maxlength="8" autocomplete="off" placeholder="e.g. MH-02"></div>
+          <div class="field"><label for="slPrice">Expected price in ₹ lakh (optional)</label><input type="number" id="slPrice" min="0" step="0.1" inputmode="decimal" placeholder="e.g. 12.5"></div>
+        </div>
+        <div class="field" id="slTargetWrap" hidden style="margin-top:16px;"><label for="slTarget">Which car are you exchanging for? (optional)</label><select id="slTarget"><option value="">Not sure yet</option></select></div>
+        <div class="form-grid cols-2" style="margin-top:16px;">
+          <div class="field"><label for="slName">Name <span class="req" aria-hidden="true">*</span></label><input type="text" id="slName" autocomplete="name"><span class="field-error" role="alert">Enter your name.</span></div>
+          <div class="field"><label for="slPhone">Mobile number <span class="req" aria-hidden="true">*</span></label><input type="tel" id="slPhone" autocomplete="tel" inputmode="tel"><span class="field-error" role="alert">Enter a 10-digit mobile number.</span></div>
+        </div>
+        <div class="field" style="margin-top:16px;"><label for="slNotes">Anything else? (condition, what you want next)</label><textarea id="slNotes" rows="3"></textarea></div>
+        <p class="calc-note" style="margin-top:12px;">We'll ask for photos by message afterwards.</p>
+        <div data-extras></div>
+        <div class="form-actions"><button class="btn btn-primary btn-lg" type="submit" id="slSubmit" data-cta="sell" data-at="sell_page">Send my car details</button></div>
+        <p class="form-status" id="slStatus" role="status"></p>
+      </form>
+    </div>
+  </section>
+</main>
+
+<div id="siteFooter"></div>
+<script src="assets/vendor/gsap/gsap.min.js" defer></script>
+<script src="assets/vendor/gsap/ScrollTrigger.min.js" defer></script>
+<script src="assets/vendor/lenis/lenis.min.js" defer></script>
+<script src="assets/js/cars.js" defer></script>
+<script src="assets/js/main.js" defer></script>
+<script src="assets/js/motion.js" defer></script>
+<script src="assets/js/forms.js" defer></script>
+<script src="assets/js/cards.js" defer></script>
+<script src="assets/js/compare-shortlist.js" defer></script>
+<script src="assets/js/sell.js" defer></script>
+<script src="assets/js/anita.js" defer></script>
+</body>
+</html>

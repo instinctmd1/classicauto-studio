@@ -1,0 +1,14 @@
+{
+ "count": 46,
+ "width": 720,
+ "height": 450,
+ "pattern": "f_{index:03d}.webp",
+ "crop_of_1280x720": {
+  "x": 150,
+  "y": 120,
+  "w": 960,
+  "h": 600
+ },
+ "poster_draped": "poster_draped.webp",
+ "poster_clean": "poster_clean.webp"
+}

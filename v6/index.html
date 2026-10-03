@@ -1,0 +1,280 @@
+<!doctype html>
+<html lang="en-IN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Classic Auto: pre-owned cars in Malad West, Mumbai, since 1974</title>
+<meta name="description" content="Classic Auto is a pre-owned car dealer in Malad West, Mumbai, since 1974. Real cars with real prices, EMI estimates on every car, and a simple way to book a test drive.">
+<meta name="theme-color" content="#0A1633">
+<link rel="icon" type="image/svg+xml" href="assets/logo.svg">
+<link rel="preload" href="assets/fonts/bebas-neue-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="assets/fonts/manrope-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="assets/vendor/lenis/lenis.css">
+<link rel="stylesheet" href="assets/css/style.css">
+<script>
+(function () {
+  var d = document.documentElement, reduced = false, seen = false;
+  try { reduced = matchMedia("(prefers-reduced-motion: reduce)").matches; } catch (e) {}
+  try { seen = sessionStorage.getItem("ca_intro_seen") === "1"; } catch (e) {}
+  if (reduced) d.classList.add("reduce"); else d.classList.add("motion");
+  if (!reduced && !seen) {
+    d.classList.add("intro-on");
+    try { sessionStorage.setItem("ca_intro_seen", "1"); } catch (e) {}
+    setTimeout(function () { if (!window.__introDone) { var el = document.getElementById("intro"); if (el) el.remove(); d.classList.remove("intro-on"); } }, 5000);
+  }
+  setTimeout(function () { if (!(window.CA_MOTION && window.CA_MOTION.ready)) d.classList.remove("motion"); }, 5000);
+})();
+</script>
+<script type="importmap">
+{ "imports": { "three": "./assets/vendor/three/build/three.module.min.js", "three/addons/": "./assets/vendor/three/examples/jsm/" } }
+</script>
+<script src="assets/js/config.js"></script>
+<script src="assets/js/track.js" defer></script>
+<!-- ca:dealer-jsonld -->
+<script type="application/ld+json" id="dealerJsonLd">
+{
+  "@context": "https://schema.org",
+  "@type": "AutoDealer",
+  "@id": "https://instinctmd1.github.io/classicauto-studio/v6/#dealer",
+  "name": "Classic Auto",
+  "url": "https://instinctmd1.github.io/classicauto-studio/v6/",
+  "foundingDate": "1974",
+  "address": {
+    "@type": "PostalAddress",
+    "streetAddress": "135/136, 1st Floor, Prabhu Plaza, S.V. Road, Next to Shankar Mandir, near Malad Railway Station",
+    "addressLocality": "Mumbai",
+    "addressRegion": "MH",
+    "addressCountry": "IN"
+  },
+  "sameAs": [
+    "https://instagram.com/classicauto_1974"
+  ]
+}
+</script>
+<!-- /ca:dealer-jsonld -->
+</head>
+<body data-page="home">
+
+<div class="intro" id="intro" role="presentation">
+  <span class="sr-only">Classic Auto is loading</span>
+  <div class="intro-stage">
+    <div class="intro-mark" id="introMark">
+      <svg id="introMarkSvg" viewBox="0 0 780 380" aria-hidden="true" focusable="false">
+        <g id="introC"><path d="M 100 12 L 300 12 L 300 88 L 128 88 Q 96 88 96 120 L 96 238 Q 96 268 128 268 L 688 268 Q 722 268 722 302 L 722 310 Q 722 344 688 344 L 92 344 Q 14 344 14 266 L 14 98 Q 14 12 100 12 Z" fill="#E11B22"/></g>
+        <g fill="#2B3990">
+          <polygon class="intro-bar" points="468,6 552,6 372,360 288,360"/>
+          <polygon class="intro-bar" points="468,6 552,6 758,360 674,360"/>
+          <polygon class="intro-bar" points="404,212 620,212 650,282 370,282"/>
+        </g>
+      </svg>
+    </div>
+    <div class="intro-words" id="introWords">
+      <div class="intro-line"><span class="w1" id="introWord1">Classic</span><span class="w2" id="introWord2">Auto</span></div>
+      <div class="intro-since" id="introSince">since 1974</div>
+    </div>
+    <button type="button" class="intro-skip" id="introSkip">Skip</button>
+  </div>
+</div>
+
+<script src="assets/js/chrome.js"></script>
+
+<div class="progress-rail" aria-hidden="true"><i></i></div>
+<div class="chapter-label" id="chapterLabel" aria-hidden="true">01 / SHOWROOM</div>
+
+<main id="main">
+
+  <!-- 01 / SHOWROOM: the interactive car -->
+  <section class="showroom" id="showroom" data-chapter="01 / SHOWROOM" aria-label="Classic Auto showroom">
+    <h1 class="sr-only">Classic Auto: pre-owned cars in Malad West, Mumbai, since 1974</h1>
+    <div class="showroom-word" data-w1="CLASSIC" data-w2="AUTO" aria-hidden="true"></div>
+    <div class="media-rect" id="showroomRect" tabindex="0" role="img" aria-label="Illustrative 3D sports car. Drag to turn it around, or use the left and right arrow keys.">
+      <picture>
+        <source media="(max-width: 768px)" srcset="hero-frames/m/poster_clean.webp">
+        <img id="showroomPoster" src="hero-frames/poster_clean.webp" width="1280" height="720" alt="" fetchpriority="high" decoding="async">
+      </picture>
+    </div>
+    <div class="container showroom-ui">
+      <div class="showroom-top">
+        <p class="eyebrow showroom-eyebrow">Pre-owned cars &middot; Malad West, Mumbai &middot; Since 1974</p>
+        <button type="button" class="tilt-btn" id="tiltBtn" hidden>Tilt to look around</button>
+      </div>
+      <div class="scroll-hint" id="scrollHint" aria-hidden="true"><span>Scroll to unveil</span><svg class="icon" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></div>
+      <div class="showroom-foot">
+        <div class="cta-row">
+          <a class="btn btn-primary btn-lg" href="stock.html" data-cta="see_stock" data-at="hero">See real stock</a>
+          <a class="btn btn-outline btn-lg" href="#" data-bind="message-cta" data-at="hero"></a>
+        </div>
+        <p class="credit">Illustrative 3D model: Ferrari 458 Italia by vicent091036 (CC BY 4.0). Classic Auto is an independent pre-owned dealer, not affiliated with Ferrari.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- trust bar: verified facts only -->
+  <section class="trust" aria-label="About Classic Auto">
+    <div class="container trust-row">
+      <div class="trust-item"><span class="trust-k"><span class="red" data-count="1974">1974</span></span><span class="trust-v">In business since <span data-bind="since">1974</span>, <span data-bind="years" data-count="52">52</span> years of pre-owned cars</span></div>
+      <div class="trust-item"><span class="trust-k"><span data-count="20">20</span>K</span><span class="trust-v">on Instagram, as of <span data-bind="igdate">2 Oct 2026</span></span></div>
+      <div class="trust-item"><span class="trust-k">Buy &middot; Sell</span><span class="trust-v">Exchange and upgrade too: four ways to move into your next car</span></div>
+      <div class="trust-item"><span class="trust-k">Easy finance</span><span class="trust-v">EMI estimates on every car; final terms from the lender</span></div>
+    </div>
+  </section>
+
+  <!-- 02 / UNVEIL: the cloth comes off as you scroll -->
+  <section class="unveil" id="unveil" data-chapter="02 / UNVEIL" aria-labelledby="unveilTitle">
+    <div class="unveil-stage">
+      <div class="media-rect" id="unveilRect">
+        <img class="poster-draped" id="unveilPoster" src="hero-frames/poster_draped.webp" width="1280" height="720" alt="" loading="lazy" decoding="async">
+        <img class="poster-clean" src="hero-frames/poster_clean.webp" width="1280" height="720" alt="" loading="lazy" decoding="async">
+        <canvas id="framesCanvas" aria-hidden="true"></canvas>
+      </div>
+      <div class="unveil-title">
+        <h2 id="unveilTitle"><span class="w-classic">Classic</span> <span class="w-auto">Auto</span></h2>
+        <p class="unveil-since" id="unveilSince">since 1974.</p>
+      </div>
+      <div class="unveil-wipe" id="unveilWipe" aria-hidden="true"></div>
+      <div class="drag-reveal" id="dragReveal">
+        <div class="drag-reveal-track"></div>
+        <div class="drag-reveal-arc" aria-hidden="true"><svg viewBox="0 0 172 172"><circle class="arc-track" cx="86" cy="86" r="82"/><circle class="arc-fill" id="dragArcFill" cx="86" cy="86" r="82" stroke-dasharray="515.2" stroke-dashoffset="515.2"/></svg></div>
+        <div class="drag-reveal-handle" id="dragHandle" role="slider" tabindex="0" aria-label="Drag to reveal the car" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+          <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
+          <span class="drag-reveal-label">Drag to reveal</span>
+        </div>
+      </div>
+      <div class="unveil-static-ui"><button type="button" class="btn btn-primary btn-lg" id="revealBtn" aria-pressed="false">Reveal the car</button></div>
+      <div class="unveil-cta" id="unveilCta">
+        <div class="container"><div class="cta-row">
+          <a class="btn btn-primary btn-lg" href="stock.html" data-cta="see_stock" data-at="hero">See real stock</a>
+          <a class="btn btn-outline btn-lg" href="#" data-bind="message-cta" data-at="hero"></a>
+          <a class="btn btn-outline btn-lg" href="#testDriveSection" data-cta="book_test_drive" data-at="hero">Book a visit</a>
+        </div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 03 / STOCK -->
+  <section class="section" id="stockChapter" data-chapter="03 / STOCK" aria-labelledby="stockTitle">
+    <div class="container">
+      <div class="section-head section-head--row" data-reveal>
+        <div>
+          <span class="eyebrow">On the floor now</span>
+          <h2 id="stockTitle">Real cars. Real prices.</h2>
+          <p class="lead" style="margin-top: 16px;">From <span class="tnum" id="priceFrom">₹2.85 L</span> to <span class="tnum" id="priceTo">₹76.99 L</span>, in three price bands. Open any car for full details, an EMI estimate and a test-drive request.</p>
+        </div>
+        <a class="link-arrow" href="stock.html" data-cta="see_stock" data-at="stock">See full stock <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+      </div>
+      <form class="search-bar" id="heroSearchForm" data-reveal>
+        <div class="search-field"><label for="searchBudget">Budget</label>
+          <select id="searchBudget"><option value="all">Any budget</option><option value="u20">Under ₹20 L</option><option value="20to50">₹20-50 L</option><option value="50plus">₹50 L and above</option></select></div>
+        <div class="search-field"><label for="searchBody">Body type</label>
+          <select id="searchBody"><option value="all">Any body type</option><option value="hatchback">Hatchback</option><option value="sedan">Sedan</option><option value="suv">SUV</option><option value="mpv">MPV</option><option value="luxury-sedan">Luxury sedan</option><option value="luxury-suv">Luxury SUV</option></select></div>
+        <div class="search-field"><label for="searchFuel">Fuel</label>
+          <select id="searchFuel"><option value="all">Any fuel</option><option value="Petrol">Petrol</option><option value="Diesel">Diesel</option><option value="Electric">Electric</option></select></div>
+        <button class="btn btn-primary" type="submit">Search stock</button>
+      </form>
+      <div class="grid grid-cars" id="featuredGrid" aria-live="polite"></div>
+      <p class="emi-note">*EMI is indicative: 20% down, 60 months, 11.5% a year assumed. Final EMI depends on the lender's approval and rate.</p>
+      <div class="find-band" data-reveal>
+        <div><h3>Not sure which car?</h3><span class="serif" style="display:block;margin-top:10px;font-size:clamp(1.4rem,1.1rem + 1.2vw,2rem);line-height:1.15;">Let us narrow it down.</span></div>
+        <div class="find-list">
+          <a class="find-row" href="quiz.html"><div><b>Find your car</b><p>Seventeen short questions. See your matches before you share any details.</p></div><span class="link-arrow">Start <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span></a>
+          <a class="find-row" href="studio.html" data-cta="studio" data-at="stock"><div><b>See it in the Studio</b><p>A private 3D viewing bay: turn the car, try paints and wheels, and see the real price beside it. The 3D model is illustrative.</p></div><span class="link-arrow">Open <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span></a>
+          <a class="find-row" href="request.html" data-cta="request_car" data-at="stock"><div><b>Request a car</b><p>Want something we don't have? Electric and ex-demo included. Tell us and we'll message you.</p></div><span class="link-arrow">Request <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span></a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 04 / WHY US -->
+  <section class="section section--panel" id="whyChapter" data-chapter="04 / WHY US" aria-labelledby="whyTitle">
+    <div class="container why">
+      <div class="why-lead" data-reveal>
+        <span class="eyebrow">Why Classic Auto</span>
+        <h2 id="whyTitle">Pre-owned cars. Since 1974.</h2>
+        <span class="serif">Buy, sell, exchange, upgrade.</span>
+      </div>
+      <div>
+        <ul class="why-list" data-reveal-group>
+          <li class="why-row" data-reveal-item><h3>Buy</h3><p>Browse real stock with real prices and an EMI estimate on every car.</p><a class="link-arrow" href="stock.html">Stock</a></li>
+          <li class="why-row" data-reveal-item><h3>Sell</h3><p>Tell us about your car and we'll message you to arrange an inspection.</p><a class="link-arrow" href="sell.html">Sell</a></li>
+          <li class="why-row" data-reveal-item><h3>Exchange</h3><p>Part-exchange your current car against any car on the floor.</p><a class="link-arrow" href="sell.html#exchange">Exchange</a></li>
+          <li class="why-row" data-reveal-item><h3>Upgrade</h3><p>Moving up to something bigger or newer? Tell us what you drive and what you want next.</p><a class="link-arrow" href="sell.html#exchange">Upgrade</a></li>
+        </ul>
+        <div class="why-foot" data-reveal><p>We handle the RC transfer paperwork. EMI estimates are indicative; final terms come from the lender.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 05 / VISIT -->
+  <section class="section" id="testDriveSection" data-chapter="05 / VISIT" aria-labelledby="visitTitle">
+    <div class="container visit">
+      <div class="visit-info" data-reveal>
+        <span class="eyebrow">Visit us</span>
+        <h2 id="visitTitle">Come see the car in person</h2>
+        <address data-bind="address"></address>
+        <p data-bind="hours"></p>
+        <div class="cta-row">
+          <a class="btn btn-primary" href="#" data-bind="visit-cta" data-at="other"></a>
+          <a class="btn btn-outline" href="#" data-bind="message-cta" data-at="other"></a>
+          <a class="btn btn-outline" href="#" data-bind="call-cta" data-at="other"></a>
+        </div>
+      </div>
+      <form class="panel" id="homeTestDriveForm" novalidate data-reveal>
+        <h3 style="margin-bottom: 4px;">Request a test drive</h3>
+        <p style="margin-bottom: 20px; font-size: 0.875rem;">Pick a day and a time of day. <span id="tdSlotNote">We'll confirm the exact time by message.</span></p>
+        <div class="seg seg--stack" role="radiogroup" aria-label="Where" style="margin-bottom: 20px;">
+          <label><input type="radio" name="tdMode" value="showroom" checked>At the showroom<small>Prabhu Plaza, Malad West</small></label>
+          <label><input type="radio" name="tdMode" value="home">At my place<small>Request only. We'll confirm by message.</small></label>
+        </div>
+        <div class="form-grid cols-2">
+          <div class="field"><label for="tdName">Name <span class="req" aria-hidden="true">*</span></label><input type="text" id="tdName" required autocomplete="name"><span class="field-error" role="alert">Enter your name.</span></div>
+          <div class="field"><label for="tdPhone">Mobile number <span class="req" aria-hidden="true">*</span></label><input type="tel" id="tdPhone" required autocomplete="tel" inputmode="tel"><span class="field-error" role="alert">Enter a 10-digit mobile number.</span></div>
+          <div class="field"><label for="tdDate">Preferred date <span class="req" aria-hidden="true">*</span></label><input type="date" id="tdDate" required><span class="field-error" role="alert">Pick a date.</span></div>
+          <div class="field"><label for="tdCar">Car (optional)</label><select id="tdCar"><option value="">Not sure yet</option></select></div>
+        </div>
+        <div class="field" style="margin-top: 16px;"><label id="tdSlotsLabel">Time of day <span class="req" aria-hidden="true">*</span></label><div class="slot-grid" id="tdSlots" role="group" aria-labelledby="tdSlotsLabel"></div><span class="field-error" role="alert">Choose a time of day.</span></div>
+        <div data-extras></div>
+        <div class="form-actions"><button class="btn btn-primary btn-lg" type="submit">Request a test drive</button></div>
+        <p class="form-status" id="tdStatus" role="status"></p>
+      </form>
+    </div>
+  </section>
+
+  <section class="section section--tight section--panel">
+    <div class="container">
+      <div class="review-teaser" data-reveal>
+        <div><h2>Reviews</h2><p>Read what customers say about Classic Auto, and tell us about your own visit.</p></div>
+        <a class="btn btn-outline btn-lg" href="reviews.html" data-cta="reviews" data-at="reviews">See reviews</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="ig-strip">
+    <div class="container">
+      <div><span class="big"><span data-count="20">20</span>K on Instagram</span><small>@<span data-bind="ig">classicauto_1974</span>: new arrivals and deliveries, <span data-bind="igposts">1,376</span> posts as of <span data-bind="igdate">2 Oct 2026</span>.</small></div>
+      <a class="btn btn-outline" data-social="instagram" href="https://instagram.com/classicauto_1974" target="_blank" rel="noopener">View profile</a>
+    </div>
+  </section>
+
+</main>
+
+<div id="siteFooter"></div>
+
+<script src="assets/vendor/gsap/gsap.min.js" defer></script>
+<script src="assets/vendor/gsap/ScrollTrigger.min.js" defer></script>
+<script src="assets/vendor/gsap/SplitText.min.js" defer></script>
+<script src="assets/vendor/gsap/Flip.min.js" defer></script>
+<script src="assets/vendor/lenis/lenis.min.js" defer></script>
+<script src="assets/js/cars.js" defer></script>
+<script src="assets/js/main.js" defer></script>
+<script src="assets/js/motion.js" defer></script>
+<script src="assets/js/intro.js" defer></script>
+<script src="assets/js/forms.js" defer></script>
+<script src="assets/js/cards.js" defer></script>
+<script src="assets/js/featured.js" defer></script>
+<script src="assets/js/compare-shortlist.js" defer></script>
+<script src="assets/js/hero-search.js" defer></script>
+<script src="assets/js/testdrive.js" defer></script>
+<script src="assets/js/anita.js" defer></script>
+<script type="module" src="assets/js/home.js"></script>
+</body>
+</html>

@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://instinctmd1.github.io/classicauto-studio/v6/sitemap.xml

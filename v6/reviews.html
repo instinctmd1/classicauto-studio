@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="en-IN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Reviews: Classic Auto, Malad West</title>
+<meta name="description" content="Read what Classic Auto's customers say, review us on Google, or send private feedback straight to the team.">
+<meta name="theme-color" content="#0A1633">
+<link rel="icon" type="image/svg+xml" href="assets/logo.svg">
+<link rel="preload" href="assets/fonts/bebas-neue-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="assets/fonts/manrope-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="assets/vendor/lenis/lenis.css">
+<link rel="stylesheet" href="assets/css/style.css">
+<script>(function(){var d=document.documentElement,r=false;try{r=matchMedia("(prefers-reduced-motion: reduce)").matches}catch(e){}d.classList.add(r?"reduce":"motion");setTimeout(function(){if(!(window.CA_MOTION&&window.CA_MOTION.ready))d.classList.remove("motion")},5000)})();</script>
+<script src="assets/js/config.js"></script>
+<script src="assets/js/track.js" defer></script>
+</head>
+<body data-page="reviews">
+<script src="assets/js/chrome.js"></script>
+<div class="progress-rail" aria-hidden="true"><i></i></div>
+
+<main id="main">
+  <section class="page-head">
+    <div class="container">
+      <h1 data-hero-in>Reviews</h1>
+      <p class="lead" data-hero-in>What our customers say, where they said it.</p>
+    </div>
+  </section>
+
+  <section class="section section--tight" id="googleBlock" hidden aria-labelledby="googleTitle">
+    <div class="container reviews-grid">
+      <div data-reveal>
+        <h2 id="googleTitle">On Google</h2>
+        <div id="googleRating" hidden>
+          <p class="rating-big tnum" id="ratingValue"></p>
+          <p id="ratingMeta" style="margin-top:8px;"></p>
+        </div>
+      </div>
+      <div class="cta-row" style="align-self:end;" data-reveal>
+        <a class="btn btn-primary btn-lg" id="googleWrite" href="#" target="_blank" rel="noopener" hidden data-cta="write_google_review" data-at="reviews">Write a review on Google</a>
+        <a class="btn btn-outline btn-lg" id="googleRead" href="#" target="_blank" rel="noopener" hidden>Read all on Google</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="section section--tight section--panel" aria-labelledby="deliveriesTitle">
+    <div class="container">
+      <div class="section-head" data-reveal><h2 id="deliveriesTitle">Deliveries and customer words</h2></div>
+      <div id="deliveries" class="reviews-list"></div>
+      <p class="empty-note" id="reviewsEmpty">Delivery photos and words from our customers will appear here once they've said yes to sharing them. <a class="link-arrow" href="stock.html" data-cta="see_stock" data-at="reviews">See the cars in stock</a></p>
+    </div>
+  </section>
+
+  <section class="section" aria-labelledby="feedbackTitle">
+    <div class="container reviews-grid">
+      <div data-reveal>
+        <h2 id="feedbackTitle">Tell the team privately</h2>
+        <p style="margin-top:16px;">This goes privately to the Classic Auto team and is not a public review.<span id="publicLine" hidden> To review us publicly, use the Google button above.</span></p>
+      </div>
+      <form class="panel" id="feedbackForm" novalidate data-reveal>
+        <div class="form-grid cols-2">
+          <div class="field"><label for="fbName">Name (optional)</label><input type="text" id="fbName" autocomplete="name"></div>
+          <div class="field"><label for="fbPhone">Mobile number (optional)</label><input type="tel" id="fbPhone" autocomplete="tel" inputmode="tel"><span class="field-error" role="alert">Enter a 10-digit mobile number, or leave it blank.</span></div>
+          <div class="field"><label for="fbCar">Car you bought (optional)</label><input type="text" id="fbCar" autocomplete="off"></div>
+          <div class="field"><span class="label" id="fbRatingLabel" style="font-size:0.875rem;font-weight:600;color:var(--ink);">Rating (optional)</span>
+            <div class="rating-pick" role="radiogroup" aria-labelledby="fbRatingLabel">
+              <label><input type="radio" name="fbRating" value="1"><span>1</span></label>
+              <label><input type="radio" name="fbRating" value="2"><span>2</span></label>
+              <label><input type="radio" name="fbRating" value="3"><span>3</span></label>
+              <label><input type="radio" name="fbRating" value="4"><span>4</span></label>
+              <label><input type="radio" name="fbRating" value="5"><span>5</span></label>
+            </div></div>
+        </div>
+        <div class="field" style="margin-top:16px;"><label for="fbText">Your message <span class="req" aria-hidden="true">*</span></label><textarea id="fbText" rows="4"></textarea><span class="field-error" role="alert">Write a few words for the team.</span></div>
+        <div class="check-field"><label class="check"><input type="checkbox" id="fbContactOk"><span>OK to contact me about this</span></label></div>
+        <div data-extras></div>
+        <div class="form-actions"><button class="btn btn-primary btn-lg" type="submit">Send feedback</button></div>
+        <p class="form-status" id="fbStatus" role="status"></p>
+      </form>
+    </div>
+  </section>
+</main>
+
+<div id="siteFooter"></div>
+<script src="assets/vendor/gsap/gsap.min.js" defer></script>
+<script src="assets/vendor/gsap/ScrollTrigger.min.js" defer></script>
+<script src="assets/vendor/lenis/lenis.min.js" defer></script>
+<script src="assets/js/cars.js" defer></script>
+<script src="assets/js/main.js" defer></script>
+<script src="assets/js/motion.js" defer></script>
+<script src="assets/js/forms.js" defer></script>
+<script src="assets/js/reviews-data.js" defer></script>
+<script src="assets/js/reviews.js" defer></script>
+<script src="assets/js/anita.js" defer></script>
+</body>
+</html>

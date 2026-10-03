@@ -1,0 +1,31 @@
+Classic Auto - website v6 - 3D model, HDRI and font credits
+============================================================
+
+Classic Auto is an independent pre-owned car dealer. It is not affiliated with Ferrari. The sports car on the home page
+and in the Studio is an illustrative 3D model, never a car for sale.
+
+3D model: models/car.glb
+------------------------
+  Ferrari 458 Italia by vicent091036 on Sketchfab
+  https://sketchfab.com/models/57bf6cc56931426e87494f554df1dab6
+  Licence: Creative Commons Attribution 4.0 International (CC BY 4.0), https://creativecommons.org/licenses/by/4.0/
+  The three.js examples file (three.js r170, examples/models/gltf/ferrari.glb), used as published (it is Draco-compressed).
+  The maker badge and lettering are removed on the live model at load time (assets/js/carSanitize.js).
+
+Where the model is used:
+  - Home page, live: the interactive car in the showroom and at the end of the cloth reveal (assets/js/live3d.js).
+  - Home page, baked: hero-frames/ holds frames rendered in Blender from the same model with a dust sheet over it, for
+    the cloth reveal and the first-paint poster. The tail badge was painted out of those frames (tools/paint_out_badge.py).
+  - Studio (studio.html): the same model, labelled "Illustrative 3D model" in the page.
+
+HDRI (Studio lighting): assets/hdri/
+------------------------------------
+  Poly Haven, CC0 (public domain; credited anyway).
+  daylight.hdr  kloofendal_48d_partly_cloudy_puresky, 1k   https://polyhaven.com/a/kloofendal_48d_partly_cloudy_puresky
+  evening.hdr   moonless_golf, 1k                          https://polyhaven.com/a/moonless_golf
+
+Fonts: assets/fonts/
+--------------------
+  Bebas Neue, Manrope and Instrument Serif, SIL Open Font License 1.1.
+
+Libraries: assets/vendor/ (three.js, GSAP, Lenis) - see assets/vendor/VENDOR.md for versions and licences.
