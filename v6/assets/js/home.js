@@ -31,6 +31,7 @@ function idle(fn) { if ("requestIdleCallback" in window) requestIdleCallback(fn,
 
 var live = null;            // the single live-car instance
 var liveHost = "showroom";  // which chapter's rect currently holds the canvas
+var showroomOnScreen = true; // kept by the Showroom's IntersectionObserver
 
 /* ======================================================================
    Chapter 01: Showroom
@@ -73,7 +74,7 @@ var liveHost = "showroom";  // which chapter's rect currently holds the canvas
           });
         }
         var io = new IntersectionObserver(function (en) {
-          var showroomVisible = en[0].isIntersecting;
+          var showroomVisible = showroomOnScreen = en[0].isIntersecting;
           if (liveHost === "showroom") live.setVisible(showroomVisible);
         }, { threshold: 0.05 });
         io.observe(stage);
@@ -263,7 +264,11 @@ var liveHost = "showroom";  // which chapter's rect currently holds the canvas
       /* In the Unveil the canvas opacity is scrubbed by scroll, so the 700 ms CSS fade must be off (it made the live car lag the
          frames: a blink at the end and a double image on the way back). Back in the Showroom the CSS owns opacity again. */
       if (which === "unveil") { live.canvas.style.transition = "none"; live.resetPose(); live.setVisible(true); }
-      else { live.canvas.style.transition = ""; live.canvas.style.opacity = ""; }
+      else {
+        live.canvas.style.transition = ""; live.canvas.style.opacity = "";
+        /* handed back while the Showroom is off screen (scrolling up through the reveal): stop rendering until it comes back */
+        live.setVisible(showroomOnScreen);
+      }
     }
 
     var milestone = { start: false, half: false, done: false };
