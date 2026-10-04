@@ -147,6 +147,7 @@
       if (!S.exporting) { c.save(); c.setLineDash([14, 10]); D.strokeRR(c, R.x + 20, R.y + R.h * 0.2, R.w - 40, R.h * 0.7, 24, '#9AA5BF', 3); c.restore(); D.T(c, 'Add the car photo first', R.x + R.w / 2, R.y + R.h * 0.55, { font: D.bl(34, 700), color: '#7C88A8', align: 'center' }); }
       return null;
     }
+    if (cutOn(S)) return D.cutCar(c, S, P, { x0: R.x, x1: g.W - g.m, top: R.y + 30, ground: g.spec.y - 30, W: g.W, floorEnd: g.spec.y + 4, bleed: false });
     if (P.src === 'stock') S._samplePhoto = true;
     const dr = D.photoPlaced(c, S, P, R, { feather: { l: R.fl, t: R.h * R.ft, b: R.h * R.fb, r: 0 }, cut: !!P.alpha, minFrac: R.minFrac, maxScale: P.alpha ? 0 : 1.3 });
     S._slots.push({ key: 'main', r: R, dr, mode: 'fill' });
@@ -395,8 +396,16 @@
     if (!S._chip) return; const fs = Math.round(Math.max(22, Math.min(30, R.w * 0.032))), f = D.bl(fs, 800), w = D.tw(c, S._chip, f, 1) + fs * 1.4, h = Math.round(fs * 1.9), x = R.x + R.w - w - 22, y = R.y + 22;
     D.fillRR(c, x, y, w, h, h / 2, 'rgba(10,26,58,.84)'); D.T(c, S._chip, x + fs * 0.7, y + h / 2 + fs * 0.34, { font: f, color: '#fff', track: 1 });
   }
+  // The 3D cut-out look (photo style 'cut', the default) is used whenever the car has a cut-out: the photo itself is a transparent PNG, or a matching cut-out
+  // PNG came with it (assets/cutouts/, "Cut-out PNG" or "Make cut-out"). Photo-forward and Framed keep the photo; a car with no cut-out keeps the photo too.
+  function cutOn(S) { const P = S.photos.main, st = S.x.photoStyle || 'cut'; return !!(P && D.cutImg(P) && (st === 'cut' || (P.alpha && st !== 'frame'))); }
   function slot(c, S, R, g) {
-    const P = S.photos.main; if (P && P.img && P.alpha) D.stage(c, S, P, R, {}); else D.framePhoto(c, S, P, R, {});
+    const P = S.photos.main;
+    if (cutOn(S)) {                                    // no frame: the car stands on the post's own floor inside R, a cut side runs off the canvas edge
+      D.cutCar(c, S, P, { x0: R.x, x1: R.x + R.w, top: R.y, ground: R.y + R.h - Math.round(Math.min(40, R.h * 0.07)), W: g.W, floorEnd: R.y + R.h + 6 });
+      chip(c, S, R); D.adjLabel(c, S, R.x + R.w - 10, R.y + R.h + 12, 'right', 0.72); return;
+    }
+    if (P && P.img && P.alpha) D.stage(c, S, P, R, {}); else D.framePhoto(c, S, P, R, {});
     chip(c, S, R);
     // the honesty label (when the photo is edited) sits small in the frame's bottom-right corner: never over the title block or the spec row
     D.adjLabel(c, S, R.x + R.w - 22, R.y + R.h - 20, 'right', 0.78);
@@ -408,9 +417,15 @@
     return { w: iw + 2 * mat, h: iw / ar + 2 * mat };
   }
   // The photo-forward post (4:5 and story): the car runs the full width with no frame or mat, rising a little under the title rows and fading into the white ground above
-  // and below. R = the band the photo may use, fr = the frame a cut-out car stands in. A cut-out PNG keeps its showroom stage. Drawn BEFORE the text so the text sits on top.
-  function bleedSlot(c, S, g, R, fr) {
+  // and below. R = the band the photo may use, fr = the frame of the Framed style. A car with a cut-out stands on the floor instead (D.cutCar). Drawn BEFORE the text so the text sits on top.
+  function bleedSlot(c, S, g, R, fr, carTop) {
     const P = S.photos.main; S._slots = S._slots || []; S._labels = S._labels || [];
+    if (P && P.img && cutOn(S)) {                     // the 3D cut-out: the roof may rise into the title band (carTop) and tucks behind the pill drawn after it
+      const ground = R.y + R.h - 26; D.cutCar(c, S, P, { x0: g.m, x1: g.W - g.m, top: carTop != null ? carTop : R.y + 10, ground, W: g.W, floorEnd: ground + 60 });
+      chip(c, S, { x: R.x, y: R.y + 24, w: R.w, h: R.h });
+      if (carTop == null) D.adjLabel(c, S, g.W - g.m, R.y + 34, 'right', 0.72);        // the Signature chassis (Price Drop, Guess, Sold, Story): the label sits top-right in the photo band, clear of the text block under it
+      return;
+    }
     if (!P || !P.img) {
       S._slots.push({ key: 'main', r: R });
       if (!S.exporting) { c.save(); c.setLineDash([14, 10]); D.strokeRR(c, R.x + 40, R.y + 56, R.w - 80, R.h - 90, 24, '#9AA5BF', 3); c.restore(); D.T(c, 'Add the car photo first', R.x + R.w / 2, R.y + R.h * 0.55, { font: D.bl(38, 700), color: '#6B7898', align: 'center' }); }
@@ -435,7 +450,7 @@
       const st = fitHero(c, S, g, v), y0 = g.col.y, px = g.W - g.m - g.price.w; pbx = px; pby = y0 + 6;
       const top = y0 + st.rowsH + (st.tag.tag ? st.tag.h : 0), carBottom = g.spec.y - 24, availH = Math.max(120, carBottom - top - 4), f = frameFor(P, g.W - 2 * g.m, availH);
       fr = { x: (g.W - f.w) / 2, y: top + 4 + Math.max(0, availH - f.h) * 0.4, w: f.w, h: f.h };
-      if (bleed) { const R = { x: 0, y: top - 44, w: g.W, h: availH + 44 + 20 }; bleedSlot(c, S, g, R, fr); g.photo = R; }
+      if (bleed) { const R = { x: 0, y: top - 44, w: g.W, h: availH + 44 + 20 }; bleedSlot(c, S, g, R, fr, Math.min(top - 44, y0 + st.head.h + 4)); g.photo = R; }
       drawHead(c, S, g, v, A, st.head, g.col.x, y0); if (st.pill.pill) drawLower(c, S, g, v, A, st.pill, g.col.x, y0 + st.head.h);
       priceBox(c, S, g, v, A, pbx, pby, S._priceOpt); if (st.ft.ft) drawLower(c, S, g, v, A, st.ft, px, pby + g.price.h + 16);
       if (st.tag.tag) drawLower(c, S, g, v, A, st.tag, g.col.x, y0 + st.rowsH);
@@ -452,7 +467,7 @@
       pbx = g.W - g.m - g.price.w; pby = y0 + 8;
       const top = Math.max(yEnd + 6, pby + g.price.h + 22), availH = Math.max(160, carBottom - top), f = frameFor(P, g.W - 2 * g.m, availH);
       fr = { x: (g.W - f.w) / 2, y: top + Math.max(0, availH - f.h) * 0.4, w: f.w, h: f.h };
-      if (bleed) { const R = { x: 0, y: top - 36, w: g.W, h: availH + 36 + 18 }; bleedSlot(c, S, g, R, fr); g.photo = R; }
+      if (bleed) { const R = { x: 0, y: top - 36, w: g.W, h: availH + 36 + 18 }; bleedSlot(c, S, g, R, fr, top - 26); g.photo = R; }
       drawHead(c, S, g, v, A, st.head, g.col.x, y0); drawLower(c, S, g, v, A, st.low, g.col.x, st.lowY); priceBox(c, S, g, v, A, pbx, pby, S._priceOpt);
     } else {                                          // 1920 x 1080: title block left, PRICE under it, the car on the right
       const y0 = g.col.y, budgetY = g.spec.y - 14 - g.price.h;
@@ -488,7 +503,8 @@
     footerBar(c, S, g, A); menuStrip(c, g);
     if (g.mode === 'tall') bottomSlab(c, S, g, A);
     stamp(c, S, g, card, pb, lim);
-    if (!framedStyle || (S.photos.main && S.photos.main.alpha)) D.adjLabel(c, S, W - g.m, g.spec.y - 6, 'right');
+    if (cutOn(S) && !framedStyle) D.adjLabel(c, S, W - g.m, g.spec.y + 2, 'right', 0.8);       // the 3D cut-out: smaller and lower, on the floor in front of the car
+    else if (!framedStyle || (S.photos.main && S.photos.main.alpha)) D.adjLabel(c, S, W - g.m, g.spec.y - 6, 'right');
   };
   // story: the bottom 340 px sit under Instagram's reply bar. They carry the accent gradient, a chequer rule and the one line that is always true.
   function bottomSlab(c, S, g, A) {
@@ -498,5 +514,5 @@
   }
   // the carousel (sigcarousel.js) builds its slides from the same parts
   PS.classicGeo = geo; PS.classicView = view;
-  PS.classicParts = { geo, view, accentOf, background, header, regCard, footerBar, menuStrip, priceBox, specRow, chip, framed, slot, bleedSlot, bottomSlab, frameFor, textCol, INK, GREY, RING, LATIN_H, hf, up, lockup };
+  PS.classicParts = { geo, view, accentOf, background, header, regCard, footerBar, menuStrip, priceBox, specRow, chip, framed, slot, bleedSlot, bottomSlab, frameFor, textCol, INK, GREY, RING, LATIN_H, hf, up, lockup, cutOn };
 })();

@@ -385,6 +385,113 @@
     S._slots.push({ key: 'main', r: R, dr: { x: R.x, y: R.y, w: R.w + travX, h: R.h + travY }, mode: 'cut' });
     return dr;
   };
+  /* ---------- the 3D cut-out car (PS-5): no frame. The car stands on the light showroom ground of the post itself, with a contact shadow that follows
+     each tyre, a faint floor reflection and a soft light behind it. Only the background is drawn; the car's pixels are placed as they are. ---------- */
+  // The cut-out for a photo: the photo itself when it is a transparent PNG, else its matching cut-out PNG (P.cut). With a plate blur the cut-out must be the
+  // photo's own size (tools/make_cutouts.py keeps it), so the marked box lands on the same plate; otherwise null and the photo layout is used instead.
+  D.cutImg = function (P) {
+    if (!P || !P.img) return null; if (P.alpha) return P.img; const k = P.cut; if (!k) return null;
+    if (P.plate) { const a = imgDims(P.img), b = imgDims(k); if (a[0] !== b[0] || a[1] !== b[1]) return null; }
+    return k;
+  };
+  // Measured once per cut-out: the car's box, which sides the photo's own frame cut through (a long run of solid pixels on the outermost row or column),
+  // the lowest solid pixel of every column, and a contact-shadow mask built from those (darkest where a tyre meets the floor).
+  const CUTS = new WeakMap();
+  D.cutInfo = function (img) {
+    let inf = CUTS.get(img); if (inf) return inf;
+    const [iw, ih] = imgDims(img); inf = { bx: 0, by: 0, bw: iw, bh: ih, cuts: { l: false, t: false, r: false, b: false }, shadow: null, gy: 0, pad: 0 };
+    try {
+      const cv = document.createElement('canvas'); cv.width = iw; cv.height = ih; const x = cv.getContext('2d', { willReadFrequently: true }); x.drawImage(img, 0, 0);
+      const d = x.getImageData(0, 0, iw, ih).data, A = (px, py) => d[(py * iw + px) * 4 + 3];
+      let x0 = iw, y0 = ih, x1 = -1, y1 = -1;
+      for (let py = 0; py < ih; py++) for (let px = 0; px < iw; px++) if (d[(py * iw + px) * 4 + 3] > 24) { if (px < x0) x0 = px; if (px > x1) x1 = px; if (py < y0) y0 = py; if (py > y1) y1 = py; }
+      if (x1 < 0) { CUTS.set(img, inf); return inf; }
+      const bw = x1 - x0 + 1, bh = y1 - y0 + 1; let n;
+      n = 0; for (let py = y0; py <= y1; py++) if (A(x0, py) > 220) n++; inf.cuts.l = n / bh > 0.18;
+      n = 0; for (let py = y0; py <= y1; py++) if (A(x1, py) > 220) n++; inf.cuts.r = n / bh > 0.18;
+      n = 0; for (let px = x0; px <= x1; px++) if (A(px, y0) > 220) n++; inf.cuts.t = n / bw > 0.06;
+      n = 0; for (let px = x0; px <= x1; px++) if (A(px, y1) > 220) n++; inf.cuts.b = n / bw > 0.3;
+      Object.assign(inf, { bx: x0, by: y0, bw, bh });
+      // lowest solid pixel per column; the floor is the line along the tyre bottoms (the lower hull of those points), so a bumper or a sill
+      // high above the floor casts only a soft shade while a tyre gets a dark contact patch
+      const bot = new Int32Array(bw).fill(-1); for (let i = 0; i < bw; i++) for (let py = y1; py >= y0; py--) if (A(x0 + i, py) > 128) { bot[i] = py; break; }
+      const hull = []; for (let i = 0; i < bw; i++) { if (bot[i] < 0) continue; while (hull.length > 1) { const [ax, ay] = hull[hull.length - 2], [bx2, by2] = hull[hull.length - 1]; if ((bx2 - ax) * (bot[i] - ay) - (by2 - ay) * (i - ax) >= 0) hull.pop(); else break; } hull.push([i, bot[i]]); }
+      const floor = new Float32Array(bw); for (let h = 0, i = 0; i < bw; i++) { while (h < hull.length - 2 && hull[h + 1][0] < i) h++; const a = hull[h], b2 = hull[Math.min(h + 1, hull.length - 1)]; floor[i] = b2[0] === a[0] ? a[1] : a[1] + (b2[1] - a[1]) * (i - a[0]) / (b2[0] - a[0]); }
+      let rise = 0; for (let i = 0; i < bw; i++) if (bot[i] >= 0) rise = Math.max(rise, y1 - floor[i]);
+      const r1 = Math.max(2, bh * 0.014), r2 = Math.max(3, bh * 0.04), near = bh * 0.06, rb0 = Math.max(1, Math.round(bw * 0.008));
+      const pad = Math.round(bw * 0.06), gy = Math.ceil(rise + r2 + 3 * rb0 + 2), sh = gy + Math.ceil(r2 + 3 * rb0 + 4), sw = bw + 2 * pad, M = new Float32Array(sw * sh);
+      for (let i = 0; i < bw; i++) {
+        if (bot[i] < 0) continue; const cy = gy - (y1 - floor[i]), t = Math.max(0, 1 - Math.max(0, floor[i] - bot[i]) / near), dk = t * t;
+        for (let yy = Math.max(0, Math.floor(cy - r2)); yy < Math.min(sh, Math.ceil(cy + r2)); yy++) {
+          const dy = yy - cy, v = Math.max(dk * Math.max(0, 1 - Math.abs(dy) / r1), 0.3 * Math.max(0, 1 - Math.abs(dy) / (dy < 0 ? r2 * 0.6 : r2))), k = yy * sw + i + pad; if (v > M[k]) M[k] = v;
+        }
+      }
+      // three box blurs (close to a gaussian)
+      const rb = rb0, tmp = new Float32Array(sw * sh);
+      const pass = (src, dst, horiz) => { const L = horiz ? sw : sh, N = horiz ? sh : sw; for (let q = 0; q < N; q++) { let acc = 0; const at = (p) => (horiz ? q * sw + p : p * sw + q); for (let p = -rb; p <= rb; p++) acc += src[at(Math.min(L - 1, Math.max(0, p)))]; for (let p = 0; p < L; p++) { dst[at(p)] = acc / (2 * rb + 1); acc += src[at(Math.min(L - 1, p + rb + 1))] - src[at(Math.max(0, p - rb))]; } } };
+      for (let k = 0; k < 3; k++) { pass(M, tmp, true); pass(tmp, M, false); }
+      const sc2 = document.createElement('canvas'); sc2.width = sw; sc2.height = sh; const sx = sc2.getContext('2d'), id = sx.createImageData(sw, sh);
+      for (let k = 0; k < sw * sh; k++) { id.data[k * 4] = 10; id.data[k * 4 + 1] = 22; id.data[k * 4 + 2] = 51; id.data[k * 4 + 3] = Math.min(255, Math.round(M[k] * 255 * 1.35)); }
+      sx.putImageData(id, 0, 0); Object.assign(inf, { shadow: sc2, gy, pad });
+    } catch (e) { /* an image from another origin cannot be read: whole-image box, a plain oval shadow */ }
+    CUTS.set(img, inf); return inf;
+  };
+  // Place and draw the car. o: {x0, x1: the width the car may use; top: the highest its roof may reach; ground: the y its lowest tyre stands on; W: the canvas
+  // width (a side the photo's frame cut through runs off that canvas edge); floorEnd: where the drawn floor must have faded out; noFloor; maxH}.
+  // Text drawn after this sits on top of the car, so a roof that rises into the title band tucks behind it (depth). Returns the placed rects.
+  const offCar = document.createElement('canvas');
+  D.cutCar = function (c, S, P, o) {
+    const img = D.cutImg(P); S._slots = S._slots || []; S._labels = S._labels || [];
+    const inf = D.cutInfo(img), [iw, ih] = imgDims(img), W = o.W || 1080, zoom = P.zoom || 1, cuts = inf.cuts;
+    const bleedL = cuts.l && o.bleed !== false, bleedR = cuts.r && !cuts.l && o.bleed !== false, roomW = bleedL ? o.x1 : bleedR ? W - o.x0 : o.x1 - o.x0, roomH = Math.max(40, o.ground - o.top);
+    let sc = Math.min(roomH / inf.bh, roomW / inf.bw); if (o.maxH) sc = Math.min(sc, o.maxH / inf.bh); sc *= zoom;
+    const cw = inf.bw * sc, ch = inf.bh * sc, trav = W * 0.3;
+    let carX = bleedL ? -1 : bleedR ? W + 1 - cw : o.x0 + (roomW - cw) / 2 + (0.5 - P.px) * trav;
+    if (bleedL) carX = Math.min(-1, -1 + (0.5 - P.px) * trav * 0.5);                      // a cut side never comes off its canvas edge
+    if (bleedR) carX = Math.max(W + 1 - cw, W + 1 - cw + (0.5 - P.px) * trav * 0.5);
+    const g = o.ground, carY = g - ch, dx = carX - inf.bx * sc, dy = g - (inf.by + inf.bh) * sc, dw = iw * sc, dh = ih * sc;
+    const vx0 = Math.max(0, carX), vx1 = Math.min(W, carX + cw), vcx = (vx0 + vx1) / 2, vw = vx1 - vx0;
+    if (!o.noFloor) {
+      // soft light behind the car and a showroom floor that fades in under it and out again before the spec row: no line, no frame
+      const gl = c.createRadialGradient(vcx, g - ch * 0.5, 20, vcx, g - ch * 0.5, Math.max(vw, ch) * 0.75); gl.addColorStop(0, 'rgba(255,255,255,.95)'); gl.addColorStop(1, 'rgba(255,255,255,0)'); c.fillStyle = gl; c.fillRect(0, carY - ch * 0.4, W, ch * 1.8);
+      const hz = g - ch * 0.3, fe = Math.max(g + 24, Math.min(o.floorEnd || g + ch * 0.32, g + ch * 0.36));
+      c.fillStyle = D.lin(c, 0, hz, 0, fe, [[0, 'rgba(205,213,228,0)'], [0.4, 'rgba(205,213,228,.5)'], [0.72, 'rgba(214,221,234,.55)'], [1, 'rgba(222,228,238,0)']]); c.fillRect(0, hz, W, fe - hz);
+      const hl = c.createLinearGradient(0, 0, W, 0); hl.addColorStop(0, 'rgba(255,255,255,0)'); hl.addColorStop(0.5, 'rgba(255,255,255,.8)'); hl.addColorStop(1, 'rgba(255,255,255,0)'); c.fillStyle = hl; c.fillRect(0, hz + (g - hz) * 0.42, W, 2);
+    }
+    // reflection: the same cut-out, flipped about the floor line, faint and fading fast (behind the shadow, so the tyres stay grounded)
+    const refH = Math.round(Math.min(ch * 0.26, Math.max(10, (o.floorEnd || g + ch * 0.3) - g)));
+    if (refH > 8) {
+      offCar.width = Math.max(2, Math.ceil(dw)); offCar.height = refH; const rc = offCar.getContext('2d'); rc.setTransform(1, 0, 0, 1, 0, 0); rc.clearRect(0, 0, offCar.width, refH);
+      rc.imageSmoothingEnabled = true; rc.imageSmoothingQuality = 'high'; rc.setTransform(1, 0, 0, -1, 0, (inf.by + inf.bh) * sc); rc.drawImage(img, 0, 0, dw, dh); rc.setTransform(1, 0, 0, 1, 0, 0);
+      rc.globalCompositeOperation = 'destination-in'; const rg = rc.createLinearGradient(0, 0, 0, refH); rg.addColorStop(0, 'rgba(0,0,0,.30)'); rg.addColorStop(0.45, 'rgba(0,0,0,.10)'); rg.addColorStop(1, 'rgba(0,0,0,0)'); rc.fillStyle = rg; rc.fillRect(0, 0, offCar.width, refH); rc.globalCompositeOperation = 'source-over';
+      c.drawImage(offCar, dx, g - 1);
+    }
+    // contact shadow: a wide soft pool, then the tyre-hugging mask
+    c.save(); c.translate(vcx, g + ch * 0.012); c.scale(1, 0.085); const wg = c.createRadialGradient(0, 0, 4, 0, 0, vw * 0.56); wg.addColorStop(0, 'rgba(10,22,51,.30)'); wg.addColorStop(0.6, 'rgba(10,22,51,.12)'); wg.addColorStop(1, 'rgba(10,22,51,0)'); c.fillStyle = wg; c.fillRect(-vw * 0.6, -vw * 0.6, vw * 1.2, vw * 1.2); c.restore();
+    if (inf.shadow) { c.save(); c.globalAlpha = 0.9; c.imageSmoothingEnabled = true; c.drawImage(inf.shadow, carX - inf.pad * sc, g - inf.gy * sc, inf.shadow.width * sc, inf.shadow.height * sc); c.restore(); }
+    // the car, exactly as supplied. A side the photo's own frame cut through runs off the canvas edge; a cut that cannot (the roof, or the second side) fades out softly.
+    const adj = filterStr(P), usedAdj = adj !== 'none' && adjFilterOK, fadeT = cuts.t ? ch * 0.08 : 0, fadeR = cuts.r && !bleedR && carX + cw < W - 2 ? cw * 0.05 : 0, fadeL = cuts.l && carX > 1 ? cw * 0.05 : 0;
+    if (fadeT || fadeR || fadeL) {
+      offCar.width = Math.max(2, Math.ceil(dw)); offCar.height = Math.max(2, Math.ceil(dh)); const k2 = offCar.getContext('2d'); k2.setTransform(1, 0, 0, 1, 0, 0); k2.clearRect(0, 0, offCar.width, offCar.height);
+      k2.imageSmoothingEnabled = true; k2.imageSmoothingQuality = 'high'; if (usedAdj) k2.filter = adj; k2.drawImage(img, 0, 0, dw, dh); k2.filter = 'none';
+      if (P.plate) plateBlur(k2, img, { x: 0, y: 0, w: dw, h: dh }, P.plate);
+      k2.globalCompositeOperation = 'destination-in'; const lx = carX - dx, ty = carY - dy;
+      if (fadeT) { const gr = k2.createLinearGradient(0, ty, 0, ty + fadeT); gr.addColorStop(0, 'rgba(0,0,0,0)'); gr.addColorStop(1, 'rgba(0,0,0,1)'); k2.fillStyle = gr; k2.fillRect(0, 0, offCar.width, offCar.height); }
+      if (fadeR) { const gr = k2.createLinearGradient(lx + cw, 0, lx + cw - fadeR, 0); gr.addColorStop(0, 'rgba(0,0,0,0)'); gr.addColorStop(1, 'rgba(0,0,0,1)'); k2.fillStyle = gr; k2.fillRect(0, 0, offCar.width, offCar.height); }
+      if (fadeL) { const gr = k2.createLinearGradient(lx, 0, lx + fadeL, 0); gr.addColorStop(0, 'rgba(0,0,0,0)'); gr.addColorStop(1, 'rgba(0,0,0,1)'); k2.fillStyle = gr; k2.fillRect(0, 0, offCar.width, offCar.height); }
+      k2.globalCompositeOperation = 'source-over'; c.drawImage(offCar, dx, dy);
+    } else {
+      c.save(); c.imageSmoothingEnabled = true; c.imageSmoothingQuality = 'high'; if (usedAdj) c.filter = adj; c.drawImage(img, dx, dy, dw, dh); c.filter = 'none'; c.restore();
+      if (P.plate) plateBlur(c, img, { x: dx, y: dy, w: dw, h: dh }, P.plate);
+    }
+    const parts = [PS.tx('adjLabelBg')]; if (usedAdj) parts.push(PS.tx('adjLabelBright')); if (P.plate) parts.push(PS.tx('adjLabelPlate')); S._labels.push(parts.join(' + '));
+    if (P.src === 'stock') S._samplePhoto = true;
+    const area = { x: Math.max(0, Math.min(o.x0, carX)), y: Math.max(o.top - 20, carY), w: 0, h: 0 }; area.w = Math.min(W, Math.max(o.x1, carX + cw)) - area.x; area.h = g + 20 - area.y;
+    S._slots.push({ key: 'main', r: area, dr: { x: dx, y: dy, w: dw, h: dh }, mode: 'cut', travel: { x: trav, y: 1e9 } });
+    return { x: dx, y: dy, w: dw, h: dh, car: { x: carX, y: carY, w: cw, h: ch }, ground: g, cuts };
+  };
+  // a template written for a transparent PNG (Hero ghost name, Reel cover) gets the cut-out in place of the photo when there is one
+  D.cutProxy = function (P) { const k = D.cutImg(P); return k && !P.alpha ? Object.assign({}, P, { img: k, alpha: true }) : P; };
   // QA hook: wraps a named zone ('footer') so the export harness can record where it sits. A no-op in the app.
   D.zone = function (c, name, r, fn) { return fn(); };
   // small honesty label for edited photos (toggle in settings). Scales with canvas height and is anchored by its BOTTOM edge.

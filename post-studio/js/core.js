@@ -347,7 +347,7 @@
 
   // photo provenance: 'own' (owner's shoot or upload), 'ig' (cropped from our Instagram listing), 'stock' (bundled layout-test photo, NOT our car)
   PS.PHOTO_SRC_LABEL = { own: 'our own photo', ig: 'Photo from our Instagram listing', stock: 'stock layout-test photo (not our car)' };
-  PS.newPhoto = (img, name, src) => ({ img, name: name || '', px: 0.5, py: 0.55, zoom: 1, fit: 'auto', bright: 0, contrast: 0, src: src || 'own', plate: null });
+  PS.newPhoto = (img, name, src) => ({ img, name: name || '', px: 0.5, py: 0.55, zoom: 1, fit: 'auto', bright: 0, contrast: 0, src: src || 'own', plate: null, cut: null });
   // does this image carry real transparency (a cut-out car)? Samples a 64 px copy.
   PS.hasAlpha = function (img) {
     try { const w = 64, h = Math.max(8, Math.round(64 * (img.naturalHeight || img.height) / (img.naturalWidth || img.width))), cv = document.createElement('canvas'); cv.width = w; cv.height = h; const x = cv.getContext('2d'); x.drawImage(img, 0, 0, w, h);

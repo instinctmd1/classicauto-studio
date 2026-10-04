@@ -657,7 +657,7 @@
      stands in that room with its edges fading into a blurred copy of itself, so no hard seam shows and the car never sits behind the title. On the 9:16 cover the logo bar sits
      inside the profile grid's 4:5 crop (y 285 to 1635); on the 4:5 cover everything is inside the grid-safe area. The price follows the "Price on the cover" choice on both. */
   function reelCover(c, S, L) {
-    const { W, H } = L, tall = L.mode === 'tall', v = carView(S.car), m = 64, w = W - 2 * m, P = S.photos.main, hasP = !!(P && P.img), iw = hasP ? (P.img.naturalWidth || P.img.width) : 1, ih = hasP ? (P.img.naturalHeight || P.img.height) : 1;
+    const { W, H } = L, tall = L.mode === 'tall', v = carView(S.car), m = 64, w = W - 2 * m, P = D.cutProxy(S.photos.main), hasP = !!(P && P.img), iw = hasP ? (P.img.naturalWidth || P.img.width) : 1, ih = hasP ? (P.img.naturalHeight || P.img.height) : 1;
     const land = hasP && (P.alpha || iw / ih > 0.7), barY = tall ? 300 : 40, y0 = tall ? 500 : 196, carLimit = tall ? H - 340 - 28 : H - 66;
     paintBg(c, L, 'flat');
     S._slots = S._slots || []; S._labels = S._labels || [];
@@ -696,7 +696,7 @@
     else {
       if (P.alpha) { const gl = c.createRadialGradient(W / 2, H * 0.78, 40, W / 2, H * 0.78, W * 0.8); gl.addColorStop(0, 'rgba(60,90,160,.35)'); gl.addColorStop(1, 'rgba(60,90,160,0)'); c.fillStyle = gl; c.fillRect(0, 0, W, H); }
       else D.blurBack(c, P.img, full, P);
-      const top = textEnd + 20; let R = { x: 0, y: top, w: W, h: carLimit - top };
+      const top = textEnd + 20; let R = { x: 0, y: top, w: W, h: carLimit - top - (P.alpha ? 56 : 0) };      // a cut-out car ends above the honesty label (its tyres are not faded out like a photo's edge)
       if (R.h < 260) { PS.note(S, 'The words fill most of the cover, so the car is small. Use a shorter title or switch the keyword off.'); R = { x: 0, y: carLimit - 260, w: W, h: 260 }; }
       const dr = D.photoPlaced(c, S, P, R, { feather: { l: 60, r: 60, t: R.h * 0.1, b: R.h * 0.1 }, radial: [0.6, 0.62, 0.62], minFrac: 0.5, anchorX: 0.5, slackY: 0.5, cut: !!P.alpha, noBackdrop: true, maxScale: P.alpha ? 0 : 1.3 });
       S._slots.push({ key: 'main', r: R, dr, mode: 'fill' });

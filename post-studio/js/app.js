@@ -303,7 +303,7 @@
       if (o.status === 'past') add('warn', 'The offer date has passed, so no deadline is printed. Clear it or type a future date.');
       if (o.status === 'unreadable') add('warn', 'That offer date could not be read. Try 31 Dec 2026.');
     }
-    if (t.needsCut && !(S.photos.main && S.photos.main.alpha)) add('info', 'This layout is built for a cut-out car (a PNG with a transparent background). Until you add one the photo shows as a soft-edged band.');
+    if (t.needsCut && !PS.D.cutImg(S.photos.main)) add('info', 'This layout is built for a cut-out car (a PNG with a transparent background). Until you add one the photo shows as a soft-edged band.');
     if (S.tpl === 'receipt' && PS.exportIssue(S) === 'noitems') add('warn', 'Add what is included, one item per line. The Receipt only lists real items and will not export while it is empty.');
     if (S.tpl === 'finance' && !(PS.parseMoney(S.car.price) > 0)) add('warn', 'Add the car’s price. The Finance post needs a real price and will not export without one.');
     { const ei = PS.exportIssue(S); if (ei === 'norole' || ei === 'nocar') add('warn', PS.ISSUE_MSG[ei]); }
@@ -353,6 +353,7 @@
             P.plate ? h('button', { class: 'btn sm ghost', type: 'button', onclick: () => { P.plate = null; plateMode = false; buildPhoto(); changed(); } }, 'Remove plate blur') : null)));
       }
       p.append(h('p', { class: 'help', text: 'Photo source: ' + (PS.PHOTO_SRC_LABEL[P.src] || PS.PHOTO_SRC_LABEL.own) + (P.src === 'ig' ? '. Swap in a walk-around photo when you have one.' : '.') }));
+      p.append(cutGroup(P));
     }
     // the layout-test photos are not Classic Auto's own pictures and are not published with the studio: the button only appears where the files exist (a local copy)
     if (PS.hasLayoutPhotos) p.append(h('div', { class: 'row' }, h('button', { class: 'btn sm ghost', type: 'button', onclick: loadLayoutPhoto }, 'Load a layout-test photo (not our car)')),
@@ -366,6 +367,55 @@
       const n = LAYOUT_PHOTOS[layoutIdx++ % LAYOUT_PHOTOS.length], img = await PS.loadImage(`assets/samples/${n}.jpg`), P = targetPhoto(true); Object.assign(P, PS.newPhoto(img, n + '.jpg', 'stock'));
       buildPhoto(); changed(); toast('Layout-test photo loaded. It is not one of our cars.');
     } catch (e) { toast('Could not load the layout-test photo.'); }
+  }
+  /* ---------- the cut-out (3D look): the car alone on a transparent background, drawn on the post's showroom floor ---------- */
+  const KIT = 'http://localhost:8766';
+  function cutGroup(P) {
+    const has = !!PS.D.cutImg(P), own = P.alpha, st = (S.x.photoStyle || 'cut');
+    const msg = own ? 'This photo is a cut-out already (transparent PNG): the car stands on the showroom floor.'
+      : has ? (st === 'cut' || !tpl().x || !tpl().x.includes('photoStyle') ? 'This car has a cut-out: the Signature layouts show it in 3D on the showroom floor, with no frame.' : 'This car has a cut-out. Pick “3D cut-out” under Photo style to use it.')
+      : P.cut && P.plate ? 'The cut-out is not the photo’s own size, so the plate blur would miss. The photo is used. Make the cut-out from this photo with “Make cut-out”.'
+      : 'No cut-out yet, so the post uses the photo. Add one for the 3D look: a PNG with a transparent background, or press “Make cut-out”.';
+    const fin = h('input', { type: 'file', accept: 'image/png,image/webp', hidden: true, 'aria-label': 'Choose a cut-out PNG' });
+    fin.addEventListener('change', () => { const f = fin.files && fin.files[0]; fin.value = ''; if (f) setCutFile(f); });
+    return h('div', { class: 'group', id: 'cutGroup' }, h('h3', { text: 'Cut-out (3D look)' }), h('p', { class: 'help', id: 'cutMsg', text: msg }),
+      own ? null : h('div', { class: 'row' },
+        h('button', { class: 'btn sm', type: 'button', id: 'btnCutFile', onclick: () => fin.click() }, P.cut ? 'Replace cut-out PNG' : 'Add cut-out PNG'),
+        h('button', { class: 'btn sm', type: 'button', id: 'btnCutMake', onclick: makeCut }, 'Make cut-out'),
+        P.cut ? h('button', { class: 'btn sm ghost', type: 'button', onclick: () => { P.cut = null; buildPhoto(); changed(); toast('Cut-out removed. The post uses the photo.'); } }, 'Remove cut-out') : null, fin),
+      own ? null : h('p', { class: 'help', text: '“Make cut-out” uses the listing kit on this computer: start it once with  python kit.py serve  in classic-auto/listing-kit. Many cars at once: python tools/make_cutouts.py <folder>. Only the background is removed; the car is never retouched.' }));
+  }
+  async function setCutFile(file) {
+    const P = targetPhoto(false); if (!P || !P.img) { toast('Add the car photo first, then its cut-out.'); return; }
+    try {
+      const img = await PS.fileToImage(file);
+      if (!PS.hasAlpha(img)) { toast('That PNG has no transparent background, so it is not a cut-out.'); return; }
+      const a = [P.img.naturalWidth || P.img.width, P.img.naturalHeight || P.img.height], b = [img.naturalWidth, img.naturalHeight];
+      P.cut = img; buildPhoto(); changed();
+      toast(P.plate && (a[0] !== b[0] || a[1] !== b[1]) ? 'Cut-out added, but it is not the photo’s size, so with the plate blur on the photo is used.' : 'Cut-out added: the car now stands on the showroom floor.');
+    } catch (e) { toast('Could not read that cut-out.'); }
+  }
+  let cutBusy = false;
+  async function makeCut() {
+    const P = targetPhoto(false); if (!P || !P.img || cutBusy) return; const btn = $('#btnCutMake'), msg = $('#cutMsg'), say = (t) => { if (msg) msg.textContent = t; };
+    cutBusy = true; if (btn) btn.disabled = true; say('Making the cut-out on this computer… (about 10 to 30 seconds)');
+    try {
+      const photo = await (await fetch(P.img.src)).blob(), fd = new FormData(); fd.append('photo', photo, (P.name || 'photo').replace(/\.[^.]+$/, '') + '.png');
+      let r; try { r = await fetch(KIT + '/api/cutout', { method: 'POST', body: fd }); } catch (e) { throw new Error('The listing kit is not running on this computer. Start it with  python kit.py serve  (in classic-auto/listing-kit) and press again.'); }
+      const j0 = await r.json(); if (!r.ok || !j0.job) throw new Error(j0.error || 'The listing kit refused the photo.');
+      for (let i = 0; i < 300; i++) {
+        await new Promise((res) => setTimeout(res, 1500)); const j = await (await fetch(`${KIT}/api/cutout/${j0.job}`)).json();
+        if (j.status === 'error') throw new Error(j.error || 'The cut-out did not work for this photo.');
+        if (j.status === 'done') {
+          const blob = await (await fetch(`${KIT}/api/cutout/${j0.job}/png`)).blob();
+          const img = await PS.fileToImage(new File([blob], 'cutout.png', { type: 'image/png' }));      // a data URL: the canvas stays exportable
+          if (targetPhoto(false) === P) { P.cut = img; buildPhoto(); changed(); toast('Cut-out made: the car now stands on the showroom floor. Check its edges before posting.'); }
+          return;
+        }
+      }
+      throw new Error('The cut-out is taking too long. Try tools/make_cutouts.py instead.');
+    } catch (e) { say(e.message); toast(e.message); }
+    finally { cutBusy = false; if (btn) btn.disabled = false; }
   }
   async function setPhotoFile(file, which) {
     if (!/^image\//.test(file.type)) { toast('That file is not an image.'); return; }
@@ -529,7 +579,7 @@
     fr.addEventListener('pointermove', (ev) => {
       if (pbox) { const c = toCanvas(ev); pbox.x1 = c.x; pbox.y1 = c.y; const x = Math.min(pbox.x0, pbox.x1) * pbox.k, y = Math.min(pbox.y0, pbox.y1) * pbox.k, w = Math.abs(pbox.x1 - pbox.x0) * pbox.k, hh = Math.abs(pbox.y1 - pbox.y0) * pbox.k; Object.assign(pel.style, { left: x + 'px', top: y + 'px', width: w + 'px', height: hh + 'px' }); pel.hidden = false; return; }
       if (!drag) return; const r = fr.getBoundingClientRect(), [W] = PS.parseSize(S.size), k = W / r.width, s = drag.slot, dr = s.dr || { w: s.r.w, h: s.r.h };
-      const ox = Math.max(1, dr.w - s.r.w), oy = Math.max(1, dr.h - s.r.h);
+      const ox = s.travel ? s.travel.x : Math.max(1, dr.w - s.r.w), oy = s.travel ? s.travel.y : Math.max(1, dr.h - s.r.h);
       drag.P.px = Math.min(1, Math.max(0, drag.px - ((ev.clientX - drag.x) * k) / ox)); drag.P.py = Math.min(1, Math.max(0, drag.py - ((ev.clientY - drag.y) * k) / oy)); render();
     });
     const endPlate = () => {

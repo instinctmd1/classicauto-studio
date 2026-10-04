@@ -20,7 +20,7 @@
     id: 'heroghost', name: 'Hero (ghost name)', group: 'More car layouts', family: 'photo', sizes: FEED, def: '1080x1350', file: 'heroghost', ver: 'v2',
     car: true, badges: [], x: ['accent'], noCta: true, needsCut: true,
     render(c, L, S) {
-      const { W, H, mode } = L, v = carView(S.car), P = S.photos.main, A = accentOf(S), m = L.m, k = mode === 'wide' ? 1.2 : mode === 'square' ? 0.9 : 1;
+      const { W, H, mode } = L, v = carView(S.car), P = D.cutProxy(S.photos.main), A = accentOf(S), m = L.m, k = mode === 'wide' ? 1.2 : mode === 'square' ? 0.9 : 1;
       c.fillStyle = D.lin(c, 0, 0, 0, H, [[0, A.mid], [0.55, A.a], [1, A.b]]); c.fillRect(0, 0, W, H);
       const gl = c.createRadialGradient(W / 2, H * 0.45, 40, W / 2, H * 0.45, W * 0.7); gl.addColorStop(0, 'rgba(255,255,255,.14)'); gl.addColorStop(1, 'rgba(255,255,255,0)'); c.fillStyle = gl; c.fillRect(0, 0, W, H);
       const { top, bottom, hh } = region(L), model = up(S.car.model || 'Model'), make = up(S.car.make || '');

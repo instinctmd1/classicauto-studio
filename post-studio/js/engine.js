@@ -39,6 +39,9 @@
   PS.hydrateCar = async function (car) {
     if (car.photoObj || !car.photo) return car;
     try { car.photoObj = PS.newPhoto(await PS.loadImage(car.photo), car.photo.split('/').pop(), car.photoSrc || 'own'); if (car.plateBox) car.photoObj.plate = Object.assign({}, car.plateBox); } catch (e) { /* missing photo is allowed */ }
+    // its cut-out (the car alone, transparent background, the photo's own size): assets/cutouts/<same name>.png, made by tools/make_cutouts.py
+    const cp = car.cutout || (/^assets\/cars\/[\w.-]+\.(jpe?g|png|webp)$/i.test(car.photo) ? car.photo.replace('assets/cars/', 'assets/cutouts/').replace(/\.\w+$/, '.png') : '');
+    if (cp && car.photoObj) try { car.photoObj.cut = await PS.loadImage(cp); } catch (e) { /* no cut-out: the photo layout is used */ }
     return car;
   };
 

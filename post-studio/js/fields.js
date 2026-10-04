@@ -8,7 +8,7 @@
     // Classic Listing (New Arrival)
     listStyle: { label: 'Style', type: 'select', def: 'classic', options: [['classic', 'Classic Listing (light)'], ['navy', 'Dark navy']] },
     carStyle: { label: 'Style', type: 'select', def: 'sig', options: [['sig', 'Signature (light, like the post)'], ['navy', 'Dark navy']] },
-    photoStyle: { label: 'Photo style', type: 'select', def: 'bleed', options: [['bleed', 'Photo-forward (the car runs to the edge and fades into the white)'], ['frame', 'Framed (a rounded frame; cut-outs stand on a showroom floor)']] },
+    photoStyle: { label: 'Photo style', type: 'select', def: 'cut', options: [['cut', '3D cut-out (the car stands on the showroom floor; needs a cut-out, else Photo-forward)'], ['bleed', 'Photo-forward (the whole photo runs to the edge and fades into the white)'], ['frame', 'Framed (a rounded frame; cut-outs stand on a showroom floor)']] },
     accent: { label: 'Accent colour', type: 'select', def: 'auto', options: [['auto', 'Match the car (navy by default)'], ['navy', 'Navy'], ['green', 'Racing green'], ['maroon', 'Maroon'], ['black', 'Black']] },
     luxury: { label: 'Header line', type: 'select', def: 'auto', options: [['auto', 'Automatic (luxury from ₹35 L)'], ['yes', 'Pre-owned luxury cars'], ['no', 'Pre-owned cars']] },
     stamp: { label: 'Corner stamp', type: 'select', def: 'none', options: [['none', 'No stamp'], ['just', 'Just in (repeated outline)'], ['new', 'New price (hazard stripe)'], ['booked', 'Booked (ring)'], ['sold', 'Sold (concentric rings)'], ['soon', 'Coming soon (ribbon)'], ['inspected', 'Inspected (only when switched on in Settings)']] },
