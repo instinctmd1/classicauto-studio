@@ -31,6 +31,8 @@ import { OneEuro } from "./oneEuro.js";
 
 var ILLUSTRATIVE = "models/car.glb";
 var HDRI = { daylight: "assets/hdri/daylight.hdr" };
+/* phones: the same sky, tone-mapped once to an 8-bit JPEG (44 KB instead of the 1.4 MB HDR; about 0.3 s on 3G instead of 6 s) */
+var SKY_JPG = { daylight: "assets/hdri/daylight_sky_1k.jpg" };
 var ROAD_DIR = "assets/textures/asphalt/";
 var NAVY = 0x0a1633, BLACK_STAGE = 0x02040a;
 var DEG = Math.PI / 180;
@@ -636,7 +638,14 @@ function initStudio(car) {
     if (m === "studio") return Promise.resolve();
     if (prepared[m]) return prepared[m];
     var env;
-    if (HDRI[m]) {
+    if (mobile && SKY_JPG[m]) {
+      env = new Promise(function (res, rej) {
+        texLoader.load(SKY_JPG[m], function (tex) {
+          tex.mapping = THREE.EquirectangularReflectionMapping; tex.colorSpace = THREE.SRGBColorSpace;
+          skies[m] = tex; envs[m] = pmrem.fromEquirectangular(tex).texture; res();
+        }, undefined, rej);
+      });
+    } else if (HDRI[m]) {
       env = new Promise(function (res, rej) {
         rgbe.load(HDRI[m], function (tex) { tex.mapping = THREE.EquirectangularReflectionMapping; envs[m] = pmrem.fromEquirectangular(tex).texture; skies[m] = tex; res(); }, undefined, rej);
       });
