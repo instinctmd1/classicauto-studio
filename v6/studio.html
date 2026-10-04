@@ -43,11 +43,13 @@
         <div>
           <div class="studio-bay" id="studioBay" data-light="studio">
             <canvas id="studioCanvas" tabindex="0" role="img" aria-label="Interactive 3D view of the car" aria-describedby="studioHelp"></canvas>
+            <div class="studio-fade" id="studioFade" aria-hidden="true"></div>
             <span class="studio-badge" id="studioModelBadge">Illustrative 3D model</span>
             <div class="control-group studio-lights" role="group" aria-label="Lighting">
               <button type="button" class="chip-btn" data-light="studio" aria-pressed="true">Studio</button>
-              <button type="button" class="chip-btn" data-light="daylight" aria-pressed="false">Daylight</button>
+              <button type="button" class="chip-btn" data-light="daylight" aria-pressed="false">Day</button>
               <button type="button" class="chip-btn" data-light="evening" aria-pressed="false">Evening</button>
+              <button type="button" class="chip-btn" data-light="night" aria-pressed="false">Night</button>
             </div>
             <div class="studio-hotspots" id="studioHotspots"></div>
             <div class="studio-reticle" id="studioReticle" hidden aria-hidden="true"><i></i><i></i><i></i><i></i></div>

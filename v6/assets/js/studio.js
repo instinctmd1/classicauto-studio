@@ -5,8 +5,12 @@
    Model:     models/cars/<id>.glb when the importer found a phone scan (car.scan),
               otherwise the illustrative Ferrari 458 (models/car.glb, CC BY 4.0) with the
               N4 label always on screen, badges removed, paint taken from the listed car.
-   Light:     Studio (default, no download: RoomEnvironment + navy cyclorama), Daylight and
-              Evening (CC0 HDRIs fetched only when chosen). A warm spotlight sweeps the car
+   Light:     Studio (default, no download: RoomEnvironment + navy cyclorama), and three
+              outdoor scenes on an asphalt road with lane lines: Day (CC0 sky HDRI fetched only
+              when chosen), Evening (painted dusk sky over a city skyline) and Night (painted
+              night sky, two street lamps, a wet road). The painted skies are drawn on a canvas,
+              so Evening and Night never wait for a download; road textures are small (about
+              100 KB on phones). A short fade hides each switch. A warm spotlight sweeps the car
               once per car on entry; any input skips it.
    Input:     one finger or mouse orbits through a One Euro filter, a vertical swipe always
               scrolls the page (touch-action: pan-y, rule N8), arrow keys orbit, any input
@@ -26,7 +30,8 @@ import { sanitizeCarModel } from "./carSanitize.js";
 import { OneEuro } from "./oneEuro.js";
 
 var ILLUSTRATIVE = "models/car.glb";
-var HDRI = { daylight: "assets/hdri/daylight.hdr", evening: "assets/hdri/evening.hdr" };
+var HDRI = { daylight: "assets/hdri/daylight.hdr" };
+var ROAD_DIR = "assets/textures/asphalt/";
 var NAVY = 0x0a1633, BLACK_STAGE = 0x02040a;
 var DEG = Math.PI / 180;
 var CAR_LEN = 3.2;                       // the model is scaled so its longest side is this many units
@@ -140,10 +145,13 @@ function initStudio(car) {
     loadingEl.innerHTML = "<span>3D isn't available on this device. The photos on the car's page show the listed car.</span>";
     $("studioPresets").hidden = true; $("tourBtn").hidden = true; $("turntableBtn").hidden = true;
   }
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, mobile ? 1.5 : 2));
+  /* Phones: 1.5x at most, stepping down to 1x if active frames run long (see adapt()); no shadow-map pass (the soft contact
+     shadow under the car stays). Desktop is unchanged. */
+  var dprNow = Math.min(window.devicePixelRatio || 1, mobile ? 1.5 : 2);
+  renderer.setPixelRatio(dprNow);
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
-  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.enabled = !mobile;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
   var scene = new THREE.Scene();
@@ -163,8 +171,8 @@ function initStudio(car) {
 
   var hemi = new THREE.HemisphereLight(0x9db4e8, 0x0a1633, 0.3); scene.add(hemi);
   var key = new THREE.DirectionalLight(0xfff1d8, 2);
-  key.position.set(3.4, 5.6, 3.2); key.castShadow = true;
-  key.shadow.mapSize.set(mobile ? 512 : 1536, mobile ? 512 : 1536);
+  key.position.set(3.4, 5.6, 3.2); key.castShadow = !mobile;
+  key.shadow.mapSize.set(1536, 1536);
   key.shadow.camera.near = 1; key.shadow.camera.far = 16;
   key.shadow.camera.left = -4; key.shadow.camera.right = 4; key.shadow.camera.top = 4; key.shadow.camera.bottom = -4;
   key.shadow.bias = -0.0012; scene.add(key);
@@ -173,27 +181,147 @@ function initStudio(car) {
   var spot = new THREE.SpotLight(0xffd9a0, 0, 14, 0.35, 0.7, 1.4);        // entrance sweep: angle .35, penumbra .7
   spot.position.set(2.6, 4.2, 0.4); scene.add(spot); scene.add(spot.target);
 
+  /* ---- the outdoor set: an asphalt road with lane lines, fading out with distance into the sky's own ground tone ---- */
+  var texLoader = new THREE.TextureLoader();
+  function radialFade(inner) {                                              // white centre -> black edge, for alphaMap
+    var c = document.createElement("canvas"); c.width = c.height = 256;
+    var g = c.getContext("2d"), gr = g.createRadialGradient(128, 128, 128 * inner, 128, 128, 128);
+    gr.addColorStop(0, "#fff"); gr.addColorStop(1, "#000");
+    g.fillStyle = "#000"; g.fillRect(0, 0, 256, 256); g.fillStyle = gr; g.fillRect(0, 0, 256, 256);
+    return new THREE.CanvasTexture(c);
+  }
+  function laneTexture(dashed) {                                            // one strip, fading out at both ends
+    var c = document.createElement("canvas"); c.width = 8; c.height = 1024;
+    var g = c.getContext("2d");
+    for (var y = 0; y < 1024; y++) {
+      var d = Math.abs(y - 512) / 512, a = d < 0.45 ? 1 : Math.max(0, 1 - (d - 0.45) / 0.55);
+      if (dashed && (Math.floor(y / 52) % 2)) a = 0;
+      var v = Math.round(a * 255);
+      g.fillStyle = "rgb(" + v + "," + v + "," + v + ")"; g.fillRect(0, y, 8, 1);
+    }
+    return new THREE.CanvasTexture(c);
+  }
+  var ROAD_R = 40, ROAD_TILE = 4.5;
+  var roadMat = new THREE.MeshStandardMaterial({ color: 0x7d7f84, roughness: 1, metalness: 0, transparent: true, depthWrite: false, alphaMap: radialFade(0.3) });
+  var road = new THREE.Mesh(new THREE.CircleGeometry(ROAD_R, 96), roadMat);
+  road.rotation.x = -Math.PI / 2; road.receiveShadow = !mobile; road.renderOrder = -2;
+  var roadSet = new THREE.Group(); roadSet.visible = false; roadSet.add(road); scene.add(roadSet);
+  var laneMat = new THREE.MeshStandardMaterial({ color: 0xe8e6dc, roughness: 0.7, metalness: 0, transparent: true, depthWrite: false, alphaMap: laneTexture(false) });
+  var dashMat = laneMat.clone(); dashMat.alphaMap = laneTexture(true);
+  [[1.62, laneMat], [-1.62, dashMat], [-4.6, laneMat]].forEach(function (l) {
+    var m = new THREE.Mesh(new THREE.PlaneGeometry(0.11, 34), l[1]);
+    m.rotation.x = -Math.PI / 2; m.position.set(l[0], 0.002, 0); m.renderOrder = -1; m.receiveShadow = !mobile;
+    roadSet.add(m);
+  });
+  var roadTexState = null;                                                  // null | Promise
+  function loadRoadTextures() {
+    if (roadTexState) return roadTexState;
+    var files = mobile ? { map: "road_diff_512.jpg", roughnessMap: "road_rough_512.jpg" }
+                       : { map: "road_diff_1k.jpg", roughnessMap: "road_rough_512.jpg", normalMap: "road_nor_512.jpg" };
+    roadTexState = Promise.all(Object.keys(files).map(function (k) {
+      return new Promise(function (res) {
+        texLoader.load(ROAD_DIR + files[k], function (t) {
+          t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(2 * ROAD_R / ROAD_TILE, 2 * ROAD_R / ROAD_TILE);
+          t.colorSpace = k === "map" ? THREE.SRGBColorSpace : THREE.NoColorSpace;
+          t.anisotropy = mobile ? 2 : Math.min(8, renderer.capabilities.getMaxAnisotropy());
+          roadMat[k] = t; res();
+        }, undefined, function () { res(); });                          // a missing texture never blocks: the plain asphalt colour stays
+      });
+    })).then(function () { roadMat.needsUpdate = true; applyRig(); });
+    return roadTexState;
+  }
+
+  /* ---- street lamps (Night): two poles on the kerb side, each with a warm downlight. The spot lights stay in the scene at zero
+     intensity in the other modes, so switching never changes the light count (no shader recompile, no hitch). ---- */
+  var lamps = [];
+  var poleMat = new THREE.MeshStandardMaterial({ color: 0x1c1f26, roughness: 0.6, metalness: 0.6 });
+  var headMat = new THREE.MeshBasicMaterial({ color: 0xffe2b0 });
+  var lampSet = new THREE.Group(); lampSet.visible = false; scene.add(lampSet);
+  [-4.2, 4.6].forEach(function (z) {
+    var pole = new THREE.Mesh(new THREE.CylinderGeometry(0.045, 0.06, 5.4, 10), poleMat); pole.position.set(-5.5, 2.7, z); lampSet.add(pole);
+    var arm = new THREE.Mesh(new THREE.BoxGeometry(1.3, 0.06, 0.08), poleMat); arm.position.set(-4.9, 5.35, z); lampSet.add(arm);
+    var head = new THREE.Mesh(new THREE.BoxGeometry(0.46, 0.07, 0.22), headMat); head.position.set(-4.35, 5.3, z); lampSet.add(head);
+    var sl = new THREE.SpotLight(0xffd9a6, 0, 18, 0.7, 0.75, 1.2);
+    sl.position.set(-4.35, 5.25, z); sl.target.position.set(-0.6, 0, z * 0.5);
+    scene.add(sl); scene.add(sl.target); lamps.push(sl);
+  });
+
+  /* ---- painted skies (equirectangular canvases, 1024 x 512: the same PMREM size as the studio room, so no recompile) ---- */
+  var SKIES = {
+    evening: { stops: [[0, "#141c3d"], [0.45, "#3a3566"], [0.72, "#9a5a72"], [0.9, "#f0915a"], [1, "#ffc27a"]], ground: "#2a2428", groundTop: "#5a3d3a",
+               glow: { u: 0.074, h: 0.006, r: 0.14, c0: "rgba(255,214,150,0.95)", c1: "rgba(255,150,90,0.45)" }, city: { color: "#1a1424", lit: 0.05 } },
+    night:   { stops: [[0, "#02040b"], [0.5, "#071230"], [0.82, "#13244f"], [0.95, "#3b3654"], [1, "#6b5048"]], ground: "#07090f", groundTop: "#1d1b24",
+               glow: { u: 0.62, h: 0.0, r: 0.22, c0: "rgba(255,170,100,0.30)", c1: "rgba(160,110,120,0.12)" }, stars: 520, city: { color: "#05070d", lit: 0.22 } }
+  };
+  function rand(seed) { return function () { seed = (seed * 16807) % 2147483647; return (seed - 1) / 2147483646; }; }
+  /* the backdrop is painted at 2048 x 1024 on desktop (1024 x 512 on phones); the lighting copy is always 1024 x 512 */
+  function paintSky(kind) {
+    var W = mobile ? 1024 : 2048, H = W / 2, u = W / 2048;
+    var P = SKIES[kind], half = H / 2, c = document.createElement("canvas"); c.width = W; c.height = H;
+    var g = c.getContext("2d"), r = rand(kind === "night" ? 7 : 3);
+    var lin = g.createLinearGradient(0, 0, 0, half);
+    P.stops.forEach(function (st) { lin.addColorStop(st[0], st[1]); });
+    g.fillStyle = lin; g.fillRect(0, 0, W, half + 1);
+    var gl = g.createLinearGradient(0, half, 0, H);
+    gl.addColorStop(0, P.groundTop); gl.addColorStop(0.1, P.ground); gl.addColorStop(1, P.ground);
+    g.fillStyle = gl; g.fillRect(0, half, W, half);
+    if (P.stars) for (var i = 0; i < P.stars; i++) {
+      var sx = r() * W, sy = Math.pow(r(), 1.4) * half * 0.8, a = 0.25 + r() * 0.75;
+      var sz = (r() < 0.12 ? 2.2 : 1.2) * u + 0.6;
+      g.fillStyle = "rgba(255,255,255," + a.toFixed(2) + ")"; g.fillRect(sx, sy, sz, sz);
+    }
+    if (P.glow) for (var k = -1; k <= 1; k++) {
+      var gx = P.glow.u * W + k * W, gy = half - P.glow.h * H, gr = P.glow.r * W, rg = g.createRadialGradient(gx, gy, 0, gx, gy, gr);
+      rg.addColorStop(0, P.glow.c0); rg.addColorStop(0.35, P.glow.c1); rg.addColorStop(1, "rgba(0,0,0,0)");
+      g.fillStyle = rg; g.fillRect(gx - gr, gy - gr, 2 * gr, gr + (half - gy) + 2);
+    }
+    if (P.city) {                                                           // a low skyline on the horizon, a few lit windows
+      var x = 0, step = 3 * u + 1;
+      while (x < W) {
+        var bw = (4 + r() * 11) * u * 1.6, bh = (2 + Math.pow(r(), 2.4) * 14) * u * 1.6;
+        g.fillStyle = P.city.color; g.fillRect(x, half - bh, bw, bh + 1);
+        if (P.city.lit) for (var wy = half - bh + step; wy < half - 1; wy += step) for (var wx = x + 1; wx < x + bw - 1; wx += step) if (r() < P.city.lit) {
+          g.fillStyle = r() < 0.7 ? "rgba(255,206,140,0.85)" : "rgba(200,220,255,0.75)"; g.fillRect(wx, wy, Math.max(1, u), Math.max(1, u));
+        }
+        x += bw + r() * 2 * u;
+      }
+    }
+    var t = new THREE.CanvasTexture(c); t.mapping = THREE.EquirectangularReflectionMapping; t.colorSpace = THREE.SRGBColorSpace;
+    return t;
+  }
+  var skies = {};                                                           // backgrounds per outdoor mode
+
   /* each mode: base intensities (multiplied by rig while the entrance fades up) */
   var MODES = {
     studio:   { env: 0.55, hemi: 0.3,  key: 2.0,  keyCol: 0xfff1d8, keyPos: [3.4, 5.6, 3.2],  red: 0.2, blue: 0.5, exposure: 1.0 },
-    daylight: { env: 1.0,  hemi: 0.15, key: 2.1,  keyCol: 0xfff1d8, keyPos: [3.4, 5.6, 3.2],  red: 0.1, blue: 0.2, exposure: 1.05 },
-    evening:  { env: 0.9,  hemi: 0.1,  key: 0.55, keyCol: 0xffd8a0, keyPos: [-4, 2.4, -3],    red: 0.2, blue: 1.4, exposure: 0.85 }
+    daylight: { env: 1.0,  hemi: 0.45, key: 2.6,  keyCol: 0xfff3e0, keyPos: [3.4, 6.2, 3.0],  red: 0,   blue: 0.15, exposure: 1.0,
+                outdoor: true, sky: 0xb7d0ec, ground: 0x6b6a66, road: 0xffffff, roadRough: 1, lamps: 0 },
+    evening:  { env: 1.5,  hemi: 0.35, key: 2.3,  keyCol: 0xffa766, keyPos: [-5.5, 1.9, -2.6], red: 0,    blue: 0.55, exposure: 1.0,
+                outdoor: true, sky: 0x8a6a9a, ground: 0x2a2428, road: 0xd9c4b8, roadRough: 0.9, lamps: 0 },
+    night:    { env: 1.3,  hemi: 0.18, key: 0.45, keyCol: 0xa9bcff, keyPos: [-3, 6.5, -2],   red: 0,    blue: 0.3,  exposure: 1.1,
+                outdoor: true, sky: 0x24305a, ground: 0x07090f, road: 0xbfc3cc, roadRough: 0.55, lamps: 38 }
   };
   var mode = "studio", rig = 1;
   function applyRig() {
-    var m = MODES[mode], hdri = mode !== "studio";
+    var m = MODES[mode], out = !!m.outdoor && !!envs[mode];
     scene.environment = envs[mode] || envs.studio;
     scene.environmentIntensity = m.env * rig;
     hemi.intensity = m.hemi * rig; key.intensity = m.key * rig; rimRed.intensity = m.red * rig; rimBlue.intensity = m.blue * rig;
     key.color.setHex(m.keyCol); key.position.set(m.keyPos[0], m.keyPos[1], m.keyPos[2]);
+    if (out) { hemi.color.setHex(m.sky); hemi.groundColor.setHex(m.ground); } else { hemi.color.setHex(0x9db4e8); hemi.groundColor.setHex(0x0a1633); }
     renderer.toneMappingExposure = m.exposure;
     var navy = new THREE.Color(BLACK_STAGE).lerp(new THREE.Color(NAVY), rig);
-    if (hdri && envs[mode]) { scene.background = envs[mode]; scene.backgroundBlurriness = 0.2; scene.backgroundIntensity = rig; scene.fog = null; }
-    else { scene.background = navy; scene.backgroundBlurriness = 0; scene.fog = new THREE.Fog(navy.getHex(), 6, 19); }
-    floor.material = hdri && envs[mode] ? shadowMat : floorMat;
+    if (out) {
+      scene.background = skies[mode] || envs[mode]; scene.backgroundBlurriness = 0; scene.backgroundIntensity = rig; scene.fog = null;
+      roadMat.color.setHex(roadMat.map ? m.road : 0x7d7f84); roadMat.roughness = m.roadRough;
+    } else { scene.background = navy; scene.backgroundBlurriness = 0; scene.fog = new THREE.Fog(navy.getHex(), 6, 19); }
+    roadSet.visible = out; floor.visible = !out;
+    lampSet.visible = out && m.lamps > 0;
+    lamps.forEach(function (l) { l.intensity = out ? m.lamps * rig : 0; });
+    floor.material = floorMat;
     floorMat.color.setHex(0x0f1d44).multiplyScalar(0.25 + 0.75 * rig);
     contact.visible = true;
-    if (mirror) mirror.visible = !hdri || !envs[mode];
+    if (mirror) mirror.visible = !out;
   }
 
   /* ---- orbit state: camera = f(az, el, r, target); everything tweens in these terms ---- */
@@ -222,8 +350,11 @@ function initStudio(car) {
   var raf = 0, dirty = true, last = performance.now(), dragging = false;
   var tween = null, tour = null, intro = null, turntable = false, selected = null;
   function invalidate() { dirty = true; if (!raf) { last = performance.now(); raf = requestAnimationFrame(frame); } }
+  var gate = null;                                                          // a Promise while shaders compile; frames wait for it
   function frame(now) {
-    raf = 0; dirty = false;
+    raf = 0;
+    if (gate) return;
+    dirty = false;
     var dt = Math.min(0.05, (now - last) / 1000); last = now;
     var active = false;
     if (intro) active = stepIntro(now) || active;
@@ -243,10 +374,23 @@ function initStudio(car) {
     if (dragging) active = true;
     applyCamera();
     renderer.render(scene, camera);
+    if (mobile) adapt(now, active);
     placeOverlay();
     if ((active || dirty) && !raf) raf = requestAnimationFrame(frame);
   }
 
+  /* Phones: over ~24 consecutive active frames (or 0.8 s), an average above 22 ms (under ~45 fps) drops the resolution a step (1.5x, 1.25x, 1x). */
+  var aPrev = 0, aAcc = 0, aN = 0, aWarm = 0, aSlow = 0;
+  function adapt(now, active) {
+    var dt = now - aPrev; aPrev = now;
+    if (!active || !(dt > 0 && dt < 1000)) { aAcc = 0; aN = 0; aWarm = now + 400; return; }
+    if (now < aWarm) return;
+    aAcc += dt; aN++;
+    if (aN < 24 && aAcc < 800) return;
+    var avg = aAcc / aN; aAcc = 0; aN = 0;
+    aSlow = avg > 22 ? aSlow + 1 : 0;
+    if (aSlow >= 2 && dprNow > 1) { aSlow = 0; dprNow = avg > 40 ? 1 : Math.max(1, dprNow - 0.25); renderer.setPixelRatio(dprNow); resize(); }
+  }
   var size = { w: 1, h: 1 };
   function resize() {
     var w = bay.clientWidth, h = bay.clientHeight;
@@ -317,15 +461,22 @@ function initStudio(car) {
     buildAnchors(); buildPresets(); buildUi();
     applyRig();
     flyTo(preset("front34"), 0);
-    loadingEl.classList.add("is-hidden"); setTimeout(function () { loadingEl.hidden = true; }, 420);
-    $("studioModelBadge").textContent = isScan ? "3D scan of this car" : "Illustrative 3D model";
-    if (isScan) { $("studioCredit").hidden = true; scanLayout(); }
-    arCheck();
-    track("studio_open", { mode: "studio", model: isScan ? "scan" : "illustrative" });
-    window.__studio.ready = true;
-    invalidate();
-    maybeIntro();
     draco.dispose();
+    /* Compile every shader before the first frame, off the main thread where the browser supports it (KHR_parallel_shader_compile).
+       The old synchronous first-frame compile froze the page for 0.9 to 1.1 s; the loading card stays up until this is done. */
+    var compiled = renderer.compileAsync ? renderer.compileAsync(scene, camera).catch(function () {}) : Promise.resolve();
+    gate = compiled;
+    compiled.then(function () {
+      gate = null;
+      loadingEl.classList.add("is-hidden"); setTimeout(function () { loadingEl.hidden = true; }, 420);
+      $("studioModelBadge").textContent = isScan ? "3D scan of this car" : "Illustrative 3D model";
+      if (isScan) { $("studioCredit").hidden = true; scanLayout(); }
+      arCheck();
+      track("studio_open", { mode: "studio", model: isScan ? "scan" : "illustrative" });
+      window.__studio.ready = true;
+      invalidate();
+      maybeIntro();
+    });
   }
 
   function scanLayout() { $("paintPanel").hidden = true; $("finishPanel").hidden = true; $("scanNote").hidden = false; }
@@ -477,21 +628,77 @@ function initStudio(car) {
     buildHotspots();
   }
 
-  /* lighting modes: HDRIs are fetched on first use only */
-  var rgbe = new RGBELoader(), envLoading = {};
+  /* lighting modes. Day's sky HDRI is fetched on first use only; Evening and Night are painted on the spot. The road textures
+     are shared by all three. A pressed chip shows a loading shimmer until its scene is ready; the newest press wins. */
+  var rgbe = new RGBELoader(), prepared = {}, wanted = null, fadeEl = $("studioFade");
+  function chip(m) { return document.querySelector('.studio-lights [data-light="' + m + '"]'); }
+  function prepare(m) {
+    if (m === "studio") return Promise.resolve();
+    if (prepared[m]) return prepared[m];
+    var env;
+    if (HDRI[m]) {
+      env = new Promise(function (res, rej) {
+        rgbe.load(HDRI[m], function (tex) { tex.mapping = THREE.EquirectangularReflectionMapping; envs[m] = pmrem.fromEquirectangular(tex).texture; skies[m] = tex; res(); }, undefined, rej);
+      });
+    } else {
+      env = new Promise(function (res) {
+        requestAnimationFrame(function () {
+          skies[m] = paintSky(m);
+          var src = skies[m];
+          if (src.image.width !== 1024) {                                   // lighting copy at 1024 x 512 (same PMREM size as the room)
+            var lc = document.createElement("canvas"); lc.width = 1024; lc.height = 512; lc.getContext("2d").drawImage(src.image, 0, 0, 1024, 512);
+            src = new THREE.CanvasTexture(lc); src.mapping = THREE.EquirectangularReflectionMapping; src.colorSpace = THREE.SRGBColorSpace;
+          }
+          envs[m] = pmrem.fromEquirectangular(src).texture;
+          if (src !== skies[m]) src.dispose();
+          res();
+        });
+      });
+    }
+    /* never wait more than 6 s for the road: without its textures it is plain asphalt colour, still a road */
+    var roadReady = Promise.race([loadRoadTextures(), new Promise(function (res) { setTimeout(res, 6000); })]);
+    prepared[m] = Promise.all([env, roadReady]).catch(function (e) { prepared[m] = null; throw e; });
+    return prepared[m];
+  }
+  function pressChips(m) {
+    document.querySelectorAll(".studio-lights [data-light]").forEach(function (b) { b.setAttribute("aria-pressed", String(b.getAttribute("data-light") === m)); });
+  }
+  function setLoading(m, on) { var b = chip(m); if (b) b.classList.toggle("is-loading", on); if (on) bay.setAttribute("aria-busy", "true"); else bay.removeAttribute("aria-busy"); }
   function setMode(m) {
-    function go() { mode = m; applyRig(); document.querySelectorAll(".studio-lights [data-light]").forEach(function (b) { b.setAttribute("aria-pressed", String(b.getAttribute("data-light") === m)); }); bay.setAttribute("data-light", m); invalidate(); }
-    if (m === "studio" || envs[m]) return go();
-    if (envLoading[m]) return;
-    envLoading[m] = true; bay.setAttribute("aria-busy", "true");
-    rgbe.load(HDRI[m], function (tex) {
-      envs[m] = pmrem.fromEquirectangular(tex).texture; tex.dispose();
-      envLoading[m] = false; bay.removeAttribute("aria-busy"); go();
-    }, undefined, function () { envLoading[m] = false; bay.removeAttribute("aria-busy"); if (window.CA && window.CA.toast) window.CA.toast("Couldn't load that lighting. Studio lighting stays on."); });
+    if (!MODES[m]) return;
+    wanted = m;
+    pressChips(m);
+    var p = prepare(m), slow = setTimeout(function () { if (wanted === m) setLoading(m, true); }, 120);
+    p.then(function () {
+      clearTimeout(slow); setLoading(m, false);
+      if (wanted !== m) return;
+      swap(m);
+    }, function () {
+      clearTimeout(slow); setLoading(m, false);
+      if (wanted !== m) return;
+      wanted = mode; pressChips(mode);
+      if (window.CA && window.CA.toast) window.CA.toast("Couldn't load that scene. The current lighting stays on.");
+    });
+  }
+  function swap(m) {
+    function go() {
+      mode = m; applyRig(); bay.setAttribute("data-light", m);
+      /* compile any new shader before the first frame (off the main thread where supported), then show it */
+      var c = renderer.compileAsync ? renderer.compileAsync(scene, camera).catch(function () {}) : Promise.resolve();
+      gate = c;
+      c.then(function () { if (gate === c) gate = null; invalidate(); requestAnimationFrame(function () { if (fadeEl) fadeEl.classList.remove("is-on"); }); });
+    }
+    if (m === mode) { applyRig(); invalidate(); return; }
+    if (reduced || !fadeEl || !window.__studio.ready) return go();
+    fadeEl.classList.add("is-on");
+    setTimeout(go, 160);
   }
   document.querySelectorAll(".studio-lights [data-light]").forEach(function (b) {
     b.addEventListener("click", function () { interrupt(); setMode(b.getAttribute("data-light")); });
   });
+  /* a finger or pointer arriving on the lighting chips starts the small road download, so the first switch rarely waits */
+  var lightsEl = document.querySelector(".studio-lights");
+  if (lightsEl) ["pointerenter", "touchstart", "focusin"].forEach(function (ev) { lightsEl.addEventListener(ev, function () { loadRoadTextures(); }, { once: true, passive: true }); });
 
   function setPaint(hex, metal) {
     if (!bodyMat) return;
@@ -680,7 +887,7 @@ function initStudio(car) {
     ready: false,
     get state() {
       return { mode: mode, model: isScan ? "scan" : "illustrative", tour: !!tour, intro: !!intro, tween: !!tween, turntable: turntable, selected: selected,
-               envLoaded: Object.keys(envs), rig: rig, bodyHex: bodyMat ? "#" + bodyMat.color.getHexString() : null,
+               envLoaded: Object.keys(envs), rig: rig, outdoor: !!roadSet.visible, lamps: !!lampSet.visible, dpr: dprNow, shadows: renderer.shadowMap.enabled, bodyHex: bodyMat ? "#" + bodyMat.color.getHexString() : null,
                rimHex: rimMats.map(function (m) { return "#" + m.color.getHexString(); }), rendering: !!raf, aspect: camera.aspect, glass: glassMat ? glassMat.type : null,
                hotspots: HOT.map(function (h) { return { key: h.key, visible: !!h.visible }; }), mirror: !!(mirror && mirror.visible), orbit: Object.assign({}, orb) };
     },

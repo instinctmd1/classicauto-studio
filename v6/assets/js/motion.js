@@ -25,6 +25,9 @@
 
   /* ---- Lenis + ScrollTrigger (desktop wheel) ---- */
   var finePointer = window.matchMedia("(hover: hover) and (pointer: fine)").matches;
+  /* Phones: the address bar showing or hiding changes only the height; never re-measure every trigger for that (a visible
+     hitch mid-swipe). */
+  ScrollTrigger.config({ ignoreMobileResize: true });
   if (window.Lenis && finePointer) {
     var lenis = new window.Lenis({
       duration: 1.1,
@@ -61,17 +64,20 @@
 
   /* ---- Reveals ---- */
   var EASE = "expo.out";
+  /* Touch screens: a shorter travel and a slightly quicker settle read as smooth at thumb-scroll speed (a long, far rise lags the
+     finger); a touch more stagger so a list still reads as a sequence. Desktop values are unchanged (24 px, 0.7 s, 0.05 s). */
+  var RISE = finePointer ? 24 : 16, DUR = finePointer ? 0.7 : 0.6, STAG = finePointer ? 0.05 : 0.07;
   function reveal(el) {
-    gsap.fromTo(el, { y: 24, opacity: 0 }, {
-      y: 0, opacity: 1, duration: 0.7, ease: EASE, clearProps: "transform",
+    gsap.fromTo(el, { y: RISE, opacity: 0 }, {
+      y: 0, opacity: 1, duration: DUR, ease: EASE, clearProps: "transform",
       scrollTrigger: { trigger: el, start: "top 90%", once: true }
     });
   }
   function revealGroup(group) {
     var items = group.querySelectorAll("[data-reveal-item]");
     if (!items.length) return;
-    gsap.fromTo(items, { y: 24, opacity: 0 }, {
-      y: 0, opacity: 1, duration: 0.7, ease: EASE, stagger: 0.05, clearProps: "transform",
+    gsap.fromTo(items, { y: RISE, opacity: 0 }, {
+      y: 0, opacity: 1, duration: DUR, ease: EASE, stagger: STAG, clearProps: "transform",
       scrollTrigger: { trigger: group, start: "top 88%", once: true }
     });
   }
@@ -82,8 +88,8 @@
     var items = grid.querySelectorAll(".car-card");
     if (!items.length) return;
     if (grid.__rg) { if (grid.__rg.scrollTrigger) grid.__rg.scrollTrigger.kill(); grid.__rg.kill(); }
-    grid.__rg = gsap.fromTo(items, { y: 28, opacity: 0, scale: 0.97 }, {
-      y: 0, opacity: 1, scale: 1, duration: 0.7, ease: EASE, clearProps: "transform",
+    grid.__rg = gsap.fromTo(items, { y: finePointer ? 28 : 18, opacity: 0, scale: 0.97 }, {
+      y: 0, opacity: 1, scale: 1, duration: DUR, ease: EASE, clearProps: "transform",
       stagger: { grid: "auto", from: "center", amount: 0.5 },
       scrollTrigger: { trigger: grid, start: "top 92%", once: true }
     });

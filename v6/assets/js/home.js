@@ -78,6 +78,10 @@ var liveHost = "showroom";  // which chapter's rect currently holds the canvas
         }, { threshold: 0.05 });
         io.observe(stage);
         live.setVisible(true);
+        document.addEventListener("ca:live-lost", function () { stage.classList.remove("is-live"); });
+        document.addEventListener("ca:live-restored", function () { stage.classList.add("is-live"); });
+        /* phones: pause the 3D frames while the page is being swiped (they resume 160 ms after the last scroll event) */
+        if (mobile) window.addEventListener("scroll", function () { live.hold(160); }, { passive: true });
       });
     }).catch(function (err) {
       document.dispatchEvent(new CustomEvent("ca:live-ready"));
@@ -99,7 +103,16 @@ var liveHost = "showroom";  // which chapter's rect currently holds the canvas
     evs.forEach(function (e) { window.addEventListener(e, go, { passive: true, once: true }); });
     setTimeout(go, 6000);
   }
-  function start() { afterIntro(function () { if (lean) whenInteracted(function () { idle(boot); }); else idle(boot); }); }
+  /* Phones: the model parse and shader compile are main-thread work, so they wait for a pause in scrolling (250 ms without a
+     scroll event, at most 2.5 s) instead of landing in the middle of a swipe through the Unveil. */
+  function whenScrollIdle(fn) {
+    var t = 0, done = false, cap = setTimeout(go, 2500);
+    function go() { if (done) return; done = true; clearTimeout(cap); clearTimeout(t); window.removeEventListener("scroll", onS); fn(); }
+    function onS() { clearTimeout(t); t = setTimeout(go, 250); }
+    window.addEventListener("scroll", onS, { passive: true });
+    t = setTimeout(go, 250);
+  }
+  function start() { afterIntro(function () { if (lean) whenInteracted(function () { whenScrollIdle(function () { idle(boot); }); }); else idle(boot); }); }
   if (document.readyState === "complete") start(); else window.addEventListener("load", start);
 })();
 
@@ -195,7 +208,11 @@ var liveHost = "showroom";  // which chapter's rect currently holds the canvas
         sizeCanvas();
         for (var i = 0; i < meta.count; i++) (function (i) {
           var img = new Image(); img.decoding = "async";
-          img.onload = function () { img.__ok = true; loaded++; draw(); publish(); };
+          /* decode off the main thread before the frame is used, so the first scrub across it never stalls on a decode */
+          img.onload = function () {
+            var ok = function () { img.__ok = true; loaded++; draw(); publish(); };
+            if (img.decode) img.decode().then(ok, ok); else ok();
+          };
           img.onerror = function () { if (window.console) console.error("[unveil] frame failed:", frameUrl(i)); };
           img.src = frameUrl(i); images[i] = img;
         })(i);
@@ -243,7 +260,10 @@ var liveHost = "showroom";  // which chapter's rect currently holds the canvas
       liveHost = which;
       var el = which === "unveil" ? rect : $("#showroomRect");
       live.mount(el, mobile ? MOBILE_CROP : null);
-      if (which === "unveil") { live.resetPose(); live.setVisible(true); }
+      /* In the Unveil the canvas opacity is scrubbed by scroll, so the 700 ms CSS fade must be off (it made the live car lag the
+         frames: a blink at the end and a double image on the way back). Back in the Showroom the CSS owns opacity again. */
+      if (which === "unveil") { live.canvas.style.transition = "none"; live.resetPose(); live.setVisible(true); }
+      else { live.canvas.style.transition = ""; live.canvas.style.opacity = ""; }
     }
 
     var milestone = { start: false, half: false, done: false };
@@ -261,13 +281,18 @@ var liveHost = "showroom";  // which chapter's rect currently holds the canvas
       // 0.88 - 0.98: the title lands, then "since 1974."
       if (titleTl) titleTl.progress(clamp((p - 0.88) / 0.1, 0, 1));
       // 0.90 - 1.00: cross-fade frames -> live car; CTA row
-      crossfade = smooth(0.9, 1.0, p);
+      /* The frames hand over to the live car only once it has loaded: a phone that has not finished the download keeps the last
+         baked frame (the clean car) instead of fading to an empty stage. */
+      var liveOk = !!(live && live.state && live.state.loaded);
+      crossfade = liveOk ? smooth(0.9, 1.0, p) : 0;
       if (live) {
         if (crossfade > 0 && liveHost !== "unveil") hostTo("unveil");
         if (crossfade <= 0 && liveHost !== "showroom") hostTo("showroom");
         if (liveHost === "unveil") live.setOpacity(crossfade);
       }
-      canvas.style.opacity = String(1 - crossfade);
+      /* The live car dissolves in ON TOP of the last baked frame, which stays fully opaque until the live car is fully in: fading
+         both at once let the navy show through a half-transparent car (a double exposure). */
+      canvas.style.opacity = crossfade >= 0.999 ? "0" : "1";
       var c = smooth(0.92, 1.0, p);
       ctaRow.style.opacity = String(c);
       ctaRow.style.transform = "translateY(" + ((1 - c) * 16).toFixed(1) + "px)";
@@ -276,7 +301,8 @@ var liveHost = "showroom";  // which chapter's rect currently holds the canvas
       // handle
       var rt = clamp((p - 0.08) / 0.92, 0, 1);
       setHandle(rt);
-      dragWrap.classList.toggle("is-done", p > 0.97);
+      /* phones: the dial sits where the CTA row lands, so it bows out before the buttons arrive (desktop keeps 0.97) */
+      dragWrap.classList.toggle("is-done", p > (mobile ? 0.9 : 0.97));
       // milestones
       if (!milestone.start && p > 0.1) { milestone.start = true; track("hero_reveal", { stage: "start", "in": inputKind }); }
       if (!milestone.half && p > 0.5) { milestone.half = true; track("hero_reveal", { stage: "half", "in": inputKind }); }
@@ -322,9 +348,13 @@ var liveHost = "showroom";  // which chapter's rect currently holds the canvas
     var startAngle = -155 * Math.PI / 180, endAngle = -25 * Math.PI / 180;
     var CIRC = arcFill ? 2 * Math.PI * parseFloat(arcFill.getAttribute("r") || 82) : 0;
     function pivot() { var r = dragWrap.getBoundingClientRect(); return { x: r.width / 2, y: r.height / 2, w: r.width, h: r.height, left: r.left, top: r.top }; }
+    /* setHandle runs on every scroll frame: it reads cached sizes (refreshed on resize) so it never forces a layout mid-scroll */
+    var dial = null;
+    function measureDial() { var pv = pivot(); dial = { x: pv.x, y: pv.y, w: pv.w, h: pv.h, hw: handle.offsetWidth, hh: handle.offsetHeight }; }
     function setHandle(t) {
-      var pv = pivot(), r = Math.min(pv.w, pv.h) / 2 - 24, a = startAngle + (endAngle - startAngle) * t;
-      handle.style.transform = "translate(" + (pv.x + r * Math.cos(a) - handle.offsetWidth / 2) + "px," + (pv.y + r * Math.sin(a) - handle.offsetHeight / 2) + "px)";
+      if (!dial || !dial.w) measureDial();
+      var pv = dial, r = Math.min(pv.w, pv.h) / 2 - 24, a = startAngle + (endAngle - startAngle) * t;
+      handle.style.transform = "translate3d(" + (pv.x + r * Math.cos(a) - pv.hw / 2).toFixed(1) + "px," + (pv.y + r * Math.sin(a) - pv.hh / 2).toFixed(1) + "px,0)";
       if (arcFill) arcFill.style.strokeDashoffset = String(CIRC * (1 - t));
       handle.setAttribute("aria-valuenow", String(Math.round(t * 100)));
     }
@@ -362,6 +392,8 @@ var liveHost = "showroom";  // which chapter's rect currently holds the canvas
       e.preventDefault(); inputKind = "key";            // Home / End move the dial, not the whole page
       scrollToProgress(0.08 + 0.92 * clamp(next, 0, 1), false);
     });
-    window.addEventListener("resize", function () { setHandle(clamp((progress - 0.08) / 0.92, 0, 1)); });
+    window.addEventListener("resize", function () { dial = null; setHandle(clamp((progress - 0.08) / 0.92, 0, 1)); });
+    /* the live car finished loading while the visitor sits at the end of the reveal: hand over now */
+    document.addEventListener("ca:live-ready", function () { setProgress(progress); });
   }
 })();

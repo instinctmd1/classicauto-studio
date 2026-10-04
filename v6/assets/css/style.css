@@ -372,6 +372,7 @@ body.nav-open .sticky-bar { transform: translateY(110%); }
 .unveil-since { margin-top: 8px; font-family: var(--font-serif); font-style: italic; font-size: clamp(1.7rem, 1rem + 3.6vw, 4rem); color: var(--ink); line-height: 1; }
 .unveil-cta { position: absolute; z-index: 5; left: 0; right: 0; bottom: 5svh; opacity: 0; pointer-events: none; }
 .unveil-cta.is-on { pointer-events: auto; }
+.unveil.is-animated .unveil-cta, .drag-reveal-handle { will-change: transform, opacity; }   /* moved every scroll frame: own layer, no repaint */
 .unveil-cta .cta-row { justify-content: center; }
 @media (max-width: 768px) { .unveil-cta { bottom: 3svh; } .unveil-cta .btn { width: 100%; } .unveil-cta .cta-row { flex-direction: column; padding-inline: 16px; } }
 
@@ -660,6 +661,13 @@ input[type="range"]::-moz-range-thumb { width: 24px; height: 24px; border-radius
 .studio-bay canvas { position: absolute; inset: 0; display: block; width: 100%; height: 100%; touch-action: pan-y; cursor: grab; }
 .studio-bay canvas.is-dragging { cursor: grabbing; }
 .studio-bay canvas:focus-visible { outline: 2px solid var(--red-ink); outline-offset: -4px; }
+/* the short dip that hides a lighting switch (the shader compile and the new sky land behind it) */
+.studio-fade { position: absolute; inset: 0; background: #050a1a; opacity: 0; pointer-events: none; transition: opacity 260ms var(--ease-out); }
+.studio-fade.is-on { opacity: 1; transition-duration: 150ms; }
+/* a scene still downloading: a soft shimmer across its chip */
+.studio-lights .chip-btn.is-loading { background-image: linear-gradient(100deg, transparent 20%, rgba(255, 255, 255, 0.22) 50%, transparent 80%); background-size: 220% 100%; animation: chip-load 1.1s linear infinite; }
+@keyframes chip-load { from { background-position: 120% 0; } to { background-position: -120% 0; } }
+@media (prefers-reduced-motion: reduce) { .studio-lights .chip-btn.is-loading { animation: none; background-image: none; opacity: 0.7; } .studio-fade { transition: none; } }
 .studio-loading { position: absolute; z-index: 6; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: var(--s-4); background: rgba(7, 15, 38, 0.9); color: var(--ink-2); font-size: var(--fs-small); transition: opacity 320ms var(--ease-out); }
 .studio-loading.is-hidden { opacity: 0; pointer-events: none; }
 .studio-spinner { width: 34px; height: 34px; border-radius: 50%; border: 2px solid var(--line-2); border-top-color: var(--red); animation: spin 900ms linear infinite; }
