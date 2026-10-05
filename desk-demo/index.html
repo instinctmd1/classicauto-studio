@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<meta name="ca-mode" content="demo">
+<meta name="color-scheme" content="dark light">
+<meta name="theme-color" content="#0A1633">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="CA Desk">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>Classic Auto · Desk (demo)</title>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="img/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="preload" href="fonts/bebas-neue-latin-400.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="fonts/manrope-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="vendor/tabulator.min.css">
+<link rel="stylesheet" href="css/tokens.css">
+<link rel="stylesheet" href="css/app.css">
+<link rel="stylesheet" href="css/pages.css">
+<link rel="stylesheet" href="css/desk.css">
+<script src="js/theme-init.js"></script>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<div id="app"></div>
+<div id="overlay"></div>
+<div class="scrim" id="scrim"></div>
+<div class="toasts" id="toasts" role="status" aria-live="polite"></div>
+<noscript><p class="empty">This dashboard needs JavaScript.</p></noscript>
+<script src="vendor/echarts.min.js" defer></script>
+<script src="vendor/tabulator.min.js" defer></script>
+<script type="module" src="js/main.js"></script>
+</body>
+</html>

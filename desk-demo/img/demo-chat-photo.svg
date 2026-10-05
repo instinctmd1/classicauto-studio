@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 480" role="img" aria-label="Made-up demo photo: a car on the showroom floor">
+  <defs>
+    <linearGradient id="wall" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1A3060"/><stop offset="1" stop-color="#0E1D40"/></linearGradient>
+    <linearGradient id="floor" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3A4468"/><stop offset="1" stop-color="#14274F"/></linearGradient>
+    <linearGradient id="body" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#F7F5F0"/><stop offset="1" stop-color="#C9CDD8"/></linearGradient>
+  </defs>
+  <rect width="640" height="300" fill="url(#wall)"/>
+  <rect y="300" width="640" height="180" fill="url(#floor)"/>
+  <g fill="#F7F5F0" opacity="0.10"><rect x="40" y="40" width="150" height="190" rx="6"/><rect x="245" y="40" width="150" height="190" rx="6"/><rect x="450" y="40" width="150" height="190" rx="6"/></g>
+  <rect x="0" y="292" width="640" height="10" fill="#E11B22"/>
+  <ellipse cx="320" cy="392" rx="230" ry="22" fill="#000" opacity="0.35"/>
+  <path d="M120 360 L140 318 Q150 300 172 296 L236 290 L290 248 Q304 238 324 238 L426 238 Q448 238 462 252 L500 292 L536 300 Q556 306 560 326 L562 360 Z" fill="url(#body)"/>
+  <path d="M300 256 L330 250 L420 250 Q436 250 446 262 L470 290 L280 292 Z" fill="#2B3990" opacity="0.85"/>
+  <rect x="120" y="340" width="442" height="22" rx="10" fill="#AAB2CA"/>
+  <circle cx="208" cy="364" r="34" fill="#0A1633"/><circle cx="208" cy="364" r="15" fill="#8D97B6"/>
+  <circle cx="478" cy="364" r="34" fill="#0A1633"/><circle cx="478" cy="364" r="15" fill="#8D97B6"/>
+  <rect x="528" y="312" width="22" height="10" rx="3" fill="#F2B544"/>
+  <rect x="24" y="420" width="208" height="38" rx="8" fill="#0A1633" opacity="0.75"/>
+  <text x="38" y="445" font-family="Manrope, Arial, sans-serif" font-size="17" font-weight="700" fill="#F7F5F0">Demo photo, made up</text>
+</svg>

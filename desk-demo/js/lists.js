@@ -1,0 +1,8 @@
+// Option lists that mirror the server's CHECK constraints, with plain labels.
+export const PAY_MODES = [["cash", "Cash"], ["upi", "UPI"], ["neft_rtgs", "NEFT or RTGS"], ["imps", "IMPS"], ["cheque", "Cheque"], ["dd", "Demand draft"], ["card", "Card"], ["loan", "Loan disbursal"]];
+export const PAY_PURPOSE_IN = [["token", "Token"], ["part_payment", "Part payment"], ["balance", "Balance"], ["loan_disbursal", "Loan disbursal"], ["tcs", "TCS collected"], ["other", "Other"]];
+export const EXPENSE_CATS = ["rent", "salaries", "electricity", "marketing", "refurb_vendors", "fuel", "office", "bank_charges", "interest", "misc"];
+export const CAT_LABEL = { rent: "Rent", salaries: "Salaries", electricity: "Electricity", marketing: "Marketing", refurb_vendors: "Workshop and refurb", fuel: "Fuel", office: "Office", bank_charges: "Bank charges", interest: "Interest", misc: "Miscellaneous" };
+export const catLabel = (c) => CAT_LABEL[c] || String(c || "").replace(/_/g, " ").replace(/^./, (x) => x.toUpperCase());
+export const LEDGER_CATS = [["capital", "Capital put in"], ["drawings", "Partner drawings"], ["loan_disbursal", "Loan received"], ["loan_repayment", "Loan repayment (EMI)"], ["interest", "Interest paid"], ["bank_charges", "Bank charges"], ["transfer", "Transfer between accounts"], ["gst_payment", "GST paid"], ["tcs_payment", "TCS paid"], ["income_tax", "Income tax"], ["other_income", "Other income"], ["other", "Other"]];
+export const modeLabel = (m) => (m === "bank" ? "Bank transfer" : m === "cash" ? "Cash" : m === "cheque" ? "Cheque" : m === "upi" ? "UPI" : null) || (PAY_MODES.find((x) => x[0] === m) || [0, m ? m.replace(/_/g, " ") : "—"])[1];

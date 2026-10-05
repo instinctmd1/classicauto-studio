@@ -1,0 +1,1 @@
+{"data":[{"can_edit":true,"columns":[{"key":"car","title":"Car","type":"text"},{"key":"price","title":"Price","type":"money"},{"key":"ready","title":"Ready","type":"checkbox"}],"created_at":"2026-10-03 16:08:07","created_by":null,"id":1,"name":"Car Mela 2026 list (demo)","row_count":5,"updated_at":"2026-10-03 16:08:07","visibility":"managers"}]}
