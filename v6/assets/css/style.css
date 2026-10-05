@@ -338,6 +338,14 @@ body.nav-open .sticky-bar { transform: translateY(110%); }
 @keyframes hint { 0%, 100% { transform: translateY(0); opacity: 0.6; } 50% { transform: translateY(6px); opacity: 1; } }
 @media (min-width: 900px) { .scroll-hint { position: absolute; left: 50%; bottom: 40px; margin: 0; transform: translateX(-50%); } }
 @media (min-width: 900px) and (max-width: 1199px) { .scroll-hint { display: none; } }   /* the wide CTAs reach the centre here */
+/* phones: the car band reaches down to the CTAs on short screens, so the hint moves up under the eyebrow (chevron in place of its rule, text on its
+   text line), clear of the car at every width, pose and tilt; the CTAs keep their place at the bottom */
+@media (max-width: 768px) {
+  .scroll-hint { align-self: flex-start; flex-direction: row; gap: 10px; margin: var(--s-4) 0 0; }
+  .scroll-hint .icon { order: -1; margin-inline: 3px; }
+  .showroom-eyebrow::before { flex-shrink: 0; }   /* the wrapped eyebrow no longer squeezes its rule, so both text lines start together */
+  .showroom-foot { margin-top: auto; }
+}
 .showroom-top { display: flex; flex-direction: column; align-items: flex-start; gap: var(--s-3); }
 .tilt-btn { min-height: 44px; padding: 0 16px; border-radius: var(--r-pill); background: rgba(10, 22, 51, 0.7); border: 1px solid var(--line-2); font-size: var(--fs-label); font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink); cursor: pointer; }
 .showroom.no-webgl .live-car-canvas { display: none; }
