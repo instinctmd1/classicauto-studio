@@ -10,6 +10,8 @@
 <link rel="stylesheet" href="css/tokens.css">
 <link rel="stylesheet" href="css/app.css">
 <link rel="stylesheet" href="css/desk.css">
+<script src="js/theme-init.js"></script>
+<script src="js/offline.js" defer></script>
 </head>
 <body class="offline-page">
 <main class="offline-card">
@@ -17,7 +19,7 @@
   <h1>You are offline</h1>
   <p>Leads and chat need a connection. Check your mobile data or Wi-Fi, then try again.</p>
   <p class="hinglish">Net nahi hai. Data ya Wi-Fi on karke dobara try karo.</p>
-  <a class="btn primary" href="./">Retry</a>
+  <a class="btn primary" id="retry" href="./?retry=1#/inbox">Retry</a>
 </main>
 </body>
 </html>

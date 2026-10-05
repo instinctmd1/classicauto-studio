@@ -53,6 +53,7 @@ export function registerServiceWorker() {
   navigator.serviceWorker.register("sw.js", { scope: "./" }).catch((e) => console.warn("service worker not registered", e));
   navigator.serviceWorker.addEventListener("message", (e) => {
     const d = e.data || {};
+    if (d.type === "push-renewed") { pushSynced = ""; syncPush(); return; }   // the browser replaced the subscription
     if (d.type === "navigate" && typeof d.url === "string") {
       const hash = d.url.includes("#") ? d.url.slice(d.url.indexOf("#")) : "#/inbox";
       if (/^#\/[a-z]+(\/[A-Za-z0-9_-]+)?(\?[^#]*)?$/.test(hash)) location.hash = hash;
@@ -81,6 +82,41 @@ function keyBytes(b64url) {
   return Uint8Array.from(raw, (c) => c.charCodeAt(0));
 }
 
+const b64u = (buf) => btoa(String.fromCharCode(...new Uint8Array(buf || new ArrayBuffer(0)))).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+
+/** How to un-block notifications on this phone, in one sentence. */
+export function blockedHelp() {
+  return isIOS() ? "Open the phone's Settings, then Notifications, then CA Desk, and allow notifications."
+    : "Tap the lock icon next to the address (or long-press the CA Desk icon, then App info), open Notifications and allow them.";
+}
+
+/** At app start (live): the server hears this phone's subscription again (it updates the row in place), a subscription
+ *  made with an older server key is replaced, and one the browser dropped is made again if this phone had it on.
+ *  Silent: no prompt, no toast, and a background request (it does not keep the session awake). */
+let pushSynced = "";
+export async function syncPush() {
+  if (DEMO || !state.user || pushSynced === String(state.user.id) || !pushSupported() || !window.isSecureContext) return;
+  if (Notification.permission !== "granted" || (isIOS() && !isStandalone())) return;
+  pushSynced = String(state.user.id);
+  try {
+    const reg = await navigator.serviceWorker.getRegistration();
+    if (!reg || !reg.pushManager) return;
+    let sub = await reg.pushManager.getSubscription();
+    if (!sub && !safeStore("ca.pushSub")) return;          // never switched on here: that waits for the person's tap
+    const cfg = await api.get("desk/config", null, { background: true });
+    const key = cfg.vapid_public_key;
+    if (!key || key.length < 60) return;
+    if (sub && sub.options && sub.options.applicationServerKey && b64u(sub.options.applicationServerKey) !== key) {
+      await sub.unsubscribe().catch(() => {});             // made for an older server key: pushes to it would fail
+      sub = null;
+    }
+    if (!sub) sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: keyBytes(key) });
+    const j = sub.toJSON();
+    const r = await api.post("push/subscriptions", { endpoint: j.endpoint, keys: j.keys, device_label: deviceLabel() }, { background: true });
+    if (r && r.id) safeStore("ca.pushSub", String(r.id));
+  } catch (e) { console.warn("notifications could not be re-checked", e); }
+}
+
 /** Must run from a tap. Asks the browser, subscribes this device and tells the server. Returns the new state. */
 export async function enableNotifications() {
   if (isIOS() && !isStandalone()) { location.hash = "#/install"; return "install-first"; }
@@ -92,15 +128,19 @@ export async function enableNotifications() {
   if (!("PushManager" in window)) return "unsupported";
   try {
     const reg = await navigator.serviceWorker.ready;
-    const cfg = await desk.get("desk/config");
-    if (desk.isSample("desk/") || !cfg.vapid_public_key || cfg.vapid_public_key.length < 60) {
-      toast("Notifications are allowed on this phone. The server part is not switched on yet, so nothing will arrive today.", "");
+    const cfg = await api.get("desk/config");
+    if (!cfg.vapid_public_key || cfg.vapid_public_key.length < 60) {
+      toast("Notifications are allowed on this phone, but the server has no notification key yet. Tell the tech admin.", "err");
       return "off";
     }
     let sub = await reg.pushManager.getSubscription();
+    if (sub && sub.options && sub.options.applicationServerKey && b64u(sub.options.applicationServerKey) !== cfg.vapid_public_key) {
+      await sub.unsubscribe().catch(() => {});
+      sub = null;
+    }
     if (!sub) sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: keyBytes(cfg.vapid_public_key) });
     const j = sub.toJSON();
-    const r = await desk.post("push/subscriptions", { endpoint: j.endpoint, keys: j.keys, device_label: deviceLabel() });
+    const r = await api.post("push/subscriptions", { endpoint: j.endpoint, keys: j.keys, device_label: deviceLabel() });
     if (r && r.id) safeStore("ca.pushSub", String(r.id));
     return "on";
   } catch (e) {
@@ -124,10 +164,18 @@ export async function sendTestNotification() {
   if (isIOS() && !isStandalone()) { location.hash = "#/install"; toast("On iPhone, install the app first: Share, then Add to Home Screen.", ""); return; }
   if (!("Notification" in window) || !("serviceWorker" in navigator)) { toast("This browser cannot show notifications.", "err"); return; }
   const perm = Notification.permission === "granted" ? "granted" : await Notification.requestPermission();
-  if (perm !== "granted") { toast(perm === "denied" ? "Notifications are blocked. Allow them in the phone's settings for this site." : "Notifications are still off.", "err"); return; }
-  if (!DEMO && !desk.isSample("push/")) {
-    try { await desk.post("push/test", {}); if (!desk.isSample("push/")) { toast("Test sent. It should arrive in a few seconds.", "ok"); return; } }
-    catch (e) { toast(e.status === 429 ? "Three tests per 10 minutes. Try again a little later." : e.message || "Could not send the test.", "err"); return; }
+  if (perm !== "granted") { toast(perm === "denied" ? `Notifications are blocked. ${blockedHelp()}` : "Notifications are still off.", "err"); return; }
+  if (!DEMO) {
+    try {
+      let r = await api.post("push/test", {});
+      if (r && r.devices === 0) {                          // not signed up yet: do that first, then send the test
+        if ((await enableNotifications()) !== "on") return;
+        r = await api.post("push/test", {});
+      }
+      if (r && r.devices === 0) toast("This phone could not be signed up for notifications. Try again in a minute.", "err");
+      else toast("Test sent. It should arrive in a few seconds.", "ok");
+    } catch (e) { toast(e.status === 429 ? "Three tests per 10 minutes. Try again a little later." : e.message || "Could not send the test.", "err"); }
+    return;
   }
   try {
     const reg = await navigator.serviceWorker.ready;
@@ -158,8 +206,11 @@ function dispatchFeed(row) {
 window.addEventListener("desk:feed", (e) => dispatchFeed(e.detail || {}));
 
 // ------------------------------------------------------------------ live feed: SSE, then polling after 3 errors in a minute
+// The feed position is learnt from the server when the feed starts, so after an outage the stream or the poll resumes
+// from where this screen was (nothing in the gap is skipped). While polling, the stream is tried again every minute and
+// whenever the phone comes back online or the app comes back to the front.
 const KINDS = ["chat.message", "chat.deleted", "lead.new", "lead.changed", "ask.updated"];
-let es = null, lastId = 0, errors = [], pollTimer = null, retryTimer = null, feedOn = false;
+let es = null, lastId = 0, errors = [], pollTimer = null, retryTimer = null, streamRetry = null, feedOn = false;
 
 function onEvent(e) {
   const id = +e.lastEventId || 0;
@@ -184,28 +235,50 @@ function connect() {
 }
 function startPolling() {
   clearInterval(pollTimer);
+  clearInterval(streamRetry);
+  streamRetry = setInterval(tryStream, 60000);
   const poll = async () => {
     try {
-      const r = await api.get("desk/feed", { after: lastId }, { background: true });
+      const r = await api.get("desk/feed", lastId ? { after: lastId } : {}, { background: true });   // no `after`: start from now
       for (const row of r.data || []) { if (row.id > lastId) { lastId = row.id; dispatchFeed(row); } }
       if (r.last_id > lastId) lastId = r.last_id;
     } catch (e) {
-      if (e.status === 404 || e.status === 405 || e.status === 401) { clearInterval(pollTimer); pollTimer = null; }   // no feed on this server yet, or signed out
+      if (e.status === 404 || e.status === 405 || e.status === 401) { clearInterval(pollTimer); pollTimer = null; clearInterval(streamRetry); streamRetry = null; }   // no feed on this server yet, or signed out
     }
   };
   poll();
   pollTimer = setInterval(poll, 10000);
 }
+/** Back from polling to the live stream (it falls back again by itself if the stream still fails). */
+function tryStream() {
+  if (!feedOn || es || !pollTimer) return;
+  clearInterval(pollTimer); pollTimer = null;
+  clearInterval(streamRetry); streamRetry = null;
+  errors = [];
+  connect();
+}
+window.addEventListener("online", tryStream);
+document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible") tryStream(); });
+/** Where the feed is now, so a later reconnect or poll never starts from 0 ("from now") and skips a gap. */
+async function learnPosition() {
+  if (lastId) return;
+  try {
+    const r = await api.get("desk/feed", {}, { background: true });
+    if (r && r.last_id > lastId) lastId = r.last_id;
+  } catch { /* the stream starts from now; the next poll learns it */ }
+}
 export function startFeed() {
   if (DEMO || feedOn) return;
   feedOn = true; errors = [];
-  connect();
+  learnPosition().finally(() => { if (feedOn && !es && !pollTimer) connect(); });
 }
 export function stopFeed() {
   feedOn = false;
   es?.close(); es = null;
   clearInterval(pollTimer); pollTimer = null;
+  clearInterval(streamRetry); streamRetry = null;
   clearTimeout(retryTimer);
+  lastId = 0;
 }
 
 // ------------------------------------------------------------------ desk clock: the server's IST time, moving on locally
@@ -268,7 +341,7 @@ function tickClocks() {
 export function startTicker() { if (!ticker) ticker = setInterval(tickClocks, 1000); }
 
 // ------------------------------------------------------------------ badges on the tabs and in the sidebar
-let badgeTimer = null;
+let badgeTimer = null, askQuietUntil = 0;
 function scheduleBadges() { clearTimeout(badgeTimer); badgeTimer = setTimeout(refreshBadges, 800); }
 function paint(name, n, title) {
   $$(`[data-badge="${name}"]`).forEach((b) => { b.hidden = !n; b.textContent = n > 99 ? "99+" : String(n || ""); if (title) b.title = title; });
@@ -287,11 +360,11 @@ export async function refreshBadges() {
     const n = (r.data || []).reduce((a, x) => a + (x.unread || 0), 0);
     total += n; paint("chat", n, "Unread messages");
   }).catch(() => {}));
-  if (can("desk.ask")) jobs.push(desk.get("ask/tasks", {}, bg).then((r) => {
+  if (can("desk.ask") && Date.now() > askQuietUntil) jobs.push(desk.get("ask/tasks", {}, bg).then((r) => {
     const seen = safeStore("ca.askSeen") || "";
     const n = (r.data || []).filter((t) => ["done", "needs_medhansh", "failed"].includes(t.status) && (t.updated_at || "") > seen).length;
     paint("ask", n, "Answers since you last looked");
-  }).catch(() => {}));
+  }).catch((e) => { if (e.code === "assistant_down") askQuietUntil = Date.now() + 5 * 60000; }));   // resting: ask again in 5 minutes, not on every feed row
   await Promise.all(jobs);
   try { if ("setAppBadge" in navigator && isStandalone()) total ? navigator.setAppBadge(total) : navigator.clearAppBadge(); } catch { /* not supported */ }
 }

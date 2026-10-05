@@ -1,12 +1,12 @@
 // Lead detail (APP-SPEC 3.3 to 3.5): who the customer is, the claim clock, the conversation or call transcript, the
 // timeline and the actions. Every button maps to the same engine function the Telegram buttons use; the server
 // decides what is allowed (the "allowed" block) and this page only hides what is not.
-import { can } from "../state.js";
+import { can, state } from "../state.js";
 import { esc, icon, lakh, sentence } from "../util.js";
 import { formDrawer, toast } from "../ui.js";
 import * as desk from "../desk-api.js";
 import { DEMO } from "../api.js";
-import { channelLabel, clockHtml, deskAgo, deskTime, onFeed, setServerNow, STAGE_LABEL, STAGES, startTicker } from "../desk.js";
+import { channelLabel, clockHtml, deskAgo, deskNow, deskTime, onFeed, setServerNow, STAGE_LABEL, STAGES, startTicker } from "../desk.js";
 
 const LOST = [["price", "Price too high"], ["finance_rejected", "Loan not approved"], ["bought_elsewhere", "Bought elsewhere"], ["car_already_sold", "Car already sold"],
   ["exchange_value", "Exchange value too low"], ["customer_unreachable", "Could not reach the customer"], ["not_serious", "Not serious"], ["location", "Too far away"], ["other", "Other reason"]];
@@ -48,7 +48,7 @@ export async function render(ctx) {
     const stage = l.status === "lost" ? "lost" : l.status === "escalated" ? "escalated" : l.stage || l.status;
     const y = window.scrollY;
     wrap.innerHTML = `<div class="lead-page">
-      <div class="lead-crumbs"><a class="back-link" href="#/inbox">${icon("left", "")}Inbox</a>${desk.sampleChip("desk/")}</div>
+      <div class="lead-crumbs"><a class="back-link" href="#/inbox">${icon("left", "")}Inbox</a></div>
       <section class="lead-head tier-${esc(l.tier_key || "none")}">
         <div class="lh-top"><span class="lc-ch">${esc(channelLabel(l.channel))}</span><span class="lc-id">#${l.id}</span><span>${esc(deskAgo(l.first_seen_ts))}</span></div>
         <h1 class="page-title lead-name">${esc(l.name || "Customer")}</h1>
@@ -69,6 +69,8 @@ export async function render(ctx) {
   }
 
   wrap.addEventListener("click", async (e) => {
+    const back = e.target.closest(".back-link");
+    if (back && /^#\/inbox/.test(state.prevHash || "")) { e.preventDefault(); history.back(); return; }   // the same list, same place
     const b = e.target.closest("[data-act]"); if (!b || !d) return;
     const what = b.dataset.act, l = d.lead;
     if (what === "claim") return claim(b);
@@ -82,8 +84,11 @@ export async function render(ctx) {
       { name: "note", label: "Note (optional)", type: "textarea", full: true }], (v) => ({ status: "test_drive", car: v.car, note: v.note || "" }), "Test drive saved");
     if (what === "sold") return statusForm("Sold", "Great work. No price here: the deal is booked on the Deals page.", [
       { name: "car", label: "Car sold", required: true, full: true, value: l.car || "" },
-      { name: "token", label: "Token taken?", type: "select", required: true, full: true, options: [["1", "Yes, token taken"], ["0", "Not yet"]], value: "1" },
-      { name: "note", label: "Note (optional)", type: "textarea", full: true }], (v) => ({ status: "sold", car: v.car, token_taken: v.token === "1", note: v.note || "" }), "Marked as sold", true);
+      { name: "token", label: "Token taken?", type: "select", required: true, full: true, options: [["1", "Yes, token taken"], ["0", "Not yet"]] },
+      { name: "note", label: "Note (optional)", type: "textarea", full: true }], (v) => {
+      if (v.token !== "1" && v.token !== "0") { const err = new Error("Choose yes or no."); err.fields = { token: "Choose yes or no." }; throw err; }   // no default: a quick Save must not record a token
+      return { status: "sold", car: v.car, token_taken: v.token === "1", note: v.note || "" };
+    }, "Marked as sold", true);
     if (what === "lost") return statusForm("Lost", "Why did this lead not buy? It helps the team learn.", [
       { name: "lost_reason", label: "Reason", type: "select", required: true, full: true, options: LOST },
       { name: "note", label: "Note (optional)", type: "textarea", full: true }], (v) => ({ status: "lost", lost_reason: v.lost_reason, note: v.note || "" }), "Marked as lost", false, true);
@@ -229,6 +234,15 @@ function conversation(d, locked) {
   return parts.join("");
 }
 
+/** "today 17:00", "tomorrow 11:30", "6 Oct 17:00". */
+function visitWhen(ts) {
+  const day = String(ts).slice(0, 10), hm = String(ts).slice(11, 16);
+  const ist = (ms) => new Date(ms + 5.5 * 36e5).toISOString().slice(0, 10);
+  if (day === ist(deskNow())) return `today ${hm}`;
+  if (day === ist(deskNow() + 864e5)) return `tomorrow ${hm}`;
+  return deskTime(ts);
+}
+
 function timeline(d) {
   const rows = (d.timeline || []).slice().reverse();
   if (!rows.length) return `<p class="muted">Nothing yet.</p>`;
@@ -236,7 +250,7 @@ function timeline(d) {
     const [label, ic] = KIND[r.kind] || [sentence(r.kind || "update"), "info"];
     let note = r.note;
     if (r.kind === "lost" && LOST_LABEL[note]) note = LOST_LABEL[note];
-    if (r.kind === "visit_booked" && note && /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}/.test(note)) note = `For ${deskTime(note)}`;
+    if (r.kind === "visit_booked" && note && /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}/.test(note)) note = `For ${visitWhen(note)}`;
     return `<li class="k-${esc(r.kind)}"><span class="ic">${icon(ic, "")}</span><div><b>${esc(label)}</b>${r.who ? ` <span class="muted">by ${esc(r.who)}</span>` : ""}${note ? `<p>${esc(note)}</p>` : ""}<time>${esc(deskTime(r.ts))}</time></div></li>`;
   }).join("")}</ol>${d.annotation?.lost_reason ? `<p class="muted small-note">Lost because: ${esc(LOST_LABEL[d.annotation.lost_reason] || d.annotation.lost_reason)}</p>` : ""}`;
 }

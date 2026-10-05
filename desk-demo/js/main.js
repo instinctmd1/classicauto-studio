@@ -4,10 +4,10 @@ import * as api from "./api.js";
 import { ApiError, DEMO } from "./api.js";
 import { state, can, isLocked, isSuper, homeKind, initPeriod, setPeriod, periodLabel, periodMonthList, stepPeriod } from "./state.js";
 import { $, $$, esc, icon, monthLabel, initials, safeStore, setClockShift } from "./util.js";
-import { closeDrawer, closeMenu, confirmDialog, formHtml, openDrawer, openMenu, readForm, save, showErrors, toast } from "./ui.js";
+import { closeDrawer, closeMenu, confirmDialog, followInPlace, formHtml, openDrawer, openMenu, overlayClosed, overlayOpened, readForm, save, showErrors, toast } from "./ui.js";
 import { disposeCharts } from "./charts.js";
 import { disposeGrids } from "./grid.js";
-import { forgetThisDevice, isStandalone, registerServiceWorker, resetPageScope, sendTestNotification, startBadges, startFeed, stopFeed } from "./desk.js";
+import { forgetThisDevice, isStandalone, registerServiceWorker, resetPageScope, sendTestNotification, startBadges, startFeed, stopFeed, syncPush } from "./desk.js";
 import { resetDeskStore } from "./desk-api.js";
 
 const FIN = ["money.view", "deals.profit.view", "accounts.view", "expenses.view", "bank.view"];
@@ -62,23 +62,28 @@ const theme = () => document.documentElement.getAttribute("data-theme") || "dark
 // ------------------------------------------------------------------ sign-in (password, then the 6-digit code)
 function loginView(message = "") {
   closeDrawer(); closeMenu(); disposeCharts(); disposeGrids(); stopIdle();
+  // The server never says whether a code is needed (that would confirm a right password), so the code field shows on
+  // a phone that has signed in with one before, or after a tap on "I use a two-factor code".
+  const withCode = safeStore("ca.totp") === "1";
   app.innerHTML = `<div class="login">
-    <section class="login-art" aria-hidden="true"><div class="checker"></div><div class="big">Classic<span>Auto</span></div><p>Stock, deals, papers, accounts and the bank file in one private place. Built for the partners.</p><div class="est">Malad West since 1974</div></section>
+    <section class="login-art" aria-hidden="true"><div class="checker"></div><div class="big">Classic<span>Auto</span></div><p>Leads, team chat and the back office in one private place.</p><div class="est">Malad West since 1974</div></section>
     <main class="login-main"><div class="login-card">
       <span class="plate"><img src="img/logo.svg" alt="Classic Auto, since 1974" width="840" height="496"></span>
-      <h1 id="lg-h">Sign in</h1><p class="lede" id="lg-lede">Back office. Only people the owner has given access to can open this.</p>
+      <h1 id="lg-h">Sign in to CA Desk</h1><p class="lede" id="lg-lede">For the Classic Auto team. Use the username and password you were given.</p>
       <form id="login-form" novalidate>
         ${message ? `<div class="form-err" role="alert">${esc(message)}</div>` : ""}
         <div class="field"><label for="u">Username</label><input class="input" id="u" name="username" autocomplete="username" autocapitalize="none" spellcheck="false" required></div>
         <div class="field"><label for="p">Password</label><div class="pw"><input class="input" id="p" name="password" type="password" autocomplete="current-password" required><button type="button" id="pw-show" aria-pressed="false">Show</button></div></div>
-        <div class="field"><label for="t">Two-factor code <span class="faint">(if you have set it up)</span></label><input class="input code-input" id="t" name="totp" inputmode="numeric" autocomplete="one-time-code" maxlength="6" pattern="[0-9]*" placeholder="123456"><div class="hint">The 6 digits from your authenticator app. Each code works once. Leave empty if you have not set it up yet.</div></div>
+        <div class="field" id="t-field"${withCode ? "" : " hidden"}><label for="t">Two-factor code</label><input class="input code-input" id="t" name="totp" inputmode="numeric" autocomplete="one-time-code" maxlength="6" pattern="[0-9]*" placeholder="123456"><div class="hint">The 6 digits from your authenticator app. Each code works once.</div></div>
+        <button class="link-btn" type="button" id="t-show"${withCode ? " hidden" : ""}>I use a two-factor code</button>
         <div class="err" id="login-err" role="alert" hidden></div>
         <button class="btn primary" type="submit" id="go">Sign in</button>
       </form>
-      <p class="fine">${icon("lock", "")}<span>Private server: nothing on this page is loaded from the internet. Money pages time out after 30 idle minutes. Every sign-in, export and reveal is logged.</span></p>
+      <p class="fine">${icon("lock", "")}<span>Private server. Every sign-in is logged.</span></p>
     </div></main></div>`;
   const form = $("#login-form"), err = $("#login-err"), go = $("#go");
   $("#pw-show").addEventListener("click", (e) => { const i = $("#p"); const show = i.type === "password"; i.type = show ? "text" : "password"; e.currentTarget.textContent = show ? "Hide" : "Show"; e.currentTarget.setAttribute("aria-pressed", String(show)); });
+  $("#t-show").addEventListener("click", (e) => { e.currentTarget.hidden = true; $("#t-field").hidden = false; $("#t").focus(); });
   $("#u").focus();
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
@@ -89,12 +94,13 @@ function loginView(message = "") {
     go.disabled = true; go.innerHTML = '<span class="spin"></span> Signing in';
     try {
       const r = await api.post("auth/login", { username, password, ...(totp ? { totp } : {}) });
+      if (totp) safeStore("ca.totp", "1");               // this phone shows the code field next time
       api.setCsrf(r.csrf);
       await boot();
     } catch (ex) {
       go.disabled = false; go.textContent = "Sign in";
       err.textContent = ex.status === 429 ? "Too many attempts. Wait a few minutes and try again."
-        : ex.status === 401 ? "Those details do not match. Check the username, password and the current two-factor code." : (ex.message || "Could not sign in.");
+        : ex.status === 401 ? "Those details do not match. Check the username and password, and the two-factor code if you use one." : (ex.message || "Could not sign in.");
       err.hidden = false;
       form.totp.value = ""; form.password.value = ""; form.password.focus();
     }
@@ -138,13 +144,14 @@ function navHtml(groups) {
 }
 
 let escMenu = () => {};
+let closeSide = () => {};
 function buildShell() {
   const groups = navModel();
   // Phone tabs (APP-SPEC section 2): a fixed set, each shown only when the capability is held. More opens the full menu.
   const tabs = [
     can("desk.inbox") && { id: "inbox", label: "Inbox", icon: "inbox", badge: "inbox" },
     can("chat.use") && { id: "chat", label: "Chat", icon: "chat", badge: "chat" },
-    { id: "home", label: "Dashboard", icon: "overview" },
+    { id: "home", label: "Home", icon: "overview" },
     can("desk.ask") && { id: "ask", label: "Ask Claude", icon: "spark", badge: "ask" },
   ].filter(Boolean);
   const roleLabel = state.user.is_super_admin ? "Owner, full access" : (state.user.role_label || state.user.role);
@@ -181,16 +188,20 @@ function buildShell() {
   const side = $("#side"), scrim = $("#scrim");
   let opener = null;
   const setSide = (open, from) => {
+    const was = side.classList.contains("open");
     side.classList.toggle("open", open); scrim.classList.toggle("on", open); $("#burger").setAttribute("aria-expanded", String(open)); document.body.style.overflow = open ? "hidden" : "";
     if (open) { opener = from || document.activeElement; side.querySelector("a")?.focus(); } else if (opener) { opener.focus?.(); opener = null; }
+    if (open) overlayOpened("side", () => setSide(false));              // the phone's Back closes the menu
+    else if (was) overlayClosed("side");
   };
+  closeSide = () => { if (side.classList.contains("open")) setSide(false); };
   document.removeEventListener("keydown", escMenu);
   escMenu = (e) => { if (e.key === "Escape" && side.classList.contains("open")) { e.preventDefault(); setSide(false); } };
   document.addEventListener("keydown", escMenu);
   $("#burger").addEventListener("click", (e) => setSide(!side.classList.contains("open"), e.currentTarget));
   $("#more").addEventListener("click", (e) => setSide(true, e.currentTarget));
   scrim.onclick = () => { if (side.classList.contains("open")) setSide(false); };
-  side.addEventListener("click", (e) => { if (e.target.closest("a")) setSide(false); });
+  side.addEventListener("click", (e) => { followInPlace(e, "side"); if (e.target.closest("a")) setSide(false); });
   $("#p-prev").addEventListener("click", () => { const p = stepPeriod(-1); if (p) changePeriod(p); });
   $("#p-next").addEventListener("click", () => { const p = stepPeriod(1); if (p) changePeriod(p); });
   $("#p-label").addEventListener("click", (e) => openPeriodMenu(e.currentTarget));
@@ -201,6 +212,7 @@ function buildShell() {
   refreshSync();
   startIdle();
   startFeed();
+  syncPush();                                           // this phone's notifications, re-told to the server
 }
 
 // ------------------------------------------------------------------ static demo: banner and role switch
@@ -352,7 +364,7 @@ export function go(hash) { location.hash = hash; }
 
 const HOME_MODULE = { owner: "overview", manager: "manager", salesman: "mine", accountant: "accountant" };
 
-async function render(keepScroll = false) {
+async function render(keepScroll = false, restoreY = 0) {
   const meta = ALL[route.page] || ALL.home;
   const main = $("#main"); if (!main) return;
   const token = ++renderToken;
@@ -377,6 +389,7 @@ async function render(keepScroll = false) {
     const ctx = { root: main, id: route.id, query: route.query, period: state.period, locked, alive: () => token === renderToken && main.isConnected, refresh: () => render(true), go, reloadMe };
     main.innerHTML = "";
     await mod.render(ctx);
+    if (restoreY && token === renderToken) window.scrollTo(0, restoreY);
     if (token === renderToken) {                      // the top bar and the page heading say the same thing
       const h1 = main.querySelector(".page-title")?.textContent?.trim();
       if (h1) { $("#crumb").textContent = h1; document.title = `${h1} · Classic Auto`; }
@@ -387,20 +400,21 @@ async function render(keepScroll = false) {
     console.error(e);
     const denied = e instanceof ApiError && e.status === 403;
     if (denied) syncMe();
+    const offline = (e instanceof ApiError && e.status === 0) || (e instanceof TypeError && /import|module|fetch/i.test(e.message || "")) || !navigator.onLine;
     main.innerHTML = denied
       ? `<div class="err-box" role="alert">${icon("lock", "")}<div><b>This page is not part of your access.</b><span class="muted">${state.user?.is_super_admin ? "Sign in again with your two-factor code." : "Ask the owner if you need it."}</span></div></div>`
-      : `<div class="err-box" role="alert">${icon("alert", "")}<div><b>This page could not load.</b><span class="muted">${esc(e.message || "")}</span></div><button class="btn" type="button" id="retry">${icon("refresh")}Try again</button></div>`;
+      : `<div class="err-box" role="alert">${icon("alert", "")}<div><b>This page could not load.</b><span class="muted">${esc(offline ? api.OFFLINE_MSG : e.message || "")}</span></div><button class="btn" type="button" id="retry">${icon("refresh")}Try again</button></div>`;
     $("#retry")?.addEventListener("click", () => render());
   }
 }
 
-function onRoute() {
-  closeDrawer(); closeMenu();
+function onRoute(restoreY = 0) {
+  closeDrawer(); closeMenu(); closeSide();
   const r = parseHash();
   const meta = ALL[r.page];
   if (!r.page || !meta || (!opens(meta) && !heldOff(meta))) { location.replace("#/home"); return; }
   route = r;
-  render();
+  render(false, restoreY);
 }
 
 // ------------------------------------------------------------------ boot
@@ -431,7 +445,16 @@ async function syncMe() {
     onRoute();
   } catch { /* a 401 shows the sign-in page through ca:unauth */ }
 }
-const onHash = () => { onRoute(); syncMe(); };
+const scrollMemo = new Map();          // hash -> how far down the person was when leaving it
+const onHash = (e) => {
+  const old = e && e.oldURL && e.oldURL.includes("#") ? e.oldURL.slice(e.oldURL.indexOf("#")) : "";
+  if (old) { scrollMemo.set(old, window.scrollY); if (scrollMemo.size > 30) scrollMemo.delete(scrollMemo.keys().next().value); }
+  state.prevHash = old;
+  // back from a lead to the inbox: the same list, at the same place
+  const y = /^#\/lead\//.test(old) && /^#\/inbox/.test(location.hash) ? scrollMemo.get(location.hash) || 0 : 0;
+  onRoute(y);
+  syncMe();
+};
 
 /** Re-read /api/me (after two-factor is set up, or a grant changes) and rebuild the menu. */
 export async function reloadMe() {
@@ -485,7 +508,17 @@ window.addEventListener("ca:unauth", () => { if (state.user) { stopFeed(); state
 
 boot().catch((e) => {
   console.error(e);
-  app.innerHTML = `<div class="login-main"><div class="err-box" role="alert">${icon("alert", "")}<div><b>The dashboard could not start.</b><span class="muted">${esc(e.message || "")}</span></div></div></div>`;
+  const offline = (e instanceof ApiError && e.status === 0) || !navigator.onLine;
+  document.body.classList.add("offline-page");
+  app.innerHTML = `<main class="offline-card">
+    <span class="plate"><img src="img/logo.svg" alt="Classic Auto, since 1974" width="840" height="496"></span>
+    <h1>${offline ? "You are offline" : "CA Desk could not start"}</h1>
+    <p>${esc(offline ? "Leads and chat need a connection. Check your mobile data or Wi-Fi, then try again." : e.message || "Something went wrong. Try again in a minute.")}</p>
+    ${offline ? `<p class="hinglish">Net nahi hai. Data ya Wi-Fi on karke dobara try karo.</p>` : ""}
+    <button class="btn primary" type="button" id="boot-retry">Try again</button>
+  </main>`;
+  document.getElementById("boot-retry").addEventListener("click", () => location.reload());
+  window.addEventListener("online", () => location.reload(), { once: true });
 });
 
 // ------------------------------------------------------------------ small layout helpers

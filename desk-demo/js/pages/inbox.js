@@ -4,7 +4,7 @@ import { can } from "../state.js";
 import { $, debounce, esc, icon, lakh, safeStore } from "../util.js";
 import { pageHead, toast } from "../ui.js";
 import * as desk from "../desk-api.js";
-import { canPromptInstall, channelLabel, clockHtml, deskAgo, enableNotifications, every, isAndroid, isIOS, isStandalone, notifyState, onFeed, onWindow, promptInstall, setServerNow, STAGE_LABEL, startTicker, tierShort } from "../desk.js";
+import { blockedHelp, canPromptInstall, channelLabel, clockHtml, deskAgo, enableNotifications, every, isAndroid, isIOS, isStandalone, notifyState, onFeed, onWindow, promptInstall, setServerNow, STAGE_LABEL, startTicker, tierShort } from "../desk.js";
 
 const OWN = () => !can("records.all");
 const VIEWS_OWN = [["mine", "Mine"], ["grabs", "Grab"], ["closed", "Closed"]];
@@ -29,7 +29,7 @@ export async function render(ctx) {
     tier: ctx.query.get("tier") || "", q: ctx.query.get("q") || "", page: 1, rows: [], total: 0, counts: {},
   };
   const sub = own ? "Your leads first, then leads in your price band you can grab. Claim within 10 minutes." : "Every lead from every channel. Unclaimed and escalated leads need someone now.";
-  ctx.root.innerHTML = `${pageHead({ title: "Inbox", sub: esc(sub), actions: `<span id="ib-sample"></span>` })}
+  ctx.root.innerHTML = `${pageHead({ title: "Inbox", sub: esc(sub) })}
     <div id="ib-strips"></div>
     <div class="ib-bar">
       <div class="seg ib-views" role="tablist" aria-label="Which leads">${views.map(([v, label]) => `<button type="button" role="tab" data-view="${v}" aria-selected="${v === st.view}">${esc(label)}<span class="n" data-count="${v}"></span></button>`).join("")}</div>
@@ -77,7 +77,6 @@ export async function render(ctx) {
       const node = ctx.root.querySelector(`[data-count="${v}"]`);
       if (node) node.textContent = n === undefined || n === null ? "" : String(n);
     }
-    $("#ib-sample").innerHTML = desk.sampleChip("desk/");
     $("#ib-note").innerHTML = r.claim_unavailable ? `<div class="notice warn" role="note">${icon("clock", "")}<span><b>The claim clock is not answering.</b> Leads still arrive; the time left will show again in a minute.</span></div>` : "";
     list.innerHTML = st.rows.length ? st.rows.map((l, i) => card(l, i)).join("") : emptyState(st.view, st.q || st.tier);
     more.innerHTML = st.rows.length < st.total ? `<button class="btn" type="button" id="ib-next">Show more (${st.total - st.rows.length} left)</button>` : "";
@@ -170,15 +169,21 @@ function strips(ctx, ns) {
       <button class="btn sm primary" type="button" id="st-notify">Turn on</button>
       <button class="icon-btn" type="button" id="st-nx" aria-label="Not now">${icon("x")}</button></div>`);
   }
+  if (ns === "blocked" && safeStore("ca.blockedCard") !== "hidden" && can("desk.inbox")) {
+    out.push(`<div class="strip notify" role="note">${icon("bell", "")}<span><b>Lead alerts are blocked on this phone</b><span class="muted">${esc(blockedHelp())}</span></span>
+      <a class="btn sm" href="#/install">How to fix</a>
+      <button class="icon-btn" type="button" id="st-bx" aria-label="Hide this">${icon("x")}</button></div>`);
+  }
   host.innerHTML = out.join("");
+  $("#st-bx")?.addEventListener("click", () => { safeStore("ca.blockedCard", "hidden"); strips(ctx, ns); });
   $("#st-x")?.addEventListener("click", () => { safeStore("ca.installStrip", "hidden"); strips(ctx, ns); });
   $("#st-nx")?.addEventListener("click", () => { safeStore("ca.notifyCard", "hidden"); strips(ctx, ns); });
   $("#st-install")?.addEventListener("click", async () => { await promptInstall(); strips(ctx, ns); });
   $("#st-notify")?.addEventListener("click", async (e) => {
     e.currentTarget.disabled = true;
     const s = await enableNotifications();
-    if (s === "on") desk.done("Lead alerts are on for this phone", "push/");
-    else if (s === "blocked") toast("Notifications are blocked. Open the phone's Settings, then Notifications, and allow them for this app.", "err");
+    if (s === "on") desk.done("Lead alerts are on for this phone");
+    else if (s === "blocked") toast(`Notifications are blocked. ${blockedHelp()}`, "err");
     if (ctx.alive()) strips(ctx, s);
   });
 }

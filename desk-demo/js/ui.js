@@ -34,6 +34,47 @@ export async function save(btn, fn, { ok = "Saved" } = {}) {
   }
 }
 
+// ------------------------------------------------------------------ the phone's Back closes a sheet or the More menu
+// An open overlay owns one extra history entry with the same URL ({ca: key}). Back (the Android gesture, the browser
+// button) pops that entry and the overlay closes, instead of the app leaving the page and losing what was typed.
+// Closing it any other way (Cancel, Save, the scrim, Escape) takes the entry back out again.
+let ownBack = 0;
+const overlays = new Map();                // key -> close function, newest last
+const caKey = () => (history.state && history.state.ca) || null;
+export function overlayOpened(key, close) {
+  overlays.delete(key);
+  overlays.set(key, close);
+  if (ownBack === 0 && caKey() !== key) history.pushState({ ca: key }, "");
+}
+/** later: the overlay is being replaced by another of the same kind; keep the entry if one opens at once. */
+export function overlayClosed(key, later = false) {
+  overlays.delete(key);
+  const drop = () => { if (!overlays.has(key) && caKey() === key) { ownBack++; history.back(); } };
+  if (later) setTimeout(drop, 0); else drop();
+}
+window.addEventListener("popstate", () => {
+  if (ownBack > 0) {                       // our own history.back() from overlayClosed
+    ownBack--;
+    const top = [...overlays.keys()].pop();          // one opened while that Back was on its way: give it its entry
+    if (top && caKey() !== top) history.pushState({ ca: top }, "");
+    return;
+  }
+  for (const [key, close] of [...overlays].reverse()) {
+    if (caKey() === key) break;
+    overlays.delete(key);
+    close();
+  }
+});
+/** A link inside an overlay: go there in place of the overlay's history entry (Back then returns to the page under it). */
+export function followInPlace(e, key) {
+  const a = e.target.closest('a[href^="#/"]');
+  if (!a || e.defaultPrevented || e.button > 0 || e.ctrlKey || e.metaKey || e.shiftKey || caKey() !== key) return false;
+  e.preventDefault();
+  overlays.delete(key);
+  location.replace(a.getAttribute("href"));
+  return true;
+}
+
 // ------------------------------------------------------------------ drawer
 let active = null;
 const FOCUSABLE = 'a[href],button:not([disabled]),input:not([disabled]),select:not([disabled]),textarea:not([disabled]),[tabindex]:not([tabindex="-1"])';
@@ -76,6 +117,7 @@ export function openDrawer({ title, sub = "", body = "", foot = null, wide = fal
   document.addEventListener("keydown", onKey, true);
   scrim.addEventListener("click", onScrim);
   d.querySelector(".icon-btn").addEventListener("click", () => ctl.close());
+  d.addEventListener("click", (e) => { if (followInPlace(e, "sheet")) ctl.close(true); });
 
   const ctl = {
     el: d, body: bodyEl, setBody, setFoot, setTitle: (t) => { d.querySelector("h2").textContent = t; }, setSub: (h) => { subEl.innerHTML = h; },
@@ -89,10 +131,12 @@ export function openDrawer({ title, sub = "", body = "", foot = null, wide = fal
       document.body.style.overflow = "";
       setTimeout(() => d.remove(), 260);
       if (!silent) { opener?.isConnected && opener.focus?.(); }
+      overlayClosed("sheet", !!silent);
       onClose?.();
     },
   };
   active = ctl;
+  overlayOpened("sheet", () => ctl.close());
   setTimeout(() => (bodyEl.querySelector(FOCUSABLE) || d.querySelector(".icon-btn")).focus({ preventScroll: true }), 60);
   return ctl;
 }

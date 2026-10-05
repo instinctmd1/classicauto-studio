@@ -79,7 +79,7 @@
   --s1: 4px; --s2: 8px; --s3: 12px; --s4: 16px; --s5: 20px; --s6: 24px; --s8: 32px; --s10: 40px;
   --gutter: 16px;
   --side-w: 248px;
-  --top-h: 64px;
+  --top-h: calc(64px + env(safe-area-inset-top, 0px));   /* the installed iPhone app draws under the status bar */
   --bottom-h: 64px;
   --banner-h: 0px;
 

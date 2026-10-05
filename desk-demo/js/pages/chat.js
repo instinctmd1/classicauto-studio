@@ -18,7 +18,7 @@ export async function render(ctx) {
   if (!key && wide()) key = "all";
   ctx.root.innerHTML = `<div class="chat-layout${key ? " has-room" : ""}">
     <aside class="chat-rooms" aria-label="Rooms">
-      <div class="rooms-head"><h1 class="page-title">Team chat</h1><span id="ch-sample"></span></div>
+      <div class="rooms-head"><h1 class="page-title">Team chat</h1></div>
       <p class="page-sub rooms-sub">Talk to the team here instead of the old WhatsApp and Telegram groups.</p>
       <nav class="room-list" id="room-list"><div class="skel room-skel"></div><div class="skel room-skel"></div><div class="skel room-skel"></div></nav>
     </aside>
@@ -32,7 +32,6 @@ export async function render(ctx) {
       const r = await desk.get("chat/rooms", {}, quiet ? { background: true } : {});
       if (!ctx.alive()) return;
       rooms = r.data || [];
-      $("#ch-sample").innerHTML = desk.sampleChip("chat/");
       listEl.innerHTML = rooms.length ? rooms.map((rm) => `<a class="room-item${rm.key === key ? " on" : ""}" href="#/chat/${esc(rm.key)}"${rm.key === key ? ' aria-current="page"' : ""}>
           <span class="room-ic">${icon(ROOM_ICON[rm.key] || "chat", "")}</span>
           <span class="room-txt"><b>${esc(rm.name)}</b><span class="muted">${rm.last ? `${esc(shortName(rm.last.author))}: ${esc(rm.last.preview || "")}` : "No messages yet"}</span></span>
@@ -73,7 +72,23 @@ async function openRoom(ctx, host, room, refreshRooms) {
   if (!wide()) document.title = `${room.name} · Classic Auto`;
   const msgsEl = $("#msgs", host);
   let msgs = [], lastRead = 0, members = [], hasMore = false;
+  // The newest message id this screen has fetched from the server. My own sends never move it: a colleague's message
+  // that landed just before mine must still be fetched (and read receipts never go past what was actually shown).
+  let serverTop = 0;
   const mentions = new Map();       // first name -> user id, for names picked from the @ list
+  const topOf = (list) => list.reduce((a, m) => Math.max(a, m.id || 0), 0);
+  /** Fold fetched messages in: a copy of one already shown replaces it (my placeholder too), then oldest to newest. */
+  const merge = (fresh) => {
+    for (const m of fresh) {
+      const i = msgs.findIndex((x) => (!x.pending && x.id === m.id) || (m.client_id && x.client_id === m.client_id));
+      if (i >= 0) { if (!msgs[i].pending) msgs[i] = m; else if (!msgs[i].failed) msgs[i] = m; } else msgs.push(m);
+    }
+    const sent = msgs.filter((m) => !m.pending && !m.failed).sort((a, b) => a.id - b.id);
+    msgs = sent.concat(msgs.filter((m) => m.pending || m.failed));
+  };
+  // a read receipt only when the person is really here (a tap or key in the last 2 minutes), sent as a background write:
+  // it must not keep the session awake on a screen left open (APP-SPEC G5)
+  const present = () => document.visibilityState === "visible" && Date.now() - api.lastInput < 120000;
 
   const draw = (scroll) => {
     let html = "", day = "", unreadShown = false;
@@ -93,10 +108,10 @@ async function openRoom(ctx, host, room, refreshRooms) {
   const nearEnd = () => window.innerHeight + window.scrollY > document.documentElement.scrollHeight - 160;
 
   async function markRead() {
-    const top = msgs.filter((m) => !m.pending).reduce((a, m) => Math.max(a, m.id), 0);
+    const top = serverTop;
     if (!top || top <= lastRead) return;
     lastRead = top;
-    try { await desk.post(`chat/rooms/${key}/read`, { last_id: top }); refreshRooms(); } catch { /* next time */ }
+    try { await desk.post(`chat/rooms/${key}/read`, { last_id: top }, { background: true }); refreshRooms(); } catch { /* next time */ }
   }
   async function loadOlder() {
     const first = msgs.find((m) => !m.pending);
@@ -111,24 +126,27 @@ async function openRoom(ctx, host, room, refreshRooms) {
     } catch (e) { toast(e.message || "Could not load earlier messages.", "err"); }
   }
   async function loadNew() {
-    const top = msgs.filter((m) => !m.pending).reduce((a, m) => Math.max(a, m.id), 0);
     try {
-      const r = await desk.get(`chat/rooms/${key}/messages`, top ? { after: top } : {}, { background: true });
+      const r = await desk.get(`chat/rooms/${key}/messages`, serverTop ? { after: serverTop } : {}, { background: true });
       if (!ctx.alive()) return;
-      const fresh = (r.data || []).filter((m) => !msgs.some((x) => x.id === m.id || (m.client_id && x.client_id === m.client_id)));
-      if (!fresh.length) return;
-      const stick = nearEnd();
-      msgs = msgs.concat(fresh);
-      draw(stick);
-      // only when the person is actually here: a read receipt is a request that keeps the session awake (APP-SPEC G5)
-      if (document.visibilityState === "visible" && stick && Date.now() - api.lastTouch < 120000) markRead();
+      const got = r.data || [];
+      serverTop = Math.max(serverTop, topOf(got));
+      const fresh = got.filter((m) => !msgs.some((x) => !x.pending && x.id === m.id));
+      if (fresh.length) {
+        const stick = nearEnd();
+        merge(fresh);
+        draw(stick);
+        if (!stick) return;
+      }
+      if (present()) markRead();
     } catch { /* the feed will try again */ }
   }
   async function reloadAll() {
     try {
       const r = await desk.get(`chat/rooms/${key}/messages`, {}, { background: true });
       if (!ctx.alive()) return;
-      msgs = (r.data || []).concat(msgs.filter((m) => m.pending));
+      serverTop = Math.max(serverTop, topOf(r.data || []));
+      msgs = (r.data || []).concat(msgs.filter((m) => m.pending || m.failed));
       draw(false);
     } catch { /* keep what is shown */ }
   }
@@ -137,6 +155,7 @@ async function openRoom(ctx, host, room, refreshRooms) {
     const r = await desk.get(`chat/rooms/${key}/messages`);
     if (!ctx.alive()) return;
     msgs = r.data || []; lastRead = r.last_read_id || 0; hasMore = !!r.has_more;
+    serverTop = topOf(msgs);
     draw("unread");
     if (!$("#unread-sep", host)) scrollEnd();
     markRead();
@@ -230,8 +249,10 @@ async function openRoom(ctx, host, room, refreshRooms) {
       const i = msgs.indexOf(m);
       if (real && i >= 0) { if (msgs.some((x) => x.id === real.id && x !== m)) msgs.splice(i, 1); else msgs[i] = real; }
       else { m.pending = false; }
-      if (desk.isSample("chat/") && !sampleToldOnce) { sampleToldOnce = true; toast("Demo: messages stay on this screen only. Nothing is saved.", "demo"); }
-      draw(true); markRead();
+      merge([]);                                        // back in id order
+      if (desk.isSample() && !sampleToldOnce) { sampleToldOnce = true; toast("Demo: messages stay on this screen only. Nothing is saved.", "demo"); }
+      draw(true);
+      loadNew();                                        // anything a colleague posted just before mine, then the receipt
     } catch (e) {
       m.pending = false; m.failed = true; draw(false);
       toast(e.message || "Not sent. Tap the message to try again.", "err");
@@ -269,7 +290,7 @@ function composerHtml(key) {
       <button class="icon-btn" type="button" id="cm-photo" aria-label="Send a photo">${icon("image")}</button>
       <input type="file" id="cm-file" accept="image/jpeg,image/png,image/webp,image/heic,image/*" hidden>
       <label class="sr" for="cm-text">Message</label>
-      <textarea class="textarea" id="cm-text" rows="1" maxlength="2000" placeholder="Message · @ to mention" enterkeyhint="send"></textarea>
+      <textarea class="textarea" id="cm-text" rows="1" maxlength="2000" placeholder="Message · @ to mention"></textarea>
       <button class="btn primary send-btn" type="submit" aria-label="Send">${icon("send")}</button>
     </div>
   </form>`;

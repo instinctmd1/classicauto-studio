@@ -5,7 +5,7 @@ import { toast } from "../ui.js";
 import * as desk from "../desk-api.js";
 import { deskTime, every, onFeed, refreshBadges } from "../desk.js";
 
-const STATUS = { queued: ["Queued", ""], working: ["Working", "info"], done: ["Done", "pos"], needs_medhansh: ["Needs the tech admin", "warn"], failed: ["Did not work", "neg"] };
+const STATUS = { queued: ["Queued", ""], working: ["Working", "info"], waiting_approval: ["Waiting for approval", "warn"], done: ["Done", "pos"], needs_medhansh: ["Needs the tech admin", "warn"], failed: ["Did not work", "neg"] };
 const OK_TYPES = /^(image\/(jpeg|png|webp)|application\/pdf|text\/plain|text\/csv|application\/vnd\.openxmlformats-officedocument\.spreadsheetml\.sheet)$/;
 const OK_EXT = /\.(jpe?g|png|webp|pdf|txt|csv|xlsx)$/i;
 const MB = 1024 * 1024;
@@ -13,7 +13,7 @@ const DOWN = "Ask Claude is resting right now. Try again in a few minutes.";
 
 export async function render(ctx) {
   ctx.root.innerHTML = `<div class="ask-page">
-    <div class="page-head rise"><div><h1 class="page-title">Ask Claude</h1><p class="page-sub">Ask for a draft reply, a list from the stock, or a quick check. Claude works on it and the tech admin looks at anything it cannot do.</p></div><div class="page-actions" id="ask-sample"></div></div>
+    <div class="page-head rise"><div><h1 class="page-title">Ask Claude</h1><p class="page-sub">Ask for a draft reply, a list from the stock, or a quick check. Claude works on it and the tech admin looks at anything it cannot do.</p></div></div>
     <div id="ask-down"></div>
     <ol class="ask-thread" id="ask-thread" role="log" aria-live="polite" aria-label="Your requests"><li class="skel lead-skel"></li><li class="skel lead-skel"></li></ol>
     <form class="composer ask-composer" id="ask-form" novalidate>
@@ -22,7 +22,7 @@ export async function render(ctx) {
         <button class="icon-btn" type="button" id="ask-clip" aria-label="Attach files (up to 3)">${icon("clip")}</button>
         <input type="file" id="ask-file" multiple accept="image/jpeg,image/png,image/webp,application/pdf,text/plain,text/csv,.csv,.xlsx" hidden>
         <label class="sr" for="ask-text">Your request</label>
-        <textarea class="textarea" id="ask-text" rows="1" maxlength="4000" placeholder="What should Claude do?" enterkeyhint="send"></textarea>
+        <textarea class="textarea" id="ask-text" rows="1" maxlength="4000" placeholder="What should Claude do?"></textarea>
         <button class="btn primary send-btn" type="submit" aria-label="Send">${icon("send")}</button>
       </div>
     </form>
@@ -31,7 +31,6 @@ export async function render(ctx) {
   let tasks = [], files = [], first = true;
 
   function paint() {
-    $("#ask-sample").innerHTML = desk.sampleChip("ask/");
     const list = tasks.slice().reverse();                // oldest first, like a chat
     thread.innerHTML = list.length ? list.map(row).join("") : `<li class="empty">${icon("spark", "")}<b>Ask your first question</b><p>For example: "Write a WhatsApp reply for a customer asking if the Fortuner is still available."</p></li>`;
   }
@@ -51,7 +50,7 @@ export async function render(ctx) {
       if (first) { first = false; window.scrollTo(0, document.documentElement.scrollHeight); }
     } catch (e) {
       if (!ctx.alive()) return;
-      down.innerHTML = `<div class="err-box" role="alert">${icon("clock", "")}<div><b>${esc(e.code === "assistant_down" ? e.message || DOWN : DOWN)}</b><span class="muted">Your earlier requests are kept.</span></div><button class="btn" type="button" id="ask-retry">${icon("refresh")}Retry</button></div>`;
+      down.innerHTML = `<div class="err-box" role="alert">${icon("clock", "")}<div><b>${esc(e.code === "assistant_down" ? e.message || DOWN : e.code === "offline" ? e.message : DOWN)}</b><span class="muted">Your earlier requests are kept.</span></div><button class="btn" type="button" id="ask-retry">${icon("refresh")}Retry</button></div>`;
       $("#ask-retry").addEventListener("click", () => load());
       if (first) { first = false; thread.innerHTML = ""; }
     }
@@ -94,7 +93,7 @@ export async function render(ctx) {
     try {
       await desk.upload("ask/tasks", fd);
       ta.value = ""; grow(); files = []; drawFiles();
-      desk.done("Sent to Claude", "ask/");
+      desk.done("Sent to Claude");
       await load();
       window.scrollTo(0, document.documentElement.scrollHeight);
     } catch (ex) {
@@ -115,6 +114,7 @@ function row(t) {
   const body = t.result_text ? `<p class="ask-result">${esc(t.result_text)}</p>`
     : t.status === "needs_medhansh" ? `<p class="muted">Claude could not finish this alone. The tech admin will take a look.</p>`
     : t.status === "failed" ? `<p class="muted">It did not work this time. Try asking in a different way.</p>`
+    : t.status === "waiting_approval" ? `<p class="muted">The manager or a partner has to approve this first. Tell them it is waiting.</p>`
     : busy ? `<p class="muted ask-wait"><span class="spin"></span>${t.status === "queued" ? "Waiting for its turn" : "Working on it"}</p>` : "";
   return `<li class="ask-item">
     <div class="ask-q"><p>${esc(t.text)}</p><time>${esc(deskTime(t.created_at))}</time></div>

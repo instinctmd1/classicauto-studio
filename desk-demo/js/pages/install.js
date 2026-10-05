@@ -3,7 +3,7 @@
 import { esc, icon } from "../util.js";
 import { toast } from "../ui.js";
 import * as desk from "../desk-api.js";
-import { canPromptInstall, enableNotifications, isIOS, isStandalone, notifyState, onWindow, promptInstall, sendTestNotification } from "../desk.js";
+import { blockedHelp, canPromptInstall, enableNotifications, isIOS, isStandalone, notifyState, onWindow, promptInstall, sendTestNotification } from "../desk.js";
 
 // Small drawings of the buttons people look for on screen.
 const GLYPH = {
@@ -15,7 +15,7 @@ const GLYPH = {
   bell: `<svg class="glyph" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9M13.7 21a2 2 0 0 1-3.4 0"/></svg>`,
 };
 const IOS_STEPS = [
-  [GLYPH.safari, "Open this link in <b>Safari</b>.", "Chrome on iPhone cannot install apps."],
+  [GLYPH.safari, "Open this link in <b>Safari</b>.", "Safari is the surest way. Some other iPhone browsers do not offer Add to Home Screen."],
   [GLYPH.share, "Tap <b>Share</b>, the square with an arrow pointing up.", "It is at the bottom of the screen, or at the top on iPad."],
   [GLYPH.add, "Scroll down, tap <b>Add to Home Screen</b>, then <b>Add</b>.", ""],
   [GLYPH.app, "Open <b>CA Desk</b> from your home screen.", "Sign in once inside the app."],
@@ -78,7 +78,7 @@ export async function render(ctx) {
     const s = await notifyState();
     if (!ctx.alive()) return;
     const [cls, label] = STATE[s] || STATE.off;
-    const hint = s === "blocked" ? (isIOS() ? "Open Settings, then Notifications, then CA Desk, and allow notifications." : "Tap the lock icon next to the address, or open the phone's Settings, Apps, CA Desk, Notifications, and allow them.")
+    const hint = s === "blocked" ? blockedHelp()
       : s === "install-first" ? "On iPhone, add CA Desk to the home screen (step 1), open it from there, then come back to this page."
       : s === "unsupported" ? "Open this link in Chrome on Android, or install the app on iPhone." : s === "on" ? "You will get a ping for new leads, mentions and answers from Ask Claude." : "Tap the red button and then Allow.";
     ctx.root.querySelector("#in-state").innerHTML = `<span class="badge ${cls}"><i></i>${esc(label)}</span><p class="muted">${esc(hint)}</p>`;
@@ -93,7 +93,7 @@ export async function render(ctx) {
   notifyBtn.addEventListener("click", async () => {
     notifyBtn.disabled = true;
     const s = await enableNotifications();
-    if (s === "on") desk.done("Notifications are on", "push/");
+    if (s === "on") desk.done("Notifications are on");
     else if (s === "blocked") toast("Notifications are blocked. See the steps on this page to allow them.", "err");
     notifyBtn.disabled = false;
     paintState();

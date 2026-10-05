@@ -1,10 +1,10 @@
 // Classic Auto Desk service worker. Scope "./" so the same file works at / (live) and inside the demo folder.
 // Caches only the app shell (styles, scripts, fonts, icons). Never caches /api, the demo's data/ answers, non-GET or
 // cross-origin requests, and never serves a cached index.html: a sign-in redirect (Cloudflare Access) must reach the browser.
-const VERSION = "desk-2026-10-05.1";
+const VERSION = "desk-2026-10-05.2";
 const CACHE = `ca-desk-${VERSION}`;
 const SHELL = [
-  "offline.html", "icons/icon-192.png", "icons/badge-96.png",
+  "offline.html", "js/theme-init.js", "js/offline.js", "icons/icon-192.png", "icons/badge-96.png",
   "css/tokens.css", "css/app.css", "css/pages.css", "css/desk.css",
   "fonts/bebas-neue-latin-400.woff2", "fonts/manrope-latin.woff2", "fonts/manrope-latin-ext.woff2",
   "img/logo.svg",
@@ -64,7 +64,8 @@ function show(d) {
   return self.registration.showNotification(d.title || "Classic Auto Desk", {
     body: d.body || "",
     tag: d.tag || undefined,
-    renotify: !!d.tag,
+    renotify: !!d.tag && !d.silent,
+    silent: !!d.silent,                         // a night lead: on the lock screen, no sound (it rings when the clock starts)
     icon: "icons/icon-192.png",
     badge: "icons/badge-96.png",
     data: { url: d.url || "#/inbox" },
@@ -75,6 +76,19 @@ self.addEventListener("push", (e) => {
   let d = {};
   try { d = e.data ? e.data.json() : {}; } catch { d = { body: e.data ? e.data.text() : "" }; }
   e.waitUntil(show(d));                       // always show one: iOS withdraws push from apps that stay silent
+});
+
+// The browser replaced this phone's push subscription (it expired or was rotated): make the new one with the same server
+// key and tell any open window, which sends it to the server. A closed app re-sends it the next time it opens.
+self.addEventListener("pushsubscriptionchange", (e) => {
+  e.waitUntil((async () => {
+    const key = e.oldSubscription && e.oldSubscription.options && e.oldSubscription.options.applicationServerKey;
+    if (key && !e.newSubscription) {
+      try { await self.registration.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: key }); } catch { /* the app does it */ }
+    }
+    const wins = await self.clients.matchAll({ type: "window", includeUncontrolled: true });
+    wins.forEach((w) => w.postMessage({ type: "push-renewed" }));
+  })());
 });
 
 self.addEventListener("notificationclick", (e) => {

@@ -79,6 +79,17 @@ async function demoGet(path, params) {
 }
 
 export let lastTouch = Date.now();
+/** The last time the person really touched the screen or a key (not a request the app made by itself). */
+export let lastInput = Date.now();
+["pointerdown", "keydown", "wheel", "touchstart"].forEach((t) => window.addEventListener(t, () => { lastInput = Date.now(); }, { capture: true, passive: true }));
+
+export const OFFLINE_MSG = "No internet. Check mobile data or Wi-Fi, then try again. (Net nahi hai.)";
+/** fetch, with a network failure turned into a plain sentence instead of the browser's "Failed to fetch". */
+async function net(url, init) {
+  try { return await fetch(url, init); }
+  catch { throw new ApiError(0, "offline", OFFLINE_MSG); }
+}
+
 /** background: a poll the person did not ask for. It must not count as activity (the idle chip, the server's idle timer). */
 async function parse(res, background = false) {
   if (!background) lastTouch = Date.now();
@@ -99,7 +110,7 @@ export async function get(path, params, opts = {}) {
     .map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(v)}`).join("&");
   const headers = { Accept: "application/json" };
   if (opts.background) headers["X-CA-Background"] = "1";
-  const res = await fetch(`/api/${path}${q ? "?" + q : ""}`, { credentials: "same-origin", headers });
+  const res = await net(`/api/${path}${q ? "?" + q : ""}`, { credentials: "same-origin", headers });
   return parse(res, !!opts.background);
 }
 
@@ -108,23 +119,22 @@ function blocked() {
   return Promise.reject(new ApiError(0, "demo", "Demo mode: changes are not saved."));
 }
 
-export async function send(method, path, body) {
+/** opts.background: a write the app makes by itself (a chat read receipt): it neither slides the session nor counts as activity. */
+export async function send(method, path, body, opts = {}) {
   if (DEMO) return blocked();
-  const res = await fetch(`/api/${path}`, {
-    method, credentials: "same-origin",
-    headers: { "Content-Type": "application/json", Accept: "application/json", "X-CSRF-Token": csrf },
-    body: body === undefined ? undefined : JSON.stringify(body),
-  });
-  return parse(res);
+  const headers = { "Content-Type": "application/json", Accept: "application/json", "X-CSRF-Token": csrf };
+  if (opts.background) headers["X-CA-Background"] = "1";
+  const res = await net(`/api/${path}`, { method, credentials: "same-origin", headers, body: body === undefined ? undefined : JSON.stringify(body) });
+  return parse(res, !!opts.background);
 }
-export const post = (p, b) => send("POST", p, b ?? {});
+export const post = (p, b, opts) => send("POST", p, b ?? {}, opts);
 export const patch = (p, b) => send("PATCH", p, b);
 export const put = (p, b) => send("PUT", p, b);
 export const del = (p) => send("DELETE", p);
 
 export async function upload(path, formData) {
   if (DEMO) return blocked();
-  const res = await fetch(`/api/${path}`, { method: "POST", credentials: "same-origin", headers: { "X-CSRF-Token": csrf, Accept: "application/json" }, body: formData });
+  const res = await net(`/api/${path}`, { method: "POST", credentials: "same-origin", headers: { "X-CSRF-Token": csrf, Accept: "application/json" }, body: formData });
   return parse(res);
 }
 
