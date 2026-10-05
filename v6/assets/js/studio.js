@@ -151,6 +151,9 @@ function initStudio(car) {
      shadow under the car stays). Desktop is unchanged. */
   var dprNow = Math.min(window.devicePixelRatio || 1, mobile ? 1.5 : 2);
   renderer.setPixelRatio(dprNow);
+  /* Safari / every iPhone browser (WebKit): no resolution step-down. Changing the pixel ratio after the first frame left the
+     canvas blank there (checked in WebKit on 5 Oct), so Apple browsers keep the fixed 1.5x they had before. */
+  var canAdapt = mobile && navigator.vendor !== "Apple Computer, Inc.";
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
   renderer.shadowMap.enabled = !mobile;
@@ -376,7 +379,7 @@ function initStudio(car) {
     if (dragging) active = true;
     applyCamera();
     renderer.render(scene, camera);
-    if (mobile) adapt(now, active);
+    if (canAdapt) adapt(now, active);
     placeOverlay();
     if ((active || dirty) && !raf) raf = requestAnimationFrame(frame);
   }

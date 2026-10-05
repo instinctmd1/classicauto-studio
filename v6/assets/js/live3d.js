@@ -43,6 +43,8 @@ export function createLiveCar(opts) {
   /* Phones: start at 1.5x (never the device's 3x) and step down to 1x if frames run long (see adapt()). Desktop: unchanged. */
   var dprMax = Math.min(window.devicePixelRatio || 1, mobile ? 1.5 : 2), dprNow = dprMax;
   renderer.setPixelRatio(dprNow);
+  /* Safari / every iPhone browser (WebKit): no step-down; changing the pixel ratio after the first frame blanked the canvas there */
+  var canAdapt = mobile && navigator.vendor !== "Apple Computer, Inc.";
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
   renderer.toneMappingExposure = 1.05;
@@ -287,7 +289,7 @@ export function createLiveCar(opts) {
     state.el += (state.elT - state.el) * k;
     applyCamera();
     renderer.render(scene, camera);
-    if (mobile) adapt(now, now - prevNow);
+    if (canAdapt) adapt(now, now - prevNow);
     prevNow = now;
     publish();
     raf = requestAnimationFrame(frame);
