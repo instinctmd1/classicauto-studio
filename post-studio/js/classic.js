@@ -418,12 +418,12 @@
   }
   // The photo-forward post (4:5 and story): the car runs the full width with no frame or mat, rising a little under the title rows and fading into the white ground above
   // and below. R = the band the photo may use, fr = the frame of the Framed style. A car with a cut-out stands on the floor instead (D.cutCar). Drawn BEFORE the text so the text sits on top.
-  function bleedSlot(c, S, g, R, fr, carTop) {
+  function bleedSlot(c, S, g, R, fr, carTop, labelY) {
     const P = S.photos.main; S._slots = S._slots || []; S._labels = S._labels || [];
     if (P && P.img && cutOn(S)) {                     // the 3D cut-out: the roof may rise into the title band (carTop) and tucks behind the pill drawn after it
       const ground = R.y + R.h - 26; D.cutCar(c, S, P, { x0: g.m, x1: g.W - g.m, top: carTop != null ? carTop : R.y + 10, ground, W: g.W, floorEnd: ground + 60 });
       chip(c, S, { x: R.x, y: R.y + 24, w: R.w, h: R.h });
-      if (carTop == null) D.adjLabel(c, S, g.W - g.m, R.y + 34, 'right', 0.72);        // the Signature chassis (Price Drop, Guess, Sold, Story): the label sits top-right in the photo band, clear of the text block under it
+      if (carTop == null) D.adjLabel(c, S, g.W - g.m, labelY || R.y + 34, 'right', 0.72);        // the Signature chassis (Price Drop, Guess, Sold, Story): the label sits top-right in the photo band, clear of the text block under it (labelY: the festival layout puts it below its pennants)
       return;
     }
     if (!P || !P.img) {

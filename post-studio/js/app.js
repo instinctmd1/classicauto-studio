@@ -330,6 +330,7 @@
       return h('div', { class: 'group' }, h('h3', { text: title }), input, drop);
     };
     p.append(mkDrop('photoIn', who, P && P.img, (f) => setPhotoFile(f)));
+    p.append(h('p', { class: 'help', id: 'shootTip', text: 'Shooting tip: park the car against a plain wall, with no people, cars or clutter behind it and all four tyres in frame. A plain background gives a clean cut-out (training/car-photo-guide.md).' }));
     if (t.photo2) {
       const P2 = S.photos.second, g2 = mkDrop('photoIn2', t.photo2, P2 && P2.img, (f) => setPhotoFile(f, 'second'));
       if (P2 && P2.img) g2.append(h('div', { class: 'row' }, h('button', { class: 'btn sm ghost', type: 'button', onclick: () => { S.photos.second = null; resetConsent('second'); buildPhoto(); changed(); } }, 'Remove this photo')));
@@ -401,7 +402,7 @@
     cutBusy = true; if (btn) btn.disabled = true; say('Making the cut-out on this computer… (about 10 to 30 seconds)');
     try {
       const photo = await (await fetch(P.img.src)).blob(), fd = new FormData(); fd.append('photo', photo, (P.name || 'photo').replace(/\.[^.]+$/, '') + '.png');
-      let r; try { r = await fetch(KIT + '/api/cutout', { method: 'POST', body: fd }); } catch (e) { throw new Error('The listing kit is not running on this computer. Start it with  python kit.py serve  (in classic-auto/listing-kit) and press again.'); }
+      let r; try { r = await fetch(KIT + '/api/cutout', { method: 'POST', body: fd }); } catch (e) { throw new Error('Could not reach the listing kit on this computer. Start it with  python kit.py serve  (in classic-auto/listing-kit) and press again. If it is already running, allow this page to reach apps on this device when the browser asks (Chrome: the icon left of the address > Site settings > Local network access > Allow).'); }
       const j0 = await r.json(); if (!r.ok || !j0.job) throw new Error(j0.error || 'The listing kit refused the photo.');
       for (let i = 0; i < 300; i++) {
         await new Promise((res) => setTimeout(res, 1500)); const j = await (await fetch(`${KIT}/api/cutout/${j0.job}`)).json();

@@ -59,8 +59,9 @@
     const fd = p.frameFor(S.photos.main, wide ? g.W - g.m - 900 : g.W - 2 * g.m, Math.max(120, wide ? g.fr.h : availH));
     const area = wide ? { x: 900, y: g.fr.y, w: g.W - g.m - 900, h: g.fr.h } : null;
     if (wide) p.slot(c, S, { x: area.x + area.w - fd.w, y: area.y + Math.max(0, area.h - fd.h) * 0.4, w: fd.w, h: fd.h }, g);
-    else { const fr = { x: (g.W - fd.w) / 2, y: top + Math.max(0, availH - fd.h) * 0.4, w: fd.w, h: fd.h }; p.bleedSlot(c, S, g, { x: 0, y: top - 30, w: g.W, h: availH + 30 + 10 }, fr); }
+    else { const fr = { x: (g.W - fd.w) / 2, y: top + Math.max(0, availH - fd.h) * 0.4, w: fd.w, h: fd.h }; p.bleedSlot(c, S, g, { x: 0, y: top - 30, w: g.W, h: availH + 30 + 10 }, fr, null, top + 54); }      // the photo-edited label 50 px under its Signature spot, clear of the pennants
     PS.festBand(c, band, f, fid, from, padT + headH);
+    if (!wide) D.adjLabel(c, S, g.W - g.m, top + 54, 'right', 0.72);      // the photo (no cut-out) path: an edited photo is labelled at the same spot (no-op when the cut-out path drew it)
     let y = band.y + padT; T.forEach((t) => { t.draw(x0, y); y += t.h; });
     // 3) header, the car's name and price, the contact bar
     p.header(c, S, g, { luxury: PS.isLuxury(S.car, S.x.luxury) }, A, { x: g.W - g.m });

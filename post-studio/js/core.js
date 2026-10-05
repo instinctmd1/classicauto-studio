@@ -4,7 +4,7 @@
   const PS = (window.PS = window.PS || {});
 
   PS.B = {
-    red: '#E11B22', blue: '#0A5AA8', deep: '#0A1633', card: '#0E1D40', card2: '#16275A',
+    red: '#E11B22', blue: '#2B3990', deep: '#0A1633', card: '#0E1D40', card2: '#16275A',
     off: '#F7F5F0', cream: '#F5F2EC', white: '#FFFFFF', mute: '#B9C2DA', ink: '#0A1633', inkMute: '#4A5576',
     line: 'rgba(247,245,240,.16)'
   };
