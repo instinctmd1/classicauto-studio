@@ -8,7 +8,7 @@ import { closeDrawer, closeMenu, confirmDialog, followInPlace, formHtml, openDra
 import { disposeCharts } from "./charts.js";
 import { disposeGrids } from "./grid.js";
 import { forgetThisDevice, isStandalone, registerServiceWorker, resetPageScope, sendTestNotification, startBadges, startFeed, stopFeed, syncPush } from "./desk.js";
-import { resetDeskStore } from "./desk-api.js";
+import { get as deskGet, resetDeskStore } from "./desk-api.js";
 
 const FIN = ["money.view", "deals.profit.view", "accounts.view", "expenses.view", "bank.view"];
 
@@ -18,6 +18,11 @@ const NAV = [
     { id: "inbox", label: "Inbox", icon: "inbox", any: ["desk.inbox"], badge: "inbox" },
     { id: "chat", label: "Team chat", icon: "chat", any: ["chat.use"], badge: "chat" },
     { id: "ask", label: "Ask Claude", icon: "spark", any: ["desk.ask"], badge: "ask" },
+    // call accountability (ACCOUNTABILITY-SPEC 11.4): in More and the desktop Desk group, no new bottom tab. Call rules also
+    // shows while accountability is off (the owners switch it on there), once the engine knows about it.
+    { id: "calls", label: "Calls and warnings", icon: "flag", any: ["acc.own", "acc.team"], onlyIf: () => !!state.deskFlags?.acc },
+    { id: "proofs", label: "Screenshots to check", icon: "image", any: ["acc.review"], onlyIf: () => !!state.deskFlags?.acc },
+    { id: "rules", label: "Call rules", icon: "clock", any: ["acc.settings"], onlyIf: () => "acc" in (state.deskFlags || {}) },
     { id: "install", label: "Install the app", icon: "download", any: [], onlyIf: () => !isStandalone() } ] },
   { group: null, items: [
     { id: "home", label: "Home", icon: "overview", any: [], period: true },
@@ -242,6 +247,7 @@ async function switchDemoRole(id) {
   closeDrawer(); closeMenu();
   const me = await api.get("me");
   applyMe(me);
+  await loadDeskFlags();
   buildShell();
   history.replaceState(null, "", can("desk.inbox") ? "#/inbox" : "#/home");
   onRoute();
@@ -419,9 +425,10 @@ function onRoute(restoreY = 0) {
 
 // ------------------------------------------------------------------ boot
 // The demo recordings predate the Desk capabilities: the demo adds the role defaults (APP-SPEC 8.2) when they are missing.
-const DESK_DEMO_CAPS = { owner: ["desk.inbox", "desk.leads.act", "desk.ai_call", "chat.use", "desk.ask"], manager: ["desk.inbox", "desk.leads.act", "desk.ai_call", "chat.use", "desk.ask"], salesman: ["desk.inbox", "desk.leads.act", "desk.ai_call", "chat.use"] };
+const ACC_TEAM = ["acc.own", "acc.team", "acc.review", "acc.reassign", "acc.warnings.manage"];
+const DESK_DEMO_CAPS = { owner: ["desk.inbox", "desk.leads.act", "desk.ai_call", "chat.use", "desk.ask", ...ACC_TEAM, "acc.settings"], manager: ["desk.inbox", "desk.leads.act", "desk.ai_call", "chat.use", "desk.ask", ...ACC_TEAM], salesman: ["desk.inbox", "desk.leads.act", "desk.ai_call", "chat.use", "acc.own"] };
 function applyMe(me) {
-  if (DEMO && !(me.capabilities || []).some((c) => c.startsWith("desk.") || c === "chat.use")) me.capabilities = [...(me.capabilities || []), ...(DESK_DEMO_CAPS[me.user.role] || [])];
+  if (DEMO) me.capabilities = [...new Set([...(me.capabilities || []), ...(DESK_DEMO_CAPS[me.user.role] || [])])];
   state.user = me.user;
   state.caps = new Set(me.capabilities || []);
   state.locked = me.capabilities_locked || [];
@@ -454,13 +461,30 @@ const onHash = (e) => {
   const y = /^#\/lead\//.test(old) && /^#\/inbox/.test(location.hash) ? scrollMemo.get(location.hash) || 0 : 0;
   onRoute(y);
   syncMe();
+  refreshDeskFlags();
 };
+
+/** The Desk flags (call accountability on, Exotel on) decide a few menu items; read once at start (30 s cache server-side). */
+let flagsAt = 0;
+async function loadDeskFlags() {
+  flagsAt = Date.now();
+  try { state.deskFlags = (await deskGet("desk/config", null, { background: true }))?.flags || {}; }
+  catch { state.deskFlags = {}; }
+}
+/** On a page change at most once a minute: call accountability switched on or off shows in the menu without a reload. */
+async function refreshDeskFlags() {
+  if (!state.user || Date.now() - flagsAt < 60000) return;
+  const before = JSON.stringify(state.deskFlags || {});
+  await loadDeskFlags();
+  if (state.user && JSON.stringify(state.deskFlags || {}) !== before) { buildShell(); onRoute(); }
+}
 
 /** Re-read /api/me (after two-factor is set up, or a grant changes) and rebuild the menu. */
 export async function reloadMe() {
   const me = await api.get("me");
   api.setCsrf(me.csrf);
   applyMe(me);
+  await loadDeskFlags();
   buildShell();
   onRoute();
 }
@@ -477,6 +501,7 @@ async function bootDemo() {
   const me = await api.get("me");
   initPeriod(null);
   applyMe(me);
+  await loadDeskFlags();
   buildShell();
   window.removeEventListener("hashchange", onHash);
   window.addEventListener("hashchange", onHash);
@@ -495,6 +520,7 @@ async function boot() {
   api.setCsrf(me.csrf);
   applyMe(me);
   if (me.user.must_change_password) { passwordView(me.user); return; }
+  await loadDeskFlags();
   buildShell();
   window.removeEventListener("hashchange", onHash);
   window.addEventListener("hashchange", onHash);

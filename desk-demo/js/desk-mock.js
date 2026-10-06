@@ -2,6 +2,7 @@
 // that applies actions to a copy (claim, status, notes, chat, Ask Claude). Used by the static demo, and by the live app
 // only for a route the server does not have yet (desk-api.js decides). Every name here is made up; no phone numbers.
 import { ApiError } from "./api.js";
+import { accAllowedFor, accData, createAccStore } from "./desk-mock-acc.js";
 
 const BASE = "2026-10-05 11:20:00";              // the moment these answers describe; times are moved to "now" on load
 const ME = { salesman: "Kabir (demo)", manager: "Demo Manager", owner: "Partners (demo)", staff: "Demo Staff" };
@@ -39,22 +40,22 @@ const LEADS = [
     _thread: { channel: "whatsapp", updated_at: at("11:17:20"), messages: [{ who: "customer", name: null, text: "Fortuner 2021 available hai?" }, { who: "anita", name: "Anita", text: "Ji haan, ek 2021 Fortuner hai. Diesel, 4x2, single owner." }, { who: "customer", name: null, text: "Kal test drive ho sakta hai? Budget around 30 lakh." }] } }),
   L({ id: 1040, first_seen_ts: at("10:31:00"), channel: "call", name: "Demo Customer 0140", car: "BMW 5 Series 2020", budget: 4800000, tier_key: "luxury", salesman: "Partners (demo)", status: "escalated", stage: "new",
     _call: { duration_min: 2, has_recording: false, shortened: false, lines: [{ who: "agent", text: "Namaste, Classic Auto. How can I help?" }, { who: "caller", text: "5 Series 2020 dekhna hai, aaj shaam aa sakta hoon." }, { who: "agent", text: "Noted. Our team will call you back shortly to confirm a time." }] },
-    _timeline: [{ ts: at("10:41:00"), who: "Zoya (demo)", kind: "missed", note: "Not claimed in 10 minutes" }, { ts: at("10:41:05"), who: null, kind: "escalated", note: "Moved to the partners" }] }),
-  L({ id: 1038, first_seen_ts: at("10:22:00"), channel: "website", name: "Demo Customer 0138", car: "Audi Q5 2021", budget: 4600000, tier_key: "luxury", salesman: "Rohan (demo)", status: "claimed", stage: "claimed",
+    _timeline: [{ ts: at("10:46:00"), who: "Rohan (demo)", kind: "pass", note: "no_claim|Zoya (demo)|Rohan (demo)|1|2" }, { ts: at("11:01:00"), who: "Zoya (demo)", kind: "pass", note: "no_claim|Rohan (demo)|Zoya (demo)|2|2" }, { ts: at("11:16:00"), who: "Partners (demo)", kind: "escalated", note: "max_rounds|2" }] }),
+  L({ id: 1038, first_seen_ts: at("07:50:00"), after_hours: 1, channel: "website", name: "Demo Customer 0138", car: "Audi Q5 2021", budget: 4600000, tier_key: "luxury", salesman: "Rohan (demo)", status: "claimed", stage: "claimed",
     _thread: { channel: "website", updated_at: at("10:21:30"), messages: [{ who: "customer", name: null, text: "Q5 service history available?" }, { who: "anita", name: "Anita", text: "Yes, full service history with the authorised dealer." }] },
-    _timeline: [{ ts: at("10:25:00"), who: "Rohan (demo)", kind: "claimed", note: null }] }),
+    _timeline: [{ ts: at("10:05:00"), who: "Rohan (demo)", kind: "claimed", note: null }, { ts: at("10:12:00"), who: "Rohan (demo)", kind: "call_attempt", note: "297|app_tel" }, { ts: at("10:24:00"), who: "Rohan (demo)", kind: "brief_submitted", note: "84|spoke_negotiating" }, { ts: at("10:36:00"), who: "Rohan (demo)", kind: "proof_missed", note: "42" }] }),
   L({ id: 1037, first_seen_ts: at("10:05:00"), channel: "call", name: "Demo Customer 0139", car: "Hyundai Creta 2022", budget: 1400000, tier_key: "core", salesman: ME.salesman, status: "contacted", stage: "visit_booked",
     _call: { duration_min: 3, has_recording: false, shortened: false, lines: [{ who: "agent", text: "Namaste, Classic Auto. How can I help?" }, { who: "caller", text: "Creta 2022 chahiye, budget around 14 lakh." }, { who: "agent", text: "We have a white 2022 Creta SX. Would you like to see it today?" }, { who: "caller", text: "Haan, shaam ko 5 baje." }] },
-    _timeline: [{ ts: at("10:09:00"), who: ME.salesman, kind: "claimed", note: null }, { ts: at("10:40:00"), who: ME.salesman, kind: "visit_booked", note: at("17:00") }] }),
-  L({ id: 1035, first_seen_ts: at("09:48:00"), channel: "cardekho", name: "Demo Customer 0135", car: "Mahindra XUV700 AX7 2023", budget: 2250000, tier_key: "premium", salesman: ME.salesman, status: "claimed", stage: "claimed",
+    _timeline: [{ ts: at("10:09:00"), who: ME.salesman, kind: "claimed", note: null }, { ts: at("10:12:00"), who: ME.salesman, kind: "call_attempt", note: "301|app_tel" }, { ts: at("10:21:00"), who: ME.salesman, kind: "brief_submitted", note: "88|spoke_visit" }, { ts: at("10:30:00"), who: ME.salesman, kind: "proof_submitted", note: "41" }, { ts: at("10:40:00"), who: ME.salesman, kind: "visit_booked", note: at("17:00") }] }),
+  L({ id: 1035, first_seen_ts: at("11:08:00"), channel: "cardekho", name: "Demo Customer 0135", car: "Mahindra XUV700 AX7 2023", budget: 2250000, tier_key: "premium", salesman: ME.salesman, status: "claimed", stage: "claimed",
     _thread: { channel: "email", updated_at: at("09:47:30"), messages: [{ who: "customer", name: null, text: "Interested in the XUV700 AX7. Please share the best price." }] },
-    _timeline: [{ ts: at("09:52:00"), who: ME.salesman, kind: "claimed", note: null }] }),
-  L({ id: 1033, first_seen_ts: at("09:30:00"), channel: "whatsapp", name: "Demo Customer 0133", car: "Tata Nexon EV 2023", budget: 1250000, tier_key: "core", salesman: "Aarav (demo)", status: "contacted", stage: "contacted",
+    _timeline: [{ ts: at("11:12:00"), who: ME.salesman, kind: "claimed", note: null }] }),
+  L({ id: 1033, first_seen_ts: at("09:30:00"), after_hours: 1, channel: "whatsapp", name: "Demo Customer 0133", car: "Tata Nexon EV 2023", budget: 1250000, tier_key: "core", salesman: "Aarav (demo)", status: "contacted", stage: "contacted",
     _thread: { channel: "whatsapp", updated_at: at("09:29:00"), messages: [{ who: "customer", name: null, text: "Nexon EV ki battery health kitni hai?" }, { who: "anita", name: "Anita", text: "Battery health report is available. A salesman will share it." }] },
-    _timeline: [{ ts: at("09:33:00"), who: "Aarav (demo)", kind: "claimed", note: null }, { ts: at("09:50:00"), who: "Aarav (demo)", kind: "contacted", note: "Sent the battery report" }] }),
+    _timeline: [{ ts: at("10:03:00"), who: "Aarav (demo)", kind: "claimed", note: null }, { ts: at("10:18:00"), who: "Aarav (demo)", kind: "call_attempt", note: "299|app_tel" }, { ts: at("10:26:00"), who: "Aarav (demo)", kind: "brief_submitted", note: "86|spoke_interested" }, { ts: at("10:31:00"), who: "Aarav (demo)", kind: "proof_submitted", note: "43" }] }),
   L({ id: 1031, first_seen_ts: at("16:10:00", "2026-10-04"), channel: "website", name: "Demo Customer 0131", car: "Toyota Innova Crysta 2021", budget: 2350000, tier_key: "premium", salesman: ME.salesman, status: "contacted", stage: "test_drive",
     _thread: { channel: "website", updated_at: at("16:09:00", "2026-10-04"), messages: [{ who: "customer", name: null, text: "Crysta 7 seater, family ke liye. Test drive possible?" }, { who: "anita", name: "Anita", text: "Yes. A salesman will call you to book a slot." }] },
-    _timeline: [{ ts: at("16:14:00", "2026-10-04"), who: ME.salesman, kind: "claimed", note: null }, { ts: at("16:30:00", "2026-10-04"), who: ME.salesman, kind: "contacted", note: null }, { ts: at("18:05:00", "2026-10-04"), who: ME.salesman, kind: "test_drive", note: "Innova Crysta 2021" }] }),
+    _timeline: [{ ts: at("16:14:00", "2026-10-04"), who: ME.salesman, kind: "claimed", note: null }, { ts: at("16:20:00", "2026-10-04"), who: ME.salesman, kind: "call_attempt", note: "288|app_tel" }, { ts: at("16:29:00", "2026-10-04"), who: ME.salesman, kind: "brief_submitted", note: "71|spoke_callback" }, { ts: at("16:30:00", "2026-10-04"), who: ME.salesman, kind: "contacted", note: null }, { ts: at("18:05:00", "2026-10-04"), who: ME.salesman, kind: "test_drive", note: "Innova Crysta 2021" }, { ts: at("11:05:00"), who: ME.salesman, kind: "call_attempt", note: "305|app_tel" }, { ts: at("11:15:00"), who: null, kind: "brief_prompt", note: "90" }] }),
   L({ id: 1019, first_seen_ts: at("11:40:00", "2026-10-02"), channel: "whatsapp", name: "Demo Customer 0119", car: "Maruti Suzuki Brezza 2022", budget: 1050000, tier_key: "core", salesman: ME.salesman, status: "sold", stage: "sold",
     _thread: { channel: "whatsapp", updated_at: at("11:39:00", "2026-10-02"), messages: [{ who: "customer", name: null, text: "Brezza 2022 ZXi, CNG hai kya?" }, { who: "anita", name: "Anita", text: "This one is petrol. A salesman will call you." }] },
     _timeline: [{ ts: at("11:43:00", "2026-10-02"), who: ME.salesman, kind: "claimed", note: null }, { ts: at("12:10:00", "2026-10-02"), who: ME.salesman, kind: "contacted", note: null }, { ts: at("17:20:00", "2026-10-03"), who: ME.salesman, kind: "sold", note: "Token taken" }] }),
@@ -75,7 +76,7 @@ function rowFor(l, role) {
   return Object.fromEntries(ROW_KEYS.map((k) => [k, r[k] ?? null]));
 }
 function visibleTo(l, role) {
-  if (role === "salesman") return l.salesman === ME.salesman || (l.status === "new" && KABIR_TIERS.includes(l.tier_key));
+  if (role === "salesman") return l.salesman === ME.salesman || (l.status === "new" && !!l.salesman && KABIR_TIERS.includes(l.tier_key));
   return true;
 }
 function allowedFor(row, role) {
@@ -95,7 +96,7 @@ function detailFor(l, role) {
     thread: locked ? null : l._thread || null,
     call: locked ? null : l._call || null,
     annotation: l._annotation || null,
-    allowed: allowedFor(lead, role),
+    allowed: { ...allowedFor(lead, role), ...accAllowedFor(lead, role) },
     _unlock: { thread: l._thread || null, call: l._call || null },
   };
 }
@@ -162,7 +163,8 @@ const DEMO_ANSWER = "(demo answer) Done. Here is a first draft you can edit:\n\n
 export function builtin(role, path, params, personaId) {
   const p = params || {};
   const persona = { ...U[PERSONA[role]], id: personaId ?? U[PERSONA[role]].id };
-  if (path === "desk/config") return { flags: { exotel_call: false, inapp_reply: false }, vapid_public_key: "BDemoPublicKeyBase64url", server_now: BASE };
+  if (path === "desk/config") return { flags: { exotel_call: false, inapp_reply: false, acc: true, acc_exotel: false }, vapid_public_key: "BDemoPublicKeyBase64url", server_now: BASE };
+  if (path === "acc/_db") return accData();          // call accountability: the whole starting picture (desk-mock-acc.js)
   if (path === "desk/inbox") return inboxAnswer(role, p);
   let m = path.match(/^desk\/leads\/(\d+)$/);
   if (m) { const l = LEADS.find((x) => x.id === +m[1] && visibleTo(x, role)); return l ? detailFor(l, role) : null; }
@@ -244,7 +246,7 @@ export function createStore({ role, me, load }) {
   const now = () => istStr(Date.now());
   async function source(path, params) {
     let a = null;
-    if (load) a = await load(path, params);
+    if (load && !/^acc\//.test(path)) a = await load(path, params);     // the recordings predate call accountability
     if (a == null) a = builtin(role, path, params, personaId);
     if (a == null) throw new ApiError(404, "not_found", "Not found in the sample data.");
     a = clone(a);
@@ -279,7 +281,7 @@ export function createStore({ role, me, load }) {
     }
     const d = details.get(id), row = leads.get(id);
     Object.assign(d.lead, row);
-    d.allowed = { ...d.allowed, ...allowedFor(row, role) };
+    d.allowed = { ...d.allowed, ...allowedFor(row, role), ...accAllowedFor(row, role) };
     d.server_now = now();
     const out = clone(d); delete out._unlock;
     return out;
@@ -305,11 +307,20 @@ export function createStore({ role, me, load }) {
     if (d) d.timeline.push({ ts, who: myName, kind, note });
     fire({ kind: "lead.changed", lead_id: id, why: kind });
   }
+  const acc = createAccStore({ role, myName, src: (p) => source(p), leads, fire, stamp });
 
   const api = {
     async get(path, params = {}) {
       if (path === "desk/config") { if (!config) config = await source("desk/config"); return { ...clone(config), server_now: now() }; }
-      if (path === "desk/inbox") { await loadViews(); rollClocks(); return clone({ server_now: now(), ...listView([...leads.values()], role, params) }); }
+      if (path === "desk/inbox") {
+        await loadViews(); rollClocks();
+        const out = clone({ server_now: now(), ...listView([...leads.values()], role, params) });
+        const todo = await acc.rowBadges(out.data);                  // call accountability: the next to-do on each row
+        if (role === "salesman") out.counts.todo = todo;
+        else out.counts.night = [...leads.values()].filter((r) => r.status === "new" && !r.salesman).length;
+        return out;
+      }
+      if (/^acc\/|^desk\/leads\/\d+\/acc$/.test(path)) { await loadViews(); const a = await acc.get(path, params); if (a !== undefined) return a; }
       let m = path.match(/^desk\/leads\/(\d+)$/);
       if (m) { await loadViews(); rollClocks(); return detail(+m[1]); }
       if (path === "desk/feed") return { data: [], last_id: 0 };
@@ -329,6 +340,13 @@ export function createStore({ role, me, load }) {
     },
 
     async send(method, path, body = {}) {
+      if (/^acc\/|^desk\/leads\/\d+\/(call-attempt|brief|reassign)$/.test(path)) {
+        await loadViews();
+        const lid = +((path.match(/^desk\/leads\/(\d+)\//) || [])[1] || 0);
+        if (lid) await detail(lid);
+        const a = await acc.send(method, path, body);
+        if (a !== undefined) return a;
+      }
       let m = path.match(/^desk\/leads\/(\d+)\/(claim|status|notes|call|reply|ai-call)$/);
       if (m) {
         const id = +m[1], what = m[2];
@@ -393,6 +411,7 @@ export function createStore({ role, me, load }) {
     },
 
     async upload(path, fd) {
+      if (/^desk\/leads\/\d+\/proof$/.test(path)) { await loadViews(); await detail(+path.split("/")[2]); const a = await acc.upload(path, fd); if (a !== undefined) return a; }
       let m = path.match(/^chat\/rooms\/([a-z]+)\/photos$/);
       if (m) {
         const key = m[1], box = await roomMsgs(key), list = await roomList(), room = list.find((r) => r.key === key);

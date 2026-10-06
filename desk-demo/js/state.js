@@ -7,6 +7,7 @@ export const state = {
   today: new Date(Date.now() + 5.5 * 36e5).toISOString().slice(0, 10),   // IST date
   period: null, months: null,   // months: demo only, the list the bundle covers
   prevHash: "",                 // the screen before this one (the lead page's "Inbox" link goes back to it)
+  deskFlags: {},                // /api/desk/config flags: exotel_call, inapp_reply, and acc / acc_exotel while the engine has them
 };
 
 /** True when the signed-in user holds ANY of the capabilities (the API refuses everything else). */

@@ -209,7 +209,7 @@ window.addEventListener("desk:feed", (e) => dispatchFeed(e.detail || {}));
 // The feed position is learnt from the server when the feed starts, so after an outage the stream or the poll resumes
 // from where this screen was (nothing in the gap is skipped). While polling, the stream is tried again every minute and
 // whenever the phone comes back online or the app comes back to the front.
-const KINDS = ["chat.message", "chat.deleted", "lead.new", "lead.changed", "ask.updated"];
+const KINDS = ["chat.message", "chat.deleted", "lead.new", "lead.changed", "ask.updated", "acc.changed"];
 let es = null, lastId = 0, errors = [], pollTimer = null, retryTimer = null, streamRetry = null, feedOn = false;
 
 function onEvent(e) {
@@ -353,8 +353,9 @@ export async function refreshBadges() {
   const jobs = [];
   if (can("desk.inbox")) jobs.push(desk.get("desk/inbox", {}, bg).then((r) => {
     const c = r.counts || {};
-    const n = "mine_new" in c ? (c.mine_new || 0) + (c.grabs || 0) : (c.unclaimed || 0) + (c.escalated || 0);
-    total += n; paint("inbox", n, "mine_new" in c ? "New leads for you and leads you can grab" : "Unclaimed and escalated leads");
+    // a salesman: new leads, leads to grab, and (call accountability on) calls, briefs and screenshots due
+    const n = "mine_new" in c ? (c.mine_new || 0) + (c.grabs || 0) + (c.todo || 0) : (c.unclaimed || 0) + (c.escalated || 0);
+    total += n; paint("inbox", n, "mine_new" in c ? ("todo" in c ? "New leads, leads to grab, and calls, briefs and screenshots due" : "New leads for you and leads you can grab") : "Unclaimed and escalated leads");
   }).catch(() => {}));
   if (can("chat.use")) jobs.push(desk.get("chat/rooms", {}, bg).then((r) => {
     const n = (r.data || []).reduce((a, x) => a + (x.unread || 0), 0);
