@@ -24,7 +24,7 @@
     <div class="container">
       <span class="eyebrow" data-hero-in>Full stock</span>
       <h1 data-hero-in>Every car on the floor</h1>
-      <p class="lead" data-hero-in>Filter by price band, body type, fuel or gearbox. Prices and EMI estimates update as you filter.<span data-bind="stock-count" hidden></span></p>
+      <p class="lead" data-hero-in>Filter by price band, body type, fuel or gearbox. Each option shows how many cars it gives, before you pick it.<span data-bind="stock-count" hidden></span></p>
     </div>
   </section>
 
@@ -41,10 +41,11 @@
       <div class="filter-group"><label for="filterTrans">Gearbox</label>
         <select id="filterTrans"><option value="all">Any gearbox</option><option value="Manual">Manual</option><option value="Automatic">Automatic</option></select></div>
       <div class="filter-group"><label for="filterSort">Sort</label>
-        <select id="filterSort"><option value="featured">Featured</option><option value="price-asc">Price: low to high</option><option value="price-desc">Price: high to low</option><option value="year-desc">Year: newest first</option></select></div>
+        <select id="filterSort"><option value="featured">Featured</option><option value="price-asc">Price: low to high</option><option value="price-desc">Price: high to low</option><option value="year-desc">Year: newest first</option><option value="km-asc">Kilometres: lowest first</option></select></div>
       <div class="filter-toggles" role="group" aria-label="Quick filters">
-        <button type="button" class="toggle-chip" id="toggleElectric" aria-pressed="false">Electric</button>
-        <button type="button" class="toggle-chip" id="toggleDemo" aria-pressed="false">Ex-demo</button>
+        <button type="button" class="toggle-chip" id="toggleLowKm" aria-pressed="false">Under 10,000 km <b class="toggle-count">0</b></button>
+        <button type="button" class="toggle-chip" id="toggleElectric" aria-pressed="false">Electric <b class="toggle-count">0</b></button>
+        <button type="button" class="toggle-chip" id="toggleDemo" aria-pressed="false">Ex-demo <b class="toggle-count">0</b></button>
       </div>
       <span class="filter-count" id="filterCount" role="status"></span>
       <button class="filter-reset" id="filterReset" type="button">Reset filters</button>
@@ -55,6 +56,7 @@
     <div class="container">
       <h2 class="sr-only">Cars on the floor</h2>
       <div class="grid grid-cars" id="stockGrid" data-pending aria-live="polite"></div>
+      <div class="stock-more" id="stockMore" hidden><button type="button" class="btn btn-outline btn-lg" id="stockMoreBtn">Show more</button></div>
       <div class="empty-state" id="stockEmpty" style="display:none;">
         <h2 id="emptyTitle">No cars match those filters</h2>
         <p id="emptyText">Widen the price band or clear the body type, or tell us what you're looking for.</p>

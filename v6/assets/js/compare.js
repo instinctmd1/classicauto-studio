@@ -21,6 +21,7 @@
       ["Year", function (c) { return esc(c.year); }],
       ["Registered", function (c) { return esc(c.reg_month + (c.rto ? " (" + c.rto + ")" : "")); }],
       ["Driven", function (c) { return fmt.formatKm(c.kms); }],
+      ["Use", function (c) { var r = fmt.kmRate(c); return r ? r.text : "-"; }],
       ["Fuel", function (c) { return esc(c.fuel); }],
       ["Gearbox", function (c) { return esc(c.trans + " (" + fmt.transShort(c) + ")"); }],
       ["Owner", function (c) { return esc(c.owners); }],
@@ -29,6 +30,12 @@
       ["Insurance", function (c) { return fmt.insurance(c).text; }],
       ["Status", function (c) { return c.status === "SOLD" ? "Sold" : "Available"; }]
     ];
+    // the new-car comparison only when one of these cars has the maker's own figure (see main.js newPrice and the car page)
+    if (cars.some(function (c) { return fmt.newPrice(c); })) {
+      rows.splice(2, 0,
+        ["New: approx. ex-showroom", function (c) { var n = fmt.newPrice(c); return n ? fmt.money(n.price) + '<br><small class="cmp-src">' + esc(n.source) + ", " + n.asOfText + "</small>" : "-"; }],
+        ["You save approx.", function (c) { var n = fmt.newPrice(c); return n ? '<span class="cmp-save">' + fmt.money(n.save) + "</span>" : "-"; }]);
+    }
 
     var head = '<div class="cmp-row cmp-head"><div class="cmp-label"></div>' + cars.map(function (c) {
       var img = c.photos && c.photos.length ? c.photos[0] : "";

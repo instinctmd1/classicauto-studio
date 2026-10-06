@@ -63,7 +63,8 @@ var CARS = [
     colour: "Blue", paint: "#1b2a4a", reg_city: "", rto: "MH-14",
     seats: null, insurance_until: "2029-02-22", insurance_note: "Zero depreciation", photos: ["assets/photos/cars/vw-tiguan-2025/01.webp"],
     status: "available", ex_demo: false, body: "suv", segment: "owned",
-    band: "20to50", source: "ig:DdyL0O9jluc", price_on_request: false, notes: "Single owner, petrol automatic R-Line, 8,077 km driven, zero-depreciation insurance."
+    band: "20to50", source: "ig:DdyL0O9jluc", price_on_request: false, notes: "Single owner, petrol automatic R-Line, 8,077 km driven, zero-depreciation insurance.",
+    new_price: {"ex_showroom": 4711013, "variant": "Tiguan R-Line 2.0 TSI DSG 4MOTION", "source_name": "Volkswagen India website", "source_url": "https://www.volkswagen.co.in/en/models/tiguan-r-line.html", "as_of": "2026-10-07"}
   }
 ];
 

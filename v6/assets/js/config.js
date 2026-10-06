@@ -29,7 +29,13 @@ window.CA_SITE = {
   reserve: { enabled: false, amount: null, terms_url: null, payment_link: null },
   features: { ar: false, analytics: true, anita: true, cloth_variant: "linen" },  // "red-satin" once re-rendered
   retention: { enquiries_months: 24, events_months: 13, confirmed: false },       // shown on the privacy page only once Dad confirms (confirmed: true)
-  grievance_name: null                      // the named grievance contact on the privacy page
+  grievance_name: null,                     // the named grievance contact on the privacy page
+  // what Classic Auto does: footer, About and FAQ read this list. Only services Dad has confirmed (FACTS.md + "We handle the RC transfer paperwork")
+  services: ["Buy", "Sell", "Exchange", "Upgrade", "Easy finance", "Park & Sell", "RC transfer paperwork"],
+  rc_transfer_fee: null,                    // rupees, once Dad sets the figure to quote. null => the car page says "We'll confirm it"
+  // a slim dated bar above the header (festive greetings, a real offer). Text only once Dad approves it, no discount wording unless he confirms an offer.
+  // e.g. { text: "Shubh Navratri from all of us at Classic Auto", starts: "2026-10-11", ends: "2026-10-21", link: "stock.html", link_label: "See the cars" }
+  announcement: null
 };
 window.CA_WHATSAPP_NUMBER = window.CA_SITE.whatsapp || "";   // back-compat for v5 code paths
 

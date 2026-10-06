@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="en-IN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Plan your visit: Classic Auto, Prabhu Plaza, Malad West</title>
+<meta name="description" content="Visit Classic Auto at Prabhu Plaza, S.V. Road, next to Shankar Mandir, near Malad railway station, Mumbai. Directions, a map and a quick note to the team before you come.">
+<meta name="theme-color" content="#0A1633">
+<link rel="icon" type="image/svg+xml" href="assets/logo.svg">
+<link rel="preload" href="assets/fonts/bebas-neue-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="assets/fonts/manrope-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="assets/vendor/lenis/lenis.css">
+<link rel="stylesheet" href="assets/css/style.css">
+<script>(function(){var d=document.documentElement,r=false;try{r=matchMedia("(prefers-reduced-motion: reduce)").matches}catch(e){}d.classList.add(r?"reduce":"motion");setTimeout(function(){if(!(window.CA_MOTION&&window.CA_MOTION.ready))d.classList.remove("motion")},5000)})();</script>
+<script src="assets/js/config.js"></script>
+<script src="assets/js/track.js" defer></script>
+</head>
+<body data-page="visit">
+<script src="assets/js/chrome.js"></script>
+<div class="progress-rail" aria-hidden="true"><i></i></div>
+
+<main id="main">
+  <section class="page-head">
+    <div class="container">
+      <span class="eyebrow" data-hero-in>Visit</span>
+      <h1 data-hero-in>Plan your visit</h1>
+      <p class="lead" data-hero-in>On S.V. Road, next to Shankar Mandir, near Malad railway station. Tell us what you're coming for and we'll confirm a time by message.</p>
+    </div>
+  </section>
+
+  <section class="section section--tight" style="padding-top: 0;">
+    <div class="container visit">
+      <div class="visit-info">
+        <h2 class="visit-h">The showroom</h2>
+        <address data-bind="address"></address>
+        <p data-bind="hours"></p>
+        <ul class="visit-notes">
+          <li>We're on the 1st floor of Prabhu Plaza (135/136), next to Shankar Mandir.</li>
+          <li>Coming by train: the showroom is near Malad station on the Western line.</li>
+          <li>Booking a test drive? Bring your driving licence.</li>
+        </ul>
+        <div class="cta-row">
+          <a class="btn btn-primary" href="#" data-bind="visit-cta" data-at="visit_page"></a>
+          <a class="btn btn-outline" href="#" data-bind="message-cta" data-at="visit_page"></a>
+          <a class="btn btn-outline" href="#" data-bind="call-cta" data-at="visit_page"></a>
+        </div>
+        <div class="map-slot" id="mapSlot">
+          <button type="button" class="map-facade" id="mapLoad">
+            <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></svg>
+            <span><b>Show the map here</b><small>Loads Google Maps only when you tap.</small></span>
+          </button>
+        </div>
+      </div>
+
+      <form class="panel" id="visitForm" novalidate>
+        <h2 class="visit-h">Tell us you're coming</h2>
+        <p class="visit-sub">Optional. Pick what it's about and we'll confirm the time by message.</p>
+        <fieldset class="topic-set">
+          <legend class="label-legend">What's this about? <span class="req" aria-hidden="true">*</span></legend>
+          <div class="seg seg--grid" role="radiogroup" aria-label="What's this about?">
+            <label><input type="radio" name="vTopic" value="buy" checked>Buying a car</label>
+            <label><input type="radio" name="vTopic" value="sell">Selling my car</label>
+            <label><input type="radio" name="vTopic" value="exchange">Exchange</label>
+            <label><input type="radio" name="vTopic" value="finance">Finance or EMI</label>
+            <label><input type="radio" name="vTopic" value="paperwork">Paperwork or RC</label>
+            <label><input type="radio" name="vTopic" value="other">Something else</label>
+          </div>
+        </fieldset>
+        <div class="form-grid cols-2" style="margin-top: 16px;">
+          <div class="field"><label for="vName">Name <span class="req" aria-hidden="true">*</span></label><input type="text" id="vName" required autocomplete="name"><span class="field-error" role="alert">Enter your name.</span></div>
+          <div class="field"><label for="vPhone">Mobile number <span class="req" aria-hidden="true">*</span></label><input type="tel" id="vPhone" required autocomplete="tel" inputmode="tel"><span class="field-error" role="alert">Enter a 10-digit mobile number.</span></div>
+          <div class="field" id="vCarWrap"><label for="vCar">Which car? (optional)</label><select id="vCar"><option value="">Not sure yet</option></select></div>
+          <div class="field" id="vOwnWrap" hidden><label for="vOwn">Your car (optional)</label><input type="text" id="vOwn" autocomplete="off" placeholder="e.g. Hyundai i20, 2019" maxlength="60"></div>
+          <div class="field"><label for="vDate">Preferred date (optional)</label><input type="date" id="vDate"></div>
+        </div>
+        <div class="field" style="margin-top: 16px;"><label id="vSlotsLabel">Time of day (optional)</label><div class="slot-grid" id="vSlots" role="group" aria-labelledby="vSlotsLabel"></div></div>
+        <div class="field" style="margin-top: 16px;"><label for="vNote">Anything else? (optional)</label><textarea id="vNote" rows="3" maxlength="600"></textarea></div>
+        <div data-extras></div>
+        <div class="form-actions"><button class="btn btn-primary btn-lg" type="submit" id="vSubmit" data-cta="visit" data-at="visit_page">Send to the team</button></div>
+        <p class="form-status" id="vStatus" role="status"></p>
+      </form>
+    </div>
+  </section>
+</main>
+
+<div id="siteFooter"></div>
+<script src="assets/vendor/gsap/gsap.min.js" defer></script>
+<script src="assets/vendor/gsap/ScrollTrigger.min.js" defer></script>
+<script src="assets/vendor/lenis/lenis.min.js" defer></script>
+<script src="assets/js/cars.js" defer></script>
+<script src="assets/js/main.js" defer></script>
+<script src="assets/js/motion.js" defer></script>
+<script src="assets/js/forms.js" defer></script>
+<script src="assets/js/cards.js" defer></script>
+<script src="assets/js/compare-shortlist.js" defer></script>
+<script src="assets/js/visit.js" defer></script>
+<script src="assets/js/anita.js" defer></script>
+</body>
+</html>

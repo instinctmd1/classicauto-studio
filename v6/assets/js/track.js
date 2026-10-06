@@ -8,14 +8,14 @@
   window.CA_TRACK = function () {};
   if (!ON) return;
 
-  var CTA = ["message", "call", "visit", "book_test_drive", "reserve", "exchange", "emi", "write_google_review", "see_stock", "offer", "sell", "request_car", "reviews", "studio", "other"];
-  var AT = ["hero", "header", "sticky_bar", "car_page", "studio", "footer", "reviews", "anita", "quiz", "stock", "request_page", "sell_page", "other"];
+  var CTA = ["message", "call", "visit", "book_test_drive", "reserve", "exchange", "emi", "write_google_review", "see_stock", "offer", "sell", "request_car", "reviews", "studio", "share", "video", "faq", "other"];
+  var AT = ["hero", "header", "sticky_bar", "car_page", "studio", "footer", "reviews", "anita", "quiz", "stock", "request_page", "sell_page", "faq", "visit_page", "other"];
   var FORM = ["test_drive", "visit", "reserve", "exchange", "sell", "enquiry", "feedback", "offer", "emi", "quiz", "car_request"];
-  var PT = ["home", "stock", "catalogue", "car", "studio", "compare", "sell", "reviews", "other"];
+  var PT = ["home", "stock", "catalogue", "car", "studio", "compare", "sell", "reviews", "faq", "visit", "about", "other"];
   /* allowed props per event: an array of values, "n" number, "b" boolean or "s" short slug */
   var SPEC = {
     page_view: { pt: PT }, car_view: { band: "s", make: "s", seg: "s" },
-    cta_click: { cta: CTA, at: AT, via: ["whatsapp", "instagram_dm", "tel", "maps"] },
+    cta_click: { cta: CTA, at: AT, via: ["whatsapp", "instagram_dm", "tel", "maps", "share_sheet", "whatsapp_share", "copy_link"] },
     form_start: { form: FORM }, form_submit: { form: FORM, mode: ["endpoint", "whatsapp", "instagram"], ok: "b" },
     emi_calc_used: { tenure: "n", down: "n" }, filter_used: { f: ["band", "body", "fuel", "make", "segment", "trans"], v: "s" },
     hero_reveal: { stage: ["start", "half", "done"], "in": ["scroll", "drag", "key", "tap"] }, intro_skip: {},

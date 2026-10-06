@@ -256,6 +256,8 @@ var showroomOnScreen = true; // kept by the Showroom's IntersectionObserver
     if (document.fonts && document.fonts.ready) document.fonts.ready.then(buildTitle, buildTitle); else buildTitle();
 
     /* ---- hand the canvas between chapters for the final cross-fade ---- */
+    /* restart the idle clock that setProgress parks during the cross-fade, so the car turns again 3 s after it is let go */
+    function releaseLive() { if (live.state.lastInput === Infinity) live.state.lastInput = performance.now(); }
     function hostTo(which) {
       if (!live || liveHost === which) return;
       liveHost = which;
@@ -265,6 +267,7 @@ var showroomOnScreen = true; // kept by the Showroom's IntersectionObserver
          frames: a blink at the end and a double image on the way back). Back in the Showroom the CSS owns opacity again. */
       if (which === "unveil") { live.canvas.style.transition = "none"; live.resetPose(); live.setVisible(true); }
       else {
+        releaseLive();
         live.canvas.style.transition = ""; live.canvas.style.opacity = "";
         /* handed back while the Showroom is off screen (scrolling up through the reveal): stop rendering until it comes back */
         live.setVisible(showroomOnScreen);
@@ -293,7 +296,15 @@ var showroomOnScreen = true; // kept by the Showroom's IntersectionObserver
       if (live) {
         if (crossfade > 0 && liveHost !== "unveil") hostTo("unveil");
         if (crossfade <= 0 && liveHost !== "showroom") hostTo("showroom");
-        if (liveHost === "unveil") live.setOpacity(crossfade);
+        if (liveHost === "unveil") {
+          live.setOpacity(crossfade);
+          /* Until the cross-fade ends the last cloth frame still shows under the live car, so the car holds the baked pose. A
+             parked idle clock stops the auto-turn from starting when the visitor pauses here (resetPose alone only restarted the
+             3 s clock, and a pause past it showed two cars); any drag in between is undone on the next scroll. Once the car is
+             fully in, the clock restarts and it turns 3 s later, as before. */
+          if (crossfade < 0.999) { if (live.state.lastInput !== Infinity) { live.resetPose(); live.state.lastInput = Infinity; } }
+          else releaseLive();
+        }
       }
       /* The live car dissolves in ON TOP of the last baked frame, which stays fully opaque until the live car is fully in: fading
          both at once let the navy show through a half-transparent car (a double exposure). */

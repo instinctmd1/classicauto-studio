@@ -70,7 +70,7 @@
     '</button>' +
     '<div class="anita-panel" id="anitaPanel" role="dialog" aria-modal="false" aria-label="Chat with Anita">' +
       '<div class="anita-head">' +
-        '<div class="anita-avatar" aria-hidden="true">A</div>' +
+        '<div class="anita-avatar" aria-hidden="true">' + (CA.markSvg || "A") + '</div>' +
         '<div class="anita-head-text"><div class="name">Anita</div><div class="status">Classic Auto assistant</div></div>' +
         '<button class="anita-close" id="anitaClose" type="button" aria-label="Close chat"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>' +
       '</div>' +
@@ -266,7 +266,12 @@
     }).then(function (r) {
       if (window.CA_TRACK) window.CA_TRACK("form_submit", { form: "enquiry", mode: r.mode, ok: true });
     });
-    pushBot(slot ? "Request bhej di: " + slot + (state.car ? " (" + state.car.make + " " + state.car.model + ")" : "") + ". Hamari team message karke confirm karegi." : "Note kar liya. Hamari team message karegi.");
+    // when the chat knows the car, end on its Studio page (360 view, paint, km and price side by side)
+    var c = state.car;
+    var studio = c ? "\nTab tak isse 3D Studio mein dekhiye: " +
+      '<a href="studio.html?id=' + encodeURIComponent(c.id) + '" data-cta="studio" data-at="anita">Open the ' + esc(c.make + " " + c.model) + ' in the 3D Studio</a>' +
+      (c.scan ? "" : "\nStudio ka 3D model illustrative hai, yeh exact gaadi nahi.") : "";
+    pushBot(slot ? "Request bhej di: " + slot + (c ? " (" + c.make + " " + c.model + ")" : "") + ". Hamari team message karke confirm karegi." : "Note kar liya. Hamari team message karegi.", null, studio);
   }
 
   /* ------------------------------------------------------------------

@@ -485,6 +485,8 @@ body.nav-open .sticky-bar { transform: translateY(110%); }
 /* ---- Visit chapter ---- */
 .visit { display: grid; gap: var(--s-8); }
 @media (min-width: 900px) { .visit { grid-template-columns: 5fr 7fr; gap: var(--s-9); align-items: start; } }
+/* phones: same single shrinkable column as .reserve; at 320 px the one-line "Visit us" button (334 px) widened the page */
+@media (max-width: 639px) { .visit { grid-template-columns: minmax(0, 1fr); } .visit-info .btn, .form-actions .btn { white-space: normal; } }
 .visit-info address { font-size: var(--fs-lead); line-height: 1.6; color: var(--ink); margin: var(--s-5) 0; }
 .visit-info .cta-row { margin-top: var(--s-5); }
 .panel { background: var(--bg-2); border: 1px solid var(--line); border-radius: var(--r-3); padding: var(--s-5); }
@@ -550,7 +552,7 @@ body.nav-open .sticky-bar { transform: translateY(110%); }
 .filter-bar { position: sticky; top: var(--header-h); z-index: 20; background: rgba(10, 22, 51, 0.94); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); border-block: 1px solid var(--line); padding-block: var(--s-4); }
 @media (max-width: 768px) { .filter-bar { position: static; } }   /* pinned, it covered 60 to 100% of a phone screen and hid the cars */
 .filter-row { display: flex; flex-wrap: wrap; gap: var(--s-4); align-items: flex-end; }
-.filter-group { display: flex; flex-direction: column; gap: 6px; min-width: 150px; flex: 1 1 150px; }
+.filter-group { display: flex; flex-direction: column; gap: 6px; min-width: 150px; flex: 1 1 160px; }
 .filter-group select { min-height: 44px; padding: 8px 12px; }
 .filter-count { margin-left: auto; font-size: var(--fs-small); color: var(--ink-2); align-self: center; font-variant-numeric: tabular-nums; }
 .filter-reset { min-height: 44px; padding: 0 8px; background: none; border: 0; color: var(--red-ink); font-size: var(--fs-label); font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; cursor: pointer; align-self: center; }
@@ -619,6 +621,8 @@ body.nav-open .sticky-bar { transform: translateY(110%); }
 .includes-list .icon { width: 18px; height: 18px; color: var(--red-ink); margin-top: 3px; }
 .reserve { display: grid; gap: var(--s-7); }
 @media (min-width: 900px) { .reserve { grid-template-columns: 5fr 7fr; gap: var(--s-8); align-items: start; } }
+/* phones: one column that may shrink below its content's min width (the implicit auto column made car pages 377 px wide at 360 px) */
+@media (max-width: 639px) { .reserve { grid-template-columns: minmax(0, 1fr); } }
 
 /* EMI calculator */
 .calc { display: grid; gap: var(--s-4); }
@@ -666,6 +670,8 @@ input[type="range"]::-moz-range-thumb { width: 24px; height: 24px; border-radius
 @media (min-width: 1000px) { .studio-layout { grid-template-columns: 1.6fr 1fr; align-items: start; } }
 .studio-bay { position: relative; aspect-ratio: 4 / 5; min-height: 460px; background: radial-gradient(120% 90% at 50% 0%, #1a2f66 0%, #0d1b40 60%, #070f26 100%); border: 1px solid var(--line); border-radius: var(--r-3); overflow: hidden; contain: layout paint; }
 @media (min-width: 640px) { .studio-bay { aspect-ratio: 16 / 10; min-height: 0; } }
+/* phones: no 460 px floor either (through the 4:5 ratio it forced a 368 px min width, so the Studio overflowed at 320-375 px) */
+@media (max-width: 639px) { .studio-bay { min-height: 0; } }
 .studio-bay canvas { position: absolute; inset: 0; display: block; width: 100%; height: 100%; touch-action: pan-y; cursor: grab; }
 .studio-bay canvas.is-dragging { cursor: grabbing; }
 .studio-bay canvas:focus-visible { outline: 2px solid var(--red-ink); outline-offset: -4px; }
@@ -783,7 +789,9 @@ input[type="range"]::-moz-range-thumb { width: 24px; height: 24px; border-radius
 .anita-panel.is-open { transform: none; opacity: 1; pointer-events: auto; visibility: visible; transition: transform 280ms var(--ease-out), opacity 280ms var(--ease-out), visibility 0s; }
 @media (min-width: 900px) { .anita-panel { right: 24px; bottom: 160px; } }
 .anita-head { display: flex; align-items: center; gap: 12px; padding: 12px 16px; background: var(--bg-3); border-bottom: 1px solid var(--line); }
-.anita-avatar { width: 38px; height: 38px; border-radius: 50%; background: var(--red); color: var(--on-red); display: flex; align-items: center; justify-content: center; font-family: var(--font-display); font-size: 1.3rem; flex-shrink: 0; }
+/* the Classic Auto mark on the same off-white tile as the header logo (the brand blue needs the light ground) */
+.anita-avatar { width: 48px; height: 34px; padding: 6px 7px; border-radius: var(--r-2); background: var(--ink); color: var(--red); display: flex; align-items: center; justify-content: center; font-family: var(--font-display); font-size: 1.3rem; flex-shrink: 0; }
+.anita-avatar svg { display: block; width: 100%; height: auto; }
 .anita-head-text { flex: 1; min-width: 0; }
 .anita-head-text .name { font-weight: 700; font-size: var(--fs-small); color: var(--ink); }
 .anita-head-text .status { font-size: var(--fs-label); color: var(--ink-2); }
@@ -844,6 +852,7 @@ input[type="range"]::-moz-range-thumb { width: 24px; height: 24px; border-radius
 /* ---- Reviews (page shell) ---- */
 .reviews-grid { display: grid; gap: var(--s-6); }
 @media (min-width: 900px) { .reviews-grid { grid-template-columns: 1fr 1fr; } }
+@media (max-width: 639px) { .reviews-grid { grid-template-columns: minmax(0, 1fr); } }   /* the 5 rating squares widened the page at 320 px */
 .rating-big { font-family: var(--font-display); font-size: clamp(4rem, 3rem + 4vw, 6rem); line-height: 0.9; color: var(--ink); }
 .stars input { position: absolute; opacity: 0; }
 .rating-pick { display: flex; gap: 6px; }
@@ -980,3 +989,162 @@ input[type="range"]::-moz-range-thumb { width: 24px; height: 24px; border-radius
 .grid-cars[data-pending] { min-height: 120svh; }
 .filter-count:empty::before, .quiz-count:empty::before { content: "\a0"; }
 .quiz-q { min-height: 22rem; }
+
+/* =========================================================================
+   Gap plan build (7 Oct 2026): share, live filter counts, new-car comparison, drive-away costs, two-block specs,
+   gallery arrows, tap-to-load video and map, FAQ, Visit, About, announcement bar.
+   ========================================================================= */
+.text-link { color: var(--ink-2); text-decoration: underline; text-underline-offset: 3px; text-decoration-thickness: 1px; }
+@media (hover: hover) and (pointer: fine) { .text-link:hover { color: var(--red-ink); } }
+
+/* share: a card tool beside the heart, a pill on the car page, our own small sheet where the phone has no share menu */
+.tool-pair { display: inline-flex; gap: 8px; }
+.buy-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 12px; margin-bottom: var(--s-3); }
+.car-buy .buy-head .eyebrow { margin-bottom: 0; }
+.share-pill { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 16px; background: transparent; border: 1px solid var(--line-2); border-radius: var(--r-pill); color: var(--ink); font-size: 0.75rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; cursor: pointer; transition: border-color var(--dur-ui) var(--ease-out), color var(--dur-ui) var(--ease-out), transform var(--dur-ui) var(--ease-out); }
+.share-pill .icon { width: 18px; height: 18px; }
+.share-pill:active { transform: scale(0.97); }
+@media (hover: hover) and (pointer: fine) { .share-pill:hover, .share-btn:hover { border-color: var(--red-ink); color: var(--red-ink); } }
+.share-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: var(--s-4) 0; }
+@media (max-width: 479px) { .share-actions { grid-template-columns: minmax(0, 1fr); } }
+.share-actions .btn { white-space: normal; }
+.share-link input { font-size: var(--fs-small); }
+.share-dialog .offer-ask { color: var(--ink); }
+
+/* new-car comparison under the price: approximate, sourced and dated, never a badge */
+.new-compare { margin: calc(-1 * var(--s-2)) 0 var(--s-5); padding: 12px 14px; border: 1px solid var(--line); border-left: 3px solid var(--blue-ink); border-radius: var(--r-2); background: var(--bg-2); }
+.nc-row { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+.nc-row + .nc-row { margin-top: 2px; }
+.nc-k { font-size: var(--fs-small); color: var(--ink-2); }
+.nc-v { font-family: var(--font-display); font-size: 1.6rem; line-height: 1.1; letter-spacing: 0.02em; color: var(--ink); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.nc-save .nc-k { color: var(--ink); font-weight: 700; }
+.nc-save .nc-v { color: var(--ok); }
+.nc-note { margin-top: 8px; font-size: var(--fs-label); line-height: 1.55; color: var(--ink-3); max-width: none; }
+.nc-note a { color: var(--ink-2); text-decoration: underline; text-underline-offset: 3px; }
+.cmp-src { font-size: 0.6875rem; color: var(--ink-3); }
+.cmp-save { color: var(--ok); font-weight: 700; }
+
+/* gallery: arrows and a counter once a car has more than one photo */
+.car-hero:focus-visible { outline: 2px solid var(--red-ink); outline-offset: -4px; }
+.gallery-nav { position: absolute; z-index: 2; top: 50%; width: 44px; height: 44px; margin-top: -22px; display: inline-flex; align-items: center; justify-content: center; background: rgba(10, 22, 51, 0.78); border: 1px solid var(--line-2); border-radius: 50%; color: var(--ink); cursor: pointer; transition: border-color var(--dur-ui) var(--ease-out), transform var(--dur-ui) var(--ease-out); }
+.gallery-nav:active { transform: scale(0.94); }
+.gallery-prev { left: 10px; }
+.gallery-next { right: 10px; }
+.gallery-nav .icon { width: 20px; height: 20px; }
+@media (hover: hover) and (pointer: fine) { .gallery-nav:hover { border-color: var(--red-ink); } }
+.gallery-count { position: absolute; z-index: 2; right: 12px; bottom: 12px; padding: 4px 10px; background: rgba(10, 22, 51, 0.82); border: 1px solid var(--line-2); border-radius: var(--r-pill); font-size: 0.75rem; font-weight: 700; letter-spacing: 0.04em; color: var(--ink); font-variant-numeric: tabular-nums; }
+
+/* walk-around video: a facade first, the player only after a tap */
+.video-slot { grid-column: 1 / -1; margin-top: var(--s-3); }
+@media (min-width: 640px) { .video-slot { grid-column: 2; } }
+.car-gallery.is-solo .video-slot { grid-column: 1; }
+.video-facade { display: flex; align-items: center; gap: var(--s-4); width: 100%; padding: 8px; background: var(--bg-2); border: 1px solid var(--line-2); border-radius: var(--r-2); color: var(--ink); text-align: left; cursor: pointer; transition: border-color var(--dur-ui) var(--ease-out), background-color var(--dur-ui) var(--ease-out); }
+@media (hover: hover) and (pointer: fine) { .video-facade:hover { border-color: var(--red); background: var(--bg-3); } }
+.video-thumb { position: relative; flex: 0 0 auto; width: 104px; aspect-ratio: 3 / 2; border-radius: var(--r-1); overflow: hidden; background: var(--bg-3); }
+.video-thumb img { width: 100%; height: 100%; object-fit: cover; }
+.video-play { position: absolute; left: 50%; top: 50%; width: 38px; height: 38px; margin: -19px 0 0 -19px; display: flex; align-items: center; justify-content: center; border-radius: 50%; background: var(--red); color: var(--on-red); box-shadow: 0 4px 14px rgba(0, 0, 0, 0.45); }
+.video-play svg { width: 18px; height: 18px; fill: currentColor; margin-left: 2px; }
+.video-label { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.video-label b { font-family: var(--font-display); font-weight: 400; font-size: 1.5rem; letter-spacing: 0.03em; text-transform: uppercase; line-height: 1; }
+.video-label small { font-size: var(--fs-label); color: var(--ink-2); line-height: 1.4; }
+.video-frame { position: relative; aspect-ratio: 16 / 9; border: 1px solid var(--line); border-radius: var(--r-3); overflow: hidden; background: #000; }
+.video-frame.is-vertical { aspect-ratio: 9 / 16; width: min(100%, 42svh); margin-inline: auto; }
+.video-frame iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+
+/* details: "This car" and "This model" on the left, what you'll pay to drive away on the right */
+.details-layout { display: grid; gap: var(--s-7); }
+@media (max-width: 999px) { .details-layout { grid-template-columns: minmax(0, 1fr); } }
+@media (min-width: 1000px) { .details-layout { grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); gap: var(--s-8); align-items: start; } .drive-away { position: sticky; top: calc(var(--header-h) + 24px); } }
+.details-main { min-width: 0; }
+.spec-block + .spec-block { margin-top: var(--s-7); }
+.spec-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 14px; font-size: 1.9rem; margin-bottom: var(--s-4); }
+.spec-head small { font-family: var(--font-body); font-size: var(--fs-small); font-weight: 500; letter-spacing: 0; line-height: 1.45; text-transform: none; color: var(--ink-3); }
+.feature-head { font-family: var(--font-body); font-size: var(--fs-label); font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-3); margin: var(--s-5) 0 var(--s-3); line-height: 1.3; }
+.feature-list { display: flex; flex-wrap: wrap; gap: 8px; }
+.feature-list li { padding: 6px 12px; border: 1px solid var(--line-2); border-radius: var(--r-pill); font-size: var(--fs-small); color: var(--ink); }
+.spec-source { margin-top: var(--s-4); font-size: var(--fs-label); line-height: 1.6; color: var(--ink-3); max-width: 80ch; }
+.drive-away { background: var(--bg); min-width: 0; }
+.drive-away h3 { font-size: 1.9rem; margin-bottom: var(--s-4); }
+.pay-lines dd { max-width: 62%; }
+.pay-lines .is-warn dd { color: var(--danger); }
+@media (max-width: 639px) { .pay-lines dd { max-width: none; } }
+.pay-total { margin-top: var(--s-4); font-size: var(--fs-small); color: var(--ink-2); max-width: none; }
+.pay-total strong { font-variant-numeric: tabular-nums; }
+.drive-away .calc-note { margin-top: var(--s-3); }
+.sale-terms { color: var(--ink-2); }
+
+/* stock: counts on the quick toggles, a "show more" once stock passes 24 */
+.toggle-count { display: inline-flex; align-items: center; justify-content: center; min-width: 22px; height: 22px; padding: 0 6px; border-radius: var(--r-pill); background: var(--bg-3); color: var(--ink); font-size: 0.75rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+.toggle-chip[aria-pressed="true"] .toggle-count { background: rgba(255, 255, 255, 0.2); color: var(--on-red); }
+.stock-more { display: flex; justify-content: center; margin-top: var(--s-6); }
+
+/* home: quick picks under the search bar */
+.quick-links { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: var(--s-7); }
+.search-bar + .quick-links { margin-top: calc(var(--s-4) - var(--s-7)); }
+.quick-links:empty { display: none; }
+.quick-label { margin-right: 4px; font-size: var(--fs-label); font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-3); }
+
+/* footer: confirmed services */
+.footer-services { display: flex; flex-wrap: wrap; gap: 6px; margin-top: var(--s-4); }
+.footer-services li { padding: 4px 10px; border: 1px solid var(--line); border-radius: var(--r-1); font-size: 0.75rem; color: var(--ink-2); }
+.footer-col .footer-services li + li { margin-top: 0; }
+
+/* dated announcement bar (inside the fixed header, so everything that clears the header clears it too) */
+html.has-announce { --ann-h: 40px; --header-h: calc(72px + var(--ann-h)); }
+@media (max-width: 639px) { html.has-announce { --ann-h: 52px; } }
+.has-announce .site-header { flex-direction: column; align-items: stretch; }
+.has-announce .site-header > .container { flex: 1; }
+.announce { position: relative; flex: 0 0 var(--ann-h); height: var(--ann-h); display: flex; align-items: center; justify-content: center; padding: 0 48px 0 16px; background: var(--red); color: var(--on-red); }
+.announce p { margin: 0; max-width: none; color: inherit; font-size: var(--fs-small); font-weight: 600; line-height: 1.3; text-align: center; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+.announce a { text-decoration: underline; text-underline-offset: 3px; font-weight: 800; }
+.announce-close { position: absolute; right: 2px; top: 50%; width: 44px; height: 44px; margin-top: -22px; display: inline-flex; align-items: center; justify-content: center; background: none; border: 0; color: inherit; cursor: pointer; }
+.announce-close .icon { width: 18px; height: 18px; }
+
+/* FAQ */
+.faq-wrap > * { max-width: 900px; }
+.faq-tools { display: grid; gap: var(--s-4); margin-bottom: var(--s-4); }
+.faq-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.faq-search input[type="search"] { -webkit-appearance: none; appearance: none; }
+.faq-count { min-height: 1.4em; margin-bottom: var(--s-3); font-size: var(--fs-small); color: var(--ink-3); font-variant-numeric: tabular-nums; }
+.faq-list { border-top: 1px solid var(--line); }
+.faq-item { border-bottom: 1px solid var(--line); }
+.faq-item > summary { list-style: none; display: flex; align-items: center; gap: var(--s-4); min-height: 64px; padding: 14px 0; cursor: pointer; touch-action: manipulation; }
+.faq-item > summary::-webkit-details-marker { display: none; }
+.faq-item > summary::after { content: ""; flex: none; width: 9px; height: 9px; margin-right: 6px; border-right: 2px solid var(--red-ink); border-bottom: 2px solid var(--red-ink); transform: rotate(45deg); transition: transform var(--dur-ui) var(--ease-out); }
+.faq-item[open] > summary::after { transform: rotate(-135deg); }
+.faq-item > summary:focus-visible { outline: 2px solid var(--red-ink); outline-offset: 2px; }
+.faq-q { flex: 1; min-width: 0; font-size: 1.05rem; font-weight: 700; line-height: 1.4; color: var(--ink); }
+.faq-tag { flex: none; font-size: 0.6875rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-3); }
+@media (max-width: 479px) { .faq-tag { display: none; } }
+@media (hover: hover) and (pointer: fine) { .faq-item > summary:hover .faq-q { color: var(--red-ink); } }
+.faq-a { padding: 0 0 var(--s-5); }
+.faq-a p { max-width: 68ch; }
+.faq-a p + p { margin-top: 8px; }
+.faq-empty { padding-block: var(--s-7); }
+
+/* Visit */
+.visit-h { font-size: clamp(2rem, 1.6rem + 1.4vw, 2.8rem); margin-bottom: var(--s-3); }
+.visit-sub { margin-bottom: var(--s-5); font-size: var(--fs-small); }
+.visit-notes { display: grid; gap: 8px; margin: var(--s-4) 0 0; }
+.visit-notes li { position: relative; padding-left: 20px; color: var(--ink-2); font-size: var(--fs-small); }
+.visit-notes li::before { content: ""; position: absolute; left: 0; top: 0.75em; width: 10px; height: 2px; background: var(--red); }
+.map-slot { margin-top: var(--s-6); }
+.map-facade { display: flex; align-items: center; justify-content: center; gap: var(--s-4); width: 100%; aspect-ratio: 16 / 10; padding: var(--s-5); border: 1px dashed var(--line-2); border-radius: var(--r-3); background: radial-gradient(80% 90% at 50% 40%, rgba(43, 57, 144, 0.45), transparent 70%), var(--bg-2); color: var(--ink); text-align: left; cursor: pointer; transition: border-color var(--dur-ui) var(--ease-out); }
+.map-facade .icon { width: 34px; height: 34px; color: var(--red-ink); }
+.map-facade span { display: flex; flex-direction: column; gap: 4px; }
+.map-facade b { font-family: var(--font-display); font-weight: 400; font-size: 1.7rem; letter-spacing: 0.03em; text-transform: uppercase; line-height: 1; }
+.map-facade small { font-size: var(--fs-label); color: var(--ink-2); }
+@media (hover: hover) and (pointer: fine) { .map-facade:hover { border-color: var(--red-ink); } }
+.map-frame { position: relative; aspect-ratio: 16 / 10; border: 1px solid var(--line); border-radius: var(--r-3); overflow: hidden; background: var(--bg-2); }
+.map-frame iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+.topic-set { border: 0; margin: 0; padding: 0; min-width: 0; }
+.label-legend { padding: 0; margin-bottom: 10px; font-size: var(--fs-small); font-weight: 600; color: var(--ink); }
+.seg.seg--grid { grid-auto-flow: row; grid-template-columns: repeat(auto-fill, minmax(115px, 1fr)); }
+
+/* About: the buying steps as a numbered editorial list */
+.how-steps { counter-reset: how; display: grid; border-top: 1px solid var(--line); }
+.how-steps li { counter-increment: how; display: grid; grid-template-columns: 3.2rem minmax(0, 1fr); gap: 4px var(--s-4); padding-block: var(--s-5); border-bottom: 1px solid var(--line); }
+.how-steps li::before { content: counter(how, decimal-leading-zero); grid-row: span 2; font-family: var(--font-display); font-size: 2.2rem; line-height: 1; color: var(--red-ink); font-variant-numeric: tabular-nums; }
+.how-steps b { font-family: var(--font-display); font-weight: 400; font-size: 1.9rem; letter-spacing: 0.02em; text-transform: uppercase; line-height: 1; color: var(--ink); }
+.how-steps p { font-size: 1rem; }
+@media (min-width: 900px) { .how-steps li { grid-template-columns: 4.5rem 16rem minmax(0, 1fr); align-items: baseline; } .how-steps li::before { grid-row: auto; } }

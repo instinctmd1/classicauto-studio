@@ -34,6 +34,7 @@
       '<g fill="#2B3990"><polygon points="468,6 552,6 372,360 288,360"/><polygon points="468,6 552,6 758,360 674,360"/><polygon points="404,212 620,212 650,282 370,282"/></g>' +
     '</svg>';
   var BRAND_HTML = '<span class="brand-tile">' + MARK_SVG + '</span><span class="brand-word"><b>Classic</b> <i>Auto</i><small>Since ' + S.since + '</small></span>';
+  CA.markSvg = MARK_SVG;   // Anita's chat avatar uses the same mark
 
   var NAV = [
     ["index.html", "Home", "home"],
@@ -68,10 +69,27 @@
     return html;
   }
 
+  /* ------------------------------------------------- dated announcement bar (gap plan P1-9)
+     CA_SITE.announcement { text, starts, ends, link, link_label }: shown only between the two dates (inclusive), above the header,
+     and closable for the visit. Text is Dad-approved; null ships nothing. */
+  function esc(s) { return String(s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
+  var annHtml = "";
+  (function () {
+    var a = S.announcement;
+    if (!a || !a.text || !a.starts || !a.ends) return;
+    var d = new Date(), today = d.getFullYear() + "-" + ("0" + (d.getMonth() + 1)).slice(-2) + "-" + ("0" + d.getDate()).slice(-2);
+    if (today < a.starts || today > a.ends) return;
+    try { if (sessionStorage.getItem("ca_ann_closed") === a.starts + a.text.length) return; } catch (e) { /* storage blocked: show it */ }
+    document.documentElement.classList.add("has-announce");
+    annHtml = '<div class="announce" id="announceBar" role="region" aria-label="Announcement"><p>' + esc(a.text) +
+      (a.link ? ' <a href="' + esc(a.link) + '">' + esc(a.link_label || "See more") + '</a>' : "") + '</p>' +
+      '<button type="button" class="announce-close" aria-label="Close the announcement">' + ICON.close + '</button></div>';
+  })();
+
   /* ---------------------------------------------------------------- header */
   var headerHtml =
     '<a class="skip-link" href="#main">Skip to main content</a>' +
-    '<header class="site-header" id="siteHeader"><div class="container">' +
+    '<header class="site-header" id="siteHeader">' + annHtml + '<div class="container">' +
       '<a class="brand" href="index.html" aria-label="Classic Auto, home" id="brandMark">' + BRAND_HTML + '</a>' +
       '<nav class="nav-links" aria-label="Primary">' + navLinks() + '</nav>' +
       '<div class="header-social">' + socialLinks() + '</div>' +
@@ -85,6 +103,11 @@
   headerHtml = CA.rootify(headerHtml);
   if (script) script.insertAdjacentHTML("beforebegin", headerHtml);
   else document.body.insertAdjacentHTML("afterbegin", headerHtml);
+  var annBar = document.getElementById("announceBar");
+  if (annBar) annBar.querySelector(".announce-close").addEventListener("click", function () {
+    annBar.remove(); document.documentElement.classList.remove("has-announce");
+    try { sessionStorage.setItem("ca_ann_closed", S.announcement.starts + S.announcement.text.length); } catch (e) { /* fine */ }
+  });
 
   /* ---------------------------------------------------------------- footer */
   function footerHtml() {
@@ -99,17 +122,19 @@
     return '<footer class="site-footer"><div class="container">' +
       '<div class="footer-grid">' +
         '<div class="footer-brand"><a class="brand brand--foot" href="index.html" aria-label="Classic Auto, home">' + BRAND_HTML + '</a>' +
-          '<p>Pre-owned car dealership in Malad West, Mumbai, since ' + S.since + '. Buy, sell, exchange and upgrade, with EMI estimates on every car.</p>' +
+          '<p>Pre-owned car dealership in Malad West, Mumbai, since ' + S.since + '. EMI estimates on every car.</p>' +
+          (S.services && S.services.length ? '<ul class="footer-services" aria-label="What we do">' + S.services.map(function (s) { return '<li>' + esc(s) + '</li>'; }).join("") + '</ul>' : "") +
           '<div class="social-row">' + socialLinks() + '</div>' +
         '</div>' +
         '<div class="footer-col"><h2 class="footer-heading">Explore</h2><ul>' +
           '<li><a href="stock.html">Stock</a></li><li><a href="studio.html">3D Studio</a></li><li><a href="request.html">Request a car</a></li><li><a href="quiz.html">Find your car</a></li><li><a href="compare.html">Compare</a></li>' +
-          '<li><a href="sell.html">Sell your car</a></li><li><a href="reviews.html">Reviews</a></li><li><a href="catalogue.html">Printable catalogue</a></li><li><a href="privacy.html">Privacy policy</a></li><li><a href="terms.html">Terms of service</a></li>' +
+          '<li><a href="sell.html">Sell your car</a></li><li><a href="reviews.html">Reviews</a></li><li><a href="faq.html">Questions and answers</a></li><li><a href="about.html">About us</a></li><li><a href="catalogue.html">Printable catalogue</a></li><li><a href="privacy.html">Privacy policy</a></li><li><a href="terms.html">Terms of service</a></li>' +
         '</ul></div>' +
         '<div class="footer-col"><h2 class="footer-heading">Contact</h2><ul>' + contact + '</ul></div>' +
         '<div class="footer-col"><h2 class="footer-heading">Showroom</h2><ul>' +
           '<li><address>' + S.address_lines.join("<br>") + '</address></li>' +
           (S.hours ? '<li>' + S.hours + '</li>' : "") +
+          '<li><a href="visit.html">Plan your visit</a></li>' +
           '<li><a href="' + CA.mapsUrl() + '"' + ext() + ' data-cta="visit" data-at="footer" data-via="maps">' + ICON.pin + 'Open in Maps</a></li>' +
         '</ul></div>' +
       '</div>' + partners +

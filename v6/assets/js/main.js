@@ -55,10 +55,69 @@
 
   function transShort(c) { return c.trans_detail || (c.trans === "Automatic" ? "AT" : "MT"); }
 
+  var MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+  /* Whole months from a "Nov 2025" month to this month (null when the month is missing or unreadable). */
+  function monthsSince(monthYear, now) {
+    var m = /^([A-Za-z]{3})\w*\s+(\d{4})$/.exec(String(monthYear || "").trim());
+    if (!m) return null;
+    var mi = MONTHS.indexOf(m[1].charAt(0).toUpperCase() + m[1].slice(1, 3).toLowerCase());
+    if (mi < 0) return null;
+    now = now || new Date();
+    return (now.getFullYear() - (+m[2])) * 12 + (now.getMonth() - mi);
+  }
+  /* Kilometres a month (cars under a year old) or a year, from km and the registration month. Worked out on every page view so it
+     never goes stale. A number only, never a "low km" label: we state the odometer reading as listed, nothing more. */
+  function kmRate(c) {
+    var m = monthsSince(c.reg_month);
+    if (m == null || m < 0 || c.kms == null || !(c.kms > 0)) return null;
+    var months = Math.max(1, m);
+    if (months < 12) {
+      var pm = Math.round(c.kms / months / 10) * 10;
+      return { value: pm, per: "month", text: "About " + pm.toLocaleString("en-IN") + " km a month", months: months };
+    }
+    var py = Math.round(c.kms / months * 12 / 100) * 100;
+    return { value: py, per: "year", text: "About " + py.toLocaleString("en-IN") + " km a year", months: months };
+  }
+
+  /* New-car comparison (gap plan P1-4, done our way): the maker's own ex-showroom price for the same variant, with its source and
+     the date it was read, kept in data/cars.json as `new_price`. Shown only when all of these hold, otherwise not at all:
+     the figure is under 90 days old; the car is 3 years old or less (older cars are a different generation or too far apart to
+     compare); the car is for sale with a price; and the new figure is above our price by at least Rs 50,000. Every figure on
+     screen says "approx.": the ex-showroom price leaves out the road tax, registration and insurance a new car also needs. */
+  var NEW_PRICE_MAX_DAYS = 90, NEW_PRICE_MAX_MONTHS = 36, NEW_PRICE_MIN_GAP = 50000;
+  function newPrice(c) {
+    var np = c && c.new_price;
+    if (!np || !(np.ex_showroom > 0) || !/^https:\/\//.test(np.source_url || "") || !np.as_of || !np.source_name) return null;
+    if (c.price_on_request || c.price == null || c.status === "SOLD") return null;
+    var asOf = new Date(np.as_of + "T00:00:00"), today = new Date(); today.setHours(0, 0, 0, 0);
+    var days = (today - asOf) / 86400000;
+    if (!(days >= -1 && days <= NEW_PRICE_MAX_DAYS)) return null;
+    var age = monthsSince(c.reg_month);
+    if (age == null || age > NEW_PRICE_MAX_MONTHS) return null;
+    var save = np.ex_showroom - c.price;
+    if (save < NEW_PRICE_MIN_GAP) return null;
+    return { price: np.ex_showroom, save: save, variant: np.variant || "", source: np.source_name, url: np.source_url, asOf: np.as_of, asOfText: fmtDate(np.as_of) };
+  }
+
+  /* 1% TCS on a car sold for more than Rs 10 lakh (Income-tax Act s.206C(1F)). Returns the rupee figure, or 0. */
+  function tcs(c) { return c && !c.price_on_request && c.price > 1000000 ? Math.round(c.price * 0.01) : 0; }
+
+  /* The car's own Instagram listing post, from its `source` ("ig:<code>"). */
+  function igPostUrl(c) { var m = /^ig:([A-Za-z0-9_-]{5,40})$/.exec((c && c.source) || ""); return m ? "https://www.instagram.com/p/" + m[1] + "/" : ""; }
+
+  /* Page title, the same words tools/import_stock.py car_title writes into the static page. */
+  function carTitle(c) {
+    var name = carFullLabel(c).trim(), price = c.price_on_request || c.price == null ? "Ask for price" : money2(c.price);
+    return (c.status === "SOLD" ? "Sold: " + name : "Used " + name + " for sale in Mumbai") + " · " + price + " · Classic Auto, Malad West";
+  }
+  /* "₹25.50 L": the importer's two-decimal form (money() drops ".00"). */
+  function money2(n) { n = Math.round(Number(n)); return n >= 10000000 ? "₹" + (Math.floor(n / 100000) / 100).toFixed(2) + " Cr" : "₹" + (Math.floor(n / 1000) / 100).toFixed(2) + " L"; }
+
   window.ClassicAuto = {
     money: money, rupees: rupees, emi: emi, formatKm: formatKm,
     carLabel: carLabel, carFullLabel: carFullLabel, carLeadLabel: carLeadLabel,
     bodyLabel: bodyLabel, bandLabel: bandLabel, insurance: insurance, fmtDate: fmtDate, transShort: transShort,
+    monthsSince: monthsSince, kmRate: kmRate, newPrice: newPrice, tcs: tcs, igPostUrl: igPostUrl, carTitle: carTitle,
     waLink: function (text) { return window.CA.waLink(text); }
   };
 
