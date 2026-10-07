@@ -415,7 +415,7 @@
         }
       }
       throw new Error('The cut-out is taking too long. Try tools/make_cutouts.py instead.');
-    } catch (e) { say(e.message); toast(e.message); }
+    } catch (e) { const first = e.message.split('. ')[0]; say(e.message); toast(first === e.message ? e.message : first + '. Details under Cut-out (3D look).'); }      // the full steps stay in the panel; a long toast covered half a phone screen
     finally { cutBusy = false; if (btn) btn.disabled = false; }
   }
   async function setPhotoFile(file, which) {
