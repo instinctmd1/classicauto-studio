@@ -22,10 +22,12 @@ const NO_NEXT = new Set(["spoke_not_interested", "spoke_bought", "wrong_number"]
 export const INTEREST = [["hot", "Hot", "buying this week"], ["warm", "Warm", "this month"], ["cold", "Cold", "just looking"], ["none", "None", "no interest"]];
 export const INTEREST_LABEL = Object.fromEntries(INTEREST.map(([k, l]) => [k, l]));
 export const WARN = { no_claim: "No claim", no_call: "No call", missed_brief: "Missed brief", missing_proof: "No call proof", proof_rejected: "Screenshot rejected",
-  brief_mismatch: "Brief does not match the call", customer_denied: "Customer says nobody called", rollcall_missed: "Missed roll-call", manual: "From the manager" };
+  brief_mismatch: "Brief does not match the call", customer_denied: "Customer says nobody called", rollcall_missed: "Missed roll-call", manual: "From the manager",
+  no_followup: "Not followed up" };
 export const CATEGORY = { behaviour: "Behaviour", poor_handling: "Poor handling of a lead", other: "Other" };
 export const PASS_WHY = { new: "New lead", night: "Night queue", transfer: "Live transfer", no_claim: "Not claimed in time", no_call: "No call in time",
-  missing_proof: "No call proof", off_duty: "Off duty", manual: "Moved by hand", max_rounds: "Went round the team" };
+  missing_proof: "No call proof", off_duty: "Off duty", manual: "Moved by hand", max_rounds: "Went round the team",
+  followup_cycle: "Follow-up list (not followed up)" };
 export const CHECKS = { image: "Image", after_call_press: "After the Call press", in_window: "After the claim", on_time: "On time",
   duration_vs_brief: "Duration fits the brief", duplicate: "Not used before" };
 export const SOURCE = { app_tel: "Phone (app)", app_exotel: "Business number", telegram_call: "Telegram", telegram_contacted: "Telegram", anita_transfer: "Live transfer", exotel_inbound: "Customer called back" };
@@ -34,6 +36,39 @@ export const CALL_STATUS = { logged: "Logged", pending: "Ringing", connected: "S
 export const PROOF_STATE = { due: ["Screenshot due", "warn"], submitted: ["Waiting for a check", "info"], approved: ["Approved", "pos"], approved_auto: ["Approved", "pos"],
   rejected: ["Rejected", "neg"], verified: ["Verified by call record", "pos"], waived: ["Waived", ""], missed: ["Missed", "neg"], cancelled: ["Cancelled", ""] };
 export const BRIEF_STATE = { pending: ["Can fill now", "info"], open: ["Due", "warn"], submitted: ["Filled", "pos"], late: ["Filled late", "warn"], missed: ["Missed", "neg"], cancelled: ["Cancelled", ""] };
+
+// The AI read of the screenshot (SPEC-SCREENSHOT-AI 2.8, 3). The engine writes every chip's words; these are the short
+// words for the timeline (no time or duration) and the verdict filter of the Checked tab.
+export const VERDICT_SHORT = { spoke: "Spoke, number matches", no_answer: "No answer", too_short: "Too short", no_number: "Number not in screenshot",
+  before_claim: "Call before the claim", not_call_log: "Not a call history screenshot", duplicate: "Same screenshot used before",
+  before_press: "Call before the Call press", near_match: "Number nearly matches", name_only: "Name only", time_unclear: "Time doesn't fit",
+  no_duration: "No duration shown", unreadable: "Couldn't read", not_checked: "Not checked",
+  exotel_connected: "Exotel call", exotel_short: "Exotel call too short", exotel_customer_no_answer: "Exotel: no answer", exotel_customer_busy: "Exotel: busy" };
+
+/** The tick chip (6.8): ok true = the tick, false = look first (red, or amber for "!"), null = look (rank 1) or plain (rank 2). */
+export function tickChip(tick, { big = false } = {}) {
+  if (!tick || !tick.chip) return "";
+  const chip = String(tick.chip);
+  const cls = tick.ok === true ? "tick-ok" : tick.ok === false ? (chip.startsWith("!") ? "tick-warn" : "tick-bad") : tick.rank === 2 ? "tick-plain" : "tick-look";
+  const pending = tick.state === "pending";
+  return `<span class="badge tick ${cls}${big ? " big" : ""}${pending ? " pending" : ""}"${pending ? ' aria-live="polite"' : ""}>${esc(chip)}</span>`;
+}
+
+/** The flag chip beside it when the first brief does not agree (2.9). */
+export function flagChip(tick, { big = false } = {}) {
+  if (!tick || !tick.flag_chip) return "";
+  const cls = String(tick.flag_chip).startsWith("!") ? "tick-warn" : "tick-look";
+  return `<span class="badge tick ${cls}${big ? " big" : ""}">${esc(tick.flag_chip)}</span>`;
+}
+
+/** "Screenshot shows: 11:12 · 3:41 · outgoing · number ending 1234" (or "saved name") from tick.row. */
+export function shows(tick) {
+  const r = tick && tick.row;
+  if (!r) return "";
+  const bits = [r.time, r.duration_s !== null && r.duration_s !== undefined ? fmtDur(r.duration_s) : null, r.direction && r.direction !== "unknown" ? r.direction : null,
+    r.last4 ? `number ending ${r.last4}` : r.name ? "saved name" : null].filter(Boolean);
+  return bits.length ? `Screenshot shows: ${bits.join(" · ")}` : "";
+}
 
 export const outcomeLabel = (code, list = OUTCOMES) => (list.find((o) => o.code === code) || {}).label || code || "";
 export const fmtDur = (s) => (s === null || s === undefined || s === "" ? "—" : `${Math.floor(+s / 60)}:${String(+s % 60).padStart(2, "0")}`);
@@ -46,11 +81,18 @@ export const accOn = () => !!state.deskFlags?.acc;
 export const exotelOn = () => !!state.deskFlags?.acc_exotel;
 
 // ------------------------------------------------------------------ due times and the To do strip
-const KIND_TEXT = { claim: "Claim lead", call: "Call lead", brief: "Brief for lead", proof: "Screenshot for lead" };
-const KIND_ICON = { claim: "check", call: "phone", brief: "edit", proof: "camera" };
+const KIND_TEXT = { claim: "Claim lead", call: "Call lead", brief: "Brief for lead", proof: "Screenshot for lead", followup: "Follow up lead" };
+const KIND_ICON = { claim: "check", call: "phone", brief: "edit", proof: "camera", followup: "flag" };
+// the follow-up list (SPEC-FOLLOWUP-RESHUFFLE 11.3): the reason codes in plain words
+export const FU_REASON = { no_proof: "No proof of the first call", next_step_overdue: "Next step overdue", no_contact: "No follow-up for days",
+  customer_waiting: "Customer waiting for a reply", keep_missed: "Kept, deadline passed" };
 
 /** A countdown for claim and call clocks, "due 11:48" for briefs and screenshots, red "overdue" when missed. */
 export function dueChip(it) {
+  if (it.kind === "followup") {
+    return it.state === "listed" ? `<span class="due-chip over">${icon("flag", "")}<span>On the list</span></span>`
+      : `<span class="due-chip">${icon("clock", "")}<span>before ${esc(deskTime(it.due_at))}</span></span>`;
+  }
   if (it.state === "missed" || (it.due_at && istMs(it.due_at) < deskNow() - 30000 && (it.kind === "brief" || it.kind === "proof"))) {
     return `<span class="due-chip over">${icon("alert", "")}<span>overdue</span></span>`;
   }
@@ -59,6 +101,7 @@ export function dueChip(it) {
 }
 
 export function todoHref(it) {
+  if (it.kind === "followup") return (it.reasons || []).length === 1 && it.reasons[0] === "no_proof" ? `#/lead/${+it.lead_id}?proof=1` : `#/lead/${+it.lead_id}`;
   return `#/lead/${+it.lead_id}${it.kind === "brief" ? "?brief=1" : it.kind === "proof" ? "?proof=1" : ""}`;
 }
 
@@ -69,7 +112,7 @@ export function todoStrip(t, { max = 5, seatLabel = "" } = {}) {
   if (t?.blocked_from_claiming) parts.push(`<div class="atd-block" role="alert">${icon("lock", "")}<span><b>Fill your overdue brief first.</b> You cannot claim new leads until it is in.</span></div>`);
   if (items.length) {
     const rows = items.slice(0, max).map((it) => `<a class="atd-row k-${esc(it.kind)}${it.state === "missed" ? " missed" : ""}" href="${todoHref(it)}">
-      <span class="atd-ic">${icon(KIND_ICON[it.kind] || "clock", "")}</span><span class="atd-t">${esc(KIND_TEXT[it.kind] || "Lead")} <b>#${+it.lead_id}</b></span>${dueChip(it)}</a>`).join("");
+      <span class="atd-ic">${icon(KIND_ICON[it.kind] || "clock", "")}</span><span class="atd-t">${esc(KIND_TEXT[it.kind] || "Lead")} <b>#${+it.lead_id}</b>${it.kind === "followup" && (it.reasons || []).length ? `<small> · ${esc(FU_REASON[it.reasons[0]] || "")}</small>` : ""}</span>${dueChip(it)}</a>`).join("");
     const more = items.length > max ? `<span class="atd-more">${items.length - max} more on your leads</span>` : "";
     parts.push(`<section class="atd" aria-label="To do"><div class="atd-h"><h2 class="eyebrow">To do${seatLabel ? ` · ${esc(seatLabel)}` : ""}</h2><span class="atd-n">${items.length}</span></div><div class="atd-list">${rows}</div>${more}</section>`);
   }
@@ -81,7 +124,7 @@ export function todoStrip(t, { max = 5, seatLabel = "" } = {}) {
 export function rowChip(a) {
   if (!a || !a.next) return "";
   const n = a.next, miss = n.state === "missed";
-  const word = { call: "Call due", brief: "Brief due", proof: "Screenshot due", claim: "Claim" }[n.kind] || "To do";
+  const word = { call: "Call due", brief: "Brief due", proof: "Screenshot due", claim: "Claim", followup: n.state === "listed" ? "On the follow-up list" : "Follow up" }[n.kind] || "To do";
   return `<span class="badge ${miss ? "neg" : "warn"} acc-chip">${icon(KIND_ICON[n.kind] || "clock", "")}${esc(miss ? word.replace(" due", "") + " overdue" : word)}${a.count > 1 ? ` +${a.count - 1}` : ""}</span>`;
 }
 

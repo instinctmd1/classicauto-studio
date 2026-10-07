@@ -3,6 +3,7 @@
 // only for a route the server does not have yet (desk-api.js decides). Every name here is made up; no phone numbers.
 import { ApiError } from "./api.js";
 import { accAllowedFor, accData, createAccStore } from "./desk-mock-acc.js";
+import { createIntakeStore, intakeFormat } from "./desk-mock-intake.js";
 
 const BASE = "2026-10-05 11:20:00";              // the moment these answers describe; times are moved to "now" on load
 const ME = { salesman: "Kabir (demo)", manager: "Demo Manager", owner: "Partners (demo)", staff: "Demo Staff" };
@@ -156,7 +157,36 @@ const TASKS = [
   { id: "t_demo_1", text: "Make a list of cars older than 60 days in stock", status: "needs_medhansh", result_text: null, result_url: null,
     created_at: at("09:30:00"), updated_at: at("09:31:00") },
 ];
+// the Ask Claude chat (SPEC-ASK-CLAUDE-CHAT 9): a sample thread; every car and price here is made up
+const CHAT = [
+  { id: 1, role: "user", text: "Which white cars do we have under 15 lakh?", created_at: at("10:40:00") },
+  { id: 2, role: "assistant", text: "(demo answer) Two: the 2021 Hyundai Creta (CA101) at ₹12,45,000 and the 2020 Renault Kwid (CA104) at ₹4,10,000. Both are live on the website.", created_at: at("10:40:20") },
+  { id: 3, role: "user", text: "Creta price 12.2 lakh kar do", created_at: at("10:42:00") },
+  { id: 4, role: "assistant", text: "(demo answer) Check the card and tap Yes.", created_at: at("10:42:15") },
+  { id: 5, role: "card", text: null, created_at: at("10:42:15"), card: { type: "edit", action_id: 51, kind: "car_edit", state: "proposed", version: 1, mine: true, can_yes: true,
+    label: "2021 Hyundai Creta", stock_no: "CA101", rows: [{ field: "price", label: "Asking price", old: "₹12,45,000 (twelve lakh forty-five thousand)", new: "₹12,20,000 (twelve lakh twenty thousand)" }],
+    warnings: [], site: { state: "live", label: "Live" } } },
+];
+const EDIT_FMT = "EDIT CAR\nStock no:\nAsking price:\nKm:\nColour:\nVariant:\nHeadline:\nSummary:\nFeatures add:\nFeatures remove:\nVideo link:\nWhere is it: Showroom / Yard / Workshop\nTake off: Withdrawn / Returned to owner / Written off\nPut back on website: Yes\n";
 const DEMO_ANSWER = "(demo answer) Done. Here is a first draft you can edit:\n\n1. Thank the customer for the enquiry.\n2. Confirm the car is available and invite them for a test drive today.\n3. Offer a call back at a time that suits them.\n\nNothing was sent to anyone.";
+// A filled NEW CAR format as a manager would paste it in Ask Claude (made up: "DEMO" in place of every number on the RC)
+const SAMPLE_NEW_CAR = ["NEW CAR", "Make: Maruti Suzuki", "Model: Grand Vitara", "Variant: Zeta+ Strong Hybrid", "Made (month year): Jun 2023", "Registered (month year): Jul 2023",
+  "Reg number: MH47DEMO", "Reg type: Individual", "Chassis number: DEMOCHASSISGV0023", "Engine number: DEMOENGGV23", "Fuel: Hybrid", "Gearbox: Automatic, eCVT",
+  "Km: 18,400", "Colour: Nexa Blue", "Owners as per RC: 1", "Body: SUV", "Seats: 5", "Keys: 2", "Features: Panoramic sunroof, 360-degree camera, Ventilated seats",
+  "Where is it: Showroom", "Insurance: Zero dep", "Service record: Full", "Warning lights: None", "Accident or repair: None known, panels checked by eye",
+  "Claim history: Not checked", "Water damage: None found", "Checked by: Demo Manager", "Line: Bought", "Bought on: 2026-10-06", "Seller type: Individual",
+  "Seller name: Demo Seller 0310", "Asking price: 17,25,000", "List on website: Now", "Headline: 1st owner Grand Vitara strong hybrid, 18,400 km",
+  "Summary: One owner, full service history at the authorised workshop, both keys. Hybrid battery report is clean and the tyres are 80 percent.",
+  "Papers in hand: RC, Insurance, PUC, Form 29, Form 30"].join("\n");
+const MUST_ANGLES = ["E01", "E03", "E05", "E08", "I01", "I08", "O01", "K01"];
+/** The demo's canned replies to a typed question: picked by a word or two, always marked as a demo answer. */
+function cannedAnswer(q) {
+  const t = String(q).toLowerCase();
+  if (/\b(car|cars|stock|gaadi|suv|sedan|white|price|lakh)\b/.test(t)) return "(demo answer) From the demo stock: 2021 Hyundai Creta SX (CA101) at ₹12,45,000, 2022 Kia Seltos HTX (waiting for approval) at ₹13,95,000 and 2020 Renault Kwid (CA104), booked. In the real app Claude reads the live Stock page, under your login.";
+  if (/\b(lead|leads|inquir|enquir|call|calls|follow)\b/.test(t)) return "(demo answer) Today: 4 new inquiries, 1 escalated to the partners and 1 screenshot waiting for a check. Kabir has a brief due on the Innova Crysta lead. In the real app Claude reads the Inbox and Calls pages, under your login.";
+  if (/\b(sold|sale|sales|booked|deal)\b/.test(t)) return "(demo answer) This week: 1 car booked (2020 Renault Kwid, token taken). In the real app Claude reads Deals, and money only on the owner's login.";
+  return DEMO_ANSWER;
+}
 
 // ------------------------------------------------------------------ built-in answers by key
 /** The answer a real server would give for (role, path, params), or null when this sample set has no such answer. */
@@ -176,6 +206,8 @@ export function builtin(role, path, params, personaId) {
   if (path === "ask/tasks") return { available: true, data: TASKS.map((t) => ({ ...t })) };
   m = path.match(/^ask\/tasks\/(.+)$/);
   if (m) return TASKS.find((t) => t.id === m[1]) || null;
+  if (path === "ask/thread") return { thread_id: 1, messages: CHAT.map((x) => JSON.parse(JSON.stringify(x))), pending_turn: null, ai: { on: true, reason: null } };
+  if (path === "intakes/format") return { text: p.kind === "edit_car" ? EDIT_FMT : intakeFormat(p.kind, role) };
   return null;
 }
 function inboxAnswer(role, p) {
@@ -241,7 +273,7 @@ export function createStore({ role, me, load }) {
   const myName = role === "salesman" ? (me?.engine_name || ME.salesman) : persona.name;
   let delta = null;                                  // shift from the answers' clock to now
   const leads = new Map(), details = new Map(), rooms = { list: null }, msgs = new Map(), members = new Map();
-  let tasks = null, config = null, loadedViews = false, nextMsg = 900, nextTask = 3, nextAction = 55;
+  let tasks = null, config = null, loadedViews = false, nextMsg = 900, nextTask = 3, nextAction = 55, chat = null, nextChat = 100;
 
   const now = () => istStr(Date.now());
   async function source(path, params) {
@@ -308,6 +340,20 @@ export function createStore({ role, me, load }) {
     fire({ kind: "lead.changed", lead_id: id, why: kind });
   }
   const acc = createAccStore({ role, myName, src: (p) => source(p), leads, fire, stamp });
+  const intakes = createIntakeStore({ role, me, myName, now: (min = 0) => istStr(Date.now() + min * 60000) });   // car intake (desk-mock-intake.js)
+  const askUploads = new Map();
+  let nextUpload = 1;
+  /** The sample chat, plus a filled NEW CAR format pasted with its 8 photos and the read-back card it gets (owner and manager). */
+  function ensureChat() {
+    if (chat) return;
+    chat = builtin(role, "ask/thread", {}, personaId);
+    const it = intakes.fromText(SAMPLE_NEW_CAR, 8);
+    const t = (m) => istStr(Date.now() - m * 60000);
+    chat.messages.push(
+      { id: nextChat++, role: "user", text: `NEW CAR format, ${SAMPLE_NEW_CAR.split("\n").filter((l) => l.trim()).length} lines`, uploads: MUST_ANGLES.map((a) => ({ slot: "photo", angle: a })), created_at: t(6) },
+      { id: nextChat++, role: "assistant", text: `(demo answer) I read ${SAMPLE_NEW_CAR.split("\n").filter((l) => l.trim()).length - 1} lines and 8 photos. Check the card: nothing changes until you tap Yes.`, created_at: t(6) },
+      { id: nextChat++, role: "card", text: null, created_at: t(6), card: intakes.card(it, nextAction++) });
+  }
 
   const api = {
     async get(path, params = {}) {
@@ -320,6 +366,7 @@ export function createStore({ role, me, load }) {
         else out.counts.night = [...leads.values()].filter((r) => r.status === "new" && !r.salesman).length;
         return out;
       }
+      if (/^intakes(\/|$)/.test(path)) { const a = intakes.get(path, params); if (a !== undefined) return clone(a); }
       if (/^acc\/|^desk\/leads\/\d+\/acc$/.test(path)) { await loadViews(); const a = await acc.get(path, params); if (a !== undefined) return a; }
       let m = path.match(/^desk\/leads\/(\d+)$/);
       if (m) { await loadViews(); rollClocks(); return detail(+m[1]); }
@@ -336,10 +383,47 @@ export function createStore({ role, me, load }) {
       if (path === "ask/tasks") return { available: true, data: clone(await taskList()) };
       m = path.match(/^ask\/tasks\/(.+)$/);
       if (m) { const t = (await taskList()).find((x) => x.id === m[1]); if (!t) throw new ApiError(404, "not_found", "Task not found"); return clone(t); }
+      if (path === "ask/thread") { ensureChat(); return clone(chat); }
       return clone(await source(path, params));
     },
 
     async send(method, path, body = {}) {
+      if (/^ask\//.test(path)) {                       // the Ask Claude chat: nothing is saved, nothing is sent to Claude
+        ensureChat();
+        let mm = path.match(/^ask\/actions\/(\d+)\/(confirm|cancel)$/);
+        if (mm) {
+          const msg = chat.messages.find((x) => x.card && x.card.action_id === +mm[1]), c = msg?.card;
+          if (c && c.type === "readback") {                 // a pasted New car / Car sold: Yes sends the draft, as the form's Send does
+            const it = intakes.find(c.intake_id);
+            if (mm[2] === "confirm") { const r = intakes.submit(it); msg.card = intakes.card(it, c.action_id, r.state === "submitted" ? "waiting_approval" : "done"); }
+            else { intakes.send("POST", `intakes/${it.id}/cancel`, {}); msg.card = { ...c, state: "cancelled", can_yes: false }; }
+            fire({ kind: "ask.updated" });
+            return { state: msg.card.state };
+          }
+          if (c) { c.state = mm[2] === "confirm" ? "done" : "cancelled"; c.can_yes = false; if (mm[2] === "confirm" && c.site) c.site = { state: "waiting", label: "Waiting" }; }
+          fire({ kind: "ask.updated" });
+          return { state: mm[2] === "confirm" ? "done" : "cancelled" };
+        }
+        if (path === "ask/threads") { chat = { ...chat, messages: [] }; return { thread_id: 2 }; }
+        if (path === "ask/messages") {
+          const text = String(body.text || "").slice(0, 8000);
+          const fmt = /^\s*(new car|car sold|sold car|edit car)\b/i.test(text);
+          const ups = (body.upload_uuids || []).map((u) => askUploads.get(u)).filter(Boolean);
+          chat.messages.push({ id: nextChat++, role: "user", text: fmt ? `${text.split("\n")[0].trim().toUpperCase()} format, ${text.split("\n").filter((l) => l.trim()).length} lines` : text, uploads: ups, created_at: now() });
+          if (fmt && !/^\s*edit car/i.test(text)) {
+            const it = intakes.fromText(text, ups.filter((u) => u.slot === "photo").length);
+            chat.messages.push({ id: nextChat++, role: "assistant", text: "(demo answer) Check the card. Nothing changes until you tap Yes.", created_at: now() });
+            chat.messages.push({ id: nextChat++, role: "card", text: null, created_at: now(), card: intakes.card(it, nextAction++) });
+          } else if (fmt) chat.messages.push({ id: nextChat++, role: "notice", text: "Demo: in the real app a card comes back here to check, and nothing changes until Yes.", card: { type: "notice" }, created_at: now() });
+          else {
+            chat.pending_turn = { id: 1, state: "queued" };
+            setTimeout(() => { chat.pending_turn = null; chat.messages.push({ id: nextChat++, role: "assistant", text: cannedAnswer(text), created_at: now() }); fire({ kind: "ask.updated" }); }, 1800);
+          }
+          return { message: null, reply: null, turn_id: fmt ? null : 1 };
+        }
+        throw new ApiError(404, "not_found", "Not part of the sample data.");
+      }
+      if (/^intakes(\/|$)/.test(path)) { const a = intakes.send(method, path, body); if (a !== undefined) return clone(a); }
       if (/^acc\/|^desk\/leads\/\d+\/(call-attempt|brief|reassign)$/.test(path)) {
         await loadViews();
         const lid = +((path.match(/^desk\/leads\/(\d+)\//) || [])[1] || 0);
@@ -369,7 +453,7 @@ export function createStore({ role, me, load }) {
         }
         if (what === "ai-call") {
           const aid = nextAction++;
-          return { ok: true, action_id: aid, preview: `Anita will call ${row.name} ${body.when || "soon"} to ${STAGE_LABEL[body.purpose] || "call back"}${body.note ? `, and mention: ${body.note}` : ""}.`, due_at: istStr(Date.now() + 60 * 60000) };
+          return { ok: true, action_id: aid, preview: `Anita will ${body.channel === "whatsapp" ? "WhatsApp" : "call"} ${row.name} ${body.when || "soon"} to ${STAGE_LABEL[body.purpose] || "call back"}${body.note ? `, and mention: ${body.note}` : ""}.`, due_at: istStr(Date.now() + 60 * 60000) };
         }
         // status
         const s = body.status;
@@ -423,6 +507,12 @@ export function createStore({ role, me, load }) {
         fire({ kind: "chat.message", room: key, message_id: msg.id });
         return { ok: true, message: clone(msg) };
       }
+      if (path === "ask/uploads") {
+        const u = { uuid: `demo${Date.now().toString(16)}${(nextUpload++).toString(16)}`.padEnd(32, "0").slice(0, 32), slot: fd.get("slot"), doc_type: fd.get("doc_type") || null };
+        askUploads.set(u.uuid, { slot: u.slot, doc_type: u.doc_type, angle: null, owner_only: false });
+        return u;
+      }
+      { const a = intakes.upload(path, fd); if (a !== undefined) return a; }
       if (path === "ask/tasks") {
         const list = await taskList();
         const t = { id: `t_demo_${nextTask++}`, text: String(fd.get("text") || "").slice(0, 4000), status: "queued", result_text: null, result_url: null, created_at: now(), updated_at: now() };

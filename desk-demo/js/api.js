@@ -138,6 +138,28 @@ export async function upload(path, formData) {
   return parse(res);
 }
 
+/** One file with upload progress (the Ask Claude chat's photo chips): onProgress(0..1). Same CSRF and error shape. */
+export function uploadWithProgress(path, formData, onProgress) {
+  if (DEMO) return blocked();
+  return new Promise((resolve, reject) => {
+    const x = new XMLHttpRequest();
+    x.open("POST", `/api/${path}`);
+    x.withCredentials = true;
+    x.setRequestHeader("X-CSRF-Token", csrf);
+    x.setRequestHeader("Accept", "application/json");
+    x.upload.onprogress = (e) => { if (e.lengthComputable && onProgress) onProgress(e.loaded / e.total); };
+    x.onerror = () => reject(new ApiError(0, "offline", "No connection. Tap to try again."));
+    x.onload = () => {
+      let body = null;
+      try { body = JSON.parse(x.responseText || "null"); } catch { body = null; }
+      if (x.status >= 200 && x.status < 300) return resolve(body);
+      const e = body && body.error ? body.error : {};
+      reject(new ApiError(x.status, e.code || "error", e.message || `Upload failed (${x.status})`, e.fields, body));
+    };
+    x.send(formData);
+  });
+}
+
 /** Link for a document download (a plain GET with the session cookie; audited by the server). */
 export function docUrl(uuid) { return DEMO ? "sample.pdf" : `/api/documents/${uuid}/download`; }
 export function exportUrl(table, fmt, params) {

@@ -5,7 +5,7 @@ import * as api from "../api.js";
 import { get } from "../api.js";
 import { state, can, isSuper } from "../state.js";
 import { ago, badge, dateFmt, dateTimeFmt, esc, icon, inr, mount, pct } from "../util.js";
-import { bindTabs, formDrawer, pageHead, save, tabsHtml } from "../ui.js";
+import { bindTabs, formDrawer, pageHead, save, tabsHtml, toast } from "../ui.js";
 
 const KIND = { price_change: ["Price change", "tag"], discount: ["Discount", "percent"], test_drive: ["Test drive", "car"], hold: ["Hold the car", "lock"] };
 const ST = { approved: ["Approved", "pos"], pending: ["Waiting", "warn"], rejected: ["Rejected", "neg"] };
@@ -22,7 +22,15 @@ export async function render(ctx) {
     sub: decide ? "Price changes, discounts, test drives and holds that need your OK. The oldest request is on top. Approving a price change sets the new asking price straight away."
       : "Ask before you change a price, give a discount, take a car out for a test drive or hold one for a customer. The manager's answer shows here.",
     actions: can("approvals.request") ? `<button class="btn primary" type="button" id="add">${icon("plus")}New request</button>` : "" })
-    + `<section class="card flush rise">${tabsHtml(tabs, tab, "Approval lists")}<div id="pane"></div></section>`);
+    + `<div id="intake-card"></div><div id="askq"></div><section class="card flush rise">${tabsHtml(tabs, tab, "Approval lists")}<div id="pane"></div></section>`);
+  if (can("stock.manage")) {                 // the car intake's own approvals (SPEC-CAR-INTAKE 6.6)
+    get("intakes", { state: "submitted" }).then((r) => {
+      const n = (r.data || []).filter((x) => x.waiting_for_me).length;
+      const el = ctx.root.querySelector("#intake-card");
+      if (el && n) el.innerHTML = `<a class="card note-card rise" href="#/intakes?tab=waiting">${icon("car", "")}<p><b>Cars in and out: ${n} waiting for you.</b> New cars and sales sent by salesmen.</p></a>`;
+    }).catch(() => {});
+  }
+  if (can("stock.manage")) askRequests(ctx);   // changes asked for in the Ask Claude chat (SPEC-ASK-CLAUDE-CHAT 4.7)
   const pane = ctx.root.querySelector("#pane");
   const show = async (t) => {
     if (t === "pending") { pane.innerHTML = queueHtml(res.data, decide); return; }
@@ -51,7 +59,7 @@ function askLine(a) {
 
 function flags(a) {
   const out = [];
-  if (a.below_floor) out.push(badge(`Below the floor of ${inr(a.floor_price)}`, "neg"));
+  if (a.below_floor) out.push(badge(a.floor_price != null ? `Below the lowest price of ${inr(a.floor_price)}` : "Below the lowest price Dad set", "neg"));
   if (a.expected_margin != null) out.push(badge(`Margin at this price ${inr(a.expected_margin)}`, a.expected_margin < 0 ? "neg" : "pos"));
   if (a.car_status && !["available", "booked"].includes(a.car_status)) out.push(badge(`Car is ${a.car_status}`, "info"));
   return out.length ? `<div class="pill-row">${out.join("")}</div>` : "";
@@ -108,4 +116,30 @@ async function requestForm(refresh) {
   };
   d.form.querySelector('[name="kind"]').addEventListener("change", show);
   show();
+}
+
+
+// ------------------------------------------------------------------ "From Ask Claude": a salesman's car changes from the chat
+async function askRequests(ctx) {
+  const el = ctx.root.querySelector("#askq");
+  let list = [];
+  try { list = (await get("ask/approvals")).data || []; } catch { return; }
+  if (!ctx.alive() || !el || !list.length) return;
+  const rows = (c) => (c.rows || []).map((r) => `<li><b>${esc(r.label)}</b>: <s class="muted">${esc(r.old)}</s> → ${esc(r.new)}</li>`).join("")
+    || `<li>${esc(c.to_label || (c.back ? "Put back on the website" : ""))}</li>`;
+  el.innerHTML = `<section class="card rise ask-approvals" aria-label="From Ask Claude"><h2 class="sec-h">${icon("spark", "")}From Ask Claude <span class="badge warn">${list.length}</span></h2>
+    ${list.map((c) => `<article class="ask-ap" data-id="${+c.action_id}"><p><b>${esc(c.label || "")}</b> <span class="muted">(${esc(c.stock_no || "")}) · ${esc(c.kind === "car_status" ? "status" : "details")} · from ${esc(c.asked_by)} · ${esc(ago(c.asked_at))}</span></p>
+      <ul>${rows(c)}</ul>
+      ${c.own ? `<p class="muted">Your own request: another manager or an owner decides it.</p>` : `<div class="ask-acts"><button class="btn sm primary" type="button" data-askap="${+c.action_id}">${icon("check")}Approve</button><button class="btn sm" type="button" data-askrj="${+c.action_id}">Reject</button></div>`}</article>`).join("")}</section>`;
+  el.addEventListener("click", async (e) => {
+    const ap = e.target.closest("[data-askap]"), rj = e.target.closest("[data-askrj]");
+    if (ap) { const ok = await save(ap, () => api.post(`ask/actions/${ap.dataset.askap}/decision`, { decision: "approve" }), { ok: "Approved" }); if (ok) ctx.refresh(); }
+    if (rj) {
+      const note = (window.prompt("Why not? (5-200 characters, the salesman sees it)") || "").trim();
+      if (!note) return;
+      if (note.length < 5 || note.length > 200) { toast("Give a reason of 5 to 200 characters.", "err"); return; }
+      const ok = await save(rj, () => api.post(`ask/actions/${rj.dataset.askrj}/decision`, { decision: "reject", note }), { ok: "Rejected" });
+      if (ok) ctx.refresh();
+    }
+  });
 }

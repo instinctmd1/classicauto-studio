@@ -39,7 +39,7 @@ export async function render(ctx) {
   ].join("");
 
   mount(ctx.root, pageHead({ title: "Stock", sub: "Every car the firm holds or sells on commission. Click a row for the car file; edit price and location right in the grid.",
-    actions: edit ? `<button class="btn primary" type="button" id="add-car">${icon("plus")}Add car</button>` : "" })
+    actions: edit || can("stock.intake") ? `<button class="btn primary" type="button" id="add-car">${icon("plus")}Add car</button>` : "" })
     + (can("money.view") ? "" : roleNote("Purchase price, costs and profit are hidden for your role. Asking prices are shown."))
     + `<div class="kpis four">${tiles}</div>
     <section class="card flush rise"><div class="card-h"><div><h2>All cars</h2></div><div class="act" id="grid-act"></div></div>
@@ -107,7 +107,8 @@ export async function render(ctx) {
   ctx.root.querySelector("#q").addEventListener("input", debounce((e) => { view.q = e.target.value; apply(); }, 150));
   ctx.root.querySelector("#aged").addEventListener("change", (e) => { view.aged = e.target.value; apply(); });
   ctx.root.querySelector("#band").addEventListener("change", (e) => { view.band = e.target.value; apply(); });
-  ctx.root.querySelector("#add-car")?.addEventListener("click", () => carForm(null, ctx, reload));
+  // a new car goes in once, in the one format (SPEC-CAR-INTAKE 3.1): the same flow as More -> New car
+  ctx.root.querySelector("#add-car")?.addEventListener("click", () => { location.hash = "#/intake/new?kind=new_car"; });
 
   // inline edits
   table.on("cellEdited", async (cell) => {
@@ -133,8 +134,8 @@ export async function openCar(id, ctx, reload) {
   d.setTitle(`${c.make} ${c.model}`);
   d.setSub(`${esc(c.stock_no)} · ${esc(c.variant || "")} · ${statusBadge(c.status)} ${badge(pns ? "Park-N-Sell" : "Invested", pns ? "info" : "ink")}`);
   const kv = (l, v) => `<div><dt>${l}</dt><dd>${v == null || v === "" ? "—" : v}</dd></div>`;
-  const price = `<dl class="dl dl-3">${kv("Asking", `<span class="big">${inr(c.asking_price)}</span>`)}${can("stock.manage") ? kv("Floor", inr(c.floor_price)) : ""}${owner && !pns ? kv("Purchase", inr(c.purchase_price)) : ""}${owner && !pns ? kv("Firm costs", inr(c.firm_costs)) : ""}${owner && !pns ? kv("Expected margin", `<span class="${(c.expected_margin ?? 0) < 0 ? "neg" : ""}">${inr(c.expected_margin)}</span>`) : ""}${owner && !pns ? kv("Holding cost", inr(c.holding_cost)) : ""}${kv("Days in stock", `${aging(c)}`)}</dl>`;
-  const spec = `<dl class="dl dl-3">${kv("Year", c.mfg_year)}${kv("Registered", c.reg_year)}${kv("Reg no", esc(c.reg_no))}${kv("Fuel", esc(title(c.fuel || "")))}${kv("Gearbox", esc(sentence(c.transmission || "")))}${kv("KMs", num(c.kms_at_intake))}${kv("Owner no.", c.owner_serial)}${kv("Colour", esc(c.colour))}${kv("Location", esc(sentence(c.location || "")))}${kv("Insurance till", dateFmt(c.insurance_expiry))}${kv("PUC till", dateFmt(c.puc_expiry))}${kv("Form 29C", c.form29c_filed_on ? dateFmt(c.form29c_filed_on) : '<span class="badge warn">Not filed</span>')}${kv("Hypothecated", c.hypothecated_to ? esc(c.hypothecated_to) + (c.hypothecation_cleared_on ? " (cleared)" : "") : "No")}${kv("Acquired", dateFmt(c.acquired_on))}${kv("Band", esc(bandLabel(c.band)))}</dl>`;
+  const price = `<dl class="dl dl-3">${kv("Asking", `<span class="big">${inr(c.asking_price)}</span>`)}${owner ? kv("Lowest price", inr(c.floor_price)) : ""}${owner && !pns ? kv("Purchase", inr(c.purchase_price)) : ""}${owner && !pns ? kv("Firm costs", inr(c.firm_costs)) : ""}${owner && !pns ? kv("Expected margin", `<span class="${(c.expected_margin ?? 0) < 0 ? "neg" : ""}">${inr(c.expected_margin)}</span>`) : ""}${owner && !pns ? kv("Holding cost", inr(c.holding_cost)) : ""}${kv("Days in stock", `${aging(c)}`)}</dl>`;
+  const spec = `<dl class="dl dl-3">${kv("Year", c.mfg_year)}${kv("Registered", c.reg_year)}${kv("Reg no", esc(c.reg_no))}${kv("Chassis", esc(c.chassis_no || (c.chassis_tail ? "ends " + c.chassis_tail : "")))}${kv("Engine", esc(c.engine_no || (c.engine_tail ? "ends " + c.engine_tail : "")))}${kv("Fuel", esc(title(c.fuel || "")))}${kv("Gearbox", esc(sentence(c.transmission || "")))}${kv("KMs", num(c.kms_at_intake))}${kv("Owner no.", c.owner_serial)}${kv("Colour", esc(c.colour))}${kv("Location", esc(sentence(c.location || "")))}${kv("Insurance till", dateFmt(c.insurance_expiry))}${kv("PUC till", dateFmt(c.puc_expiry))}${kv("Form 29C", c.form29c_filed_on ? dateFmt(c.form29c_filed_on) : '<span class="badge warn">Not filed</span>')}${kv("Hypothecated", c.hypothecated_to ? esc(c.hypothecated_to) + (c.hypothecation_cleared_on ? " (cleared)" : "") : "No")}${kv("Acquired", dateFmt(c.acquired_on))}${kv("Band", esc(bandLabel(c.band)))}</dl>`;
   const cons = data.consignment ? `<dl class="dl dl-3">${kv("Reserve", inr(data.consignment.reserve_price))}${kv("Agreement", dateFmt(data.consignment.agreement_date))}${kv("Expires", dateFmt(data.consignment.agreement_expiry))}${kv("Commission", commissionText(data.consignment))}${kv("RC held", data.consignment.original_rc_held ? "Yes" : "No")}${kv("Keys held", data.consignment.keys_held ? "Yes" : "No")}</dl>` : "";
   const costs = data.costs ? `<table class="tbl"><thead><tr><th>Date</th><th>Category</th><th>Vendor</th><th>Paid by</th><th>Amount</th></tr></thead><tbody>${data.costs.map((k) => `<tr><td>${dateFmt(k.date, false)}</td><td>${esc(sentence(k.category))}${k.recover_from_consignor ? ' <span class="badge info">Owner pays</span>' : ""}</td><td>${esc(k.vendor || "—")}</td><td>${k.payment_mode === "credit" ? "On credit" : k.payment_mode ? esc(modeLabel(k.payment_mode)) : "—"}</td><td>${inr(k.amount)}</td></tr>`).join("")}${c.broker_fee > 0 ? `<tr><td>${dateFmt(c.acquired_on, false)}</td><td>Broker fee</td><td>—</td><td>${data.purchase_payment ? esc(modeLabel(data.purchase_payment.mode)) : "—"}</td><td>${inr(c.broker_fee)}</td></tr>` : ""}</tbody><tfoot><tr><td colspan="4">Firm cost</td><td>${inr(c.firm_costs)}</td></tr></tfoot></table>` : "";
   const refurb = (data.refurb_jobs || []).length ? `<ul class="list">${data.refurb_jobs.map((j) => `<li><span class="grow"><div class="t">${esc(sentence(j.job_type))}</div><div class="s">${esc(j.workshop || "Workshop not set")} · sent ${dateFmt(j.sent_on, false)} · promised ${dateFmt(j.promised_on, false)}${j.returned_on ? " · back " + dateFmt(j.returned_on, false) : ""}</div></span>${j.estimate ? `<span class="muted">${inr(j.estimate)}</span>` : ""}${statusBadge(j.status)}</li>`).join("")}</ul>` : `<p class="muted">No workshop jobs yet.</p>`;
@@ -142,10 +143,19 @@ export async function openCar(id, ctx, reload) {
   const prices = data.price_history.length ? `<ol class="timeline">${[...data.price_history].reverse().map((s) => `<li><span class="when">${dateFmt(s.ts)}${s.reason ? " · " + esc(s.reason) : ""}</span>${s.old_price ? `${inr(s.old_price)} → ` : ""}<b>${inr(s.new_price)}</b></li>`).join("")}</ol>` : "";
   const deals = data.deals.length ? `<ul class="list">${data.deals.map((x) => `<li><a class="grow" href="#/deals?deal=${x.id}"><div class="t">${esc(x.buyer || "Buyer")}</div><div class="s">${dateFmt(x.invoice_date || x.booked_on)} · ${inr(x.sale_price)}</div></a>${statusBadge(x.status)}</li>`).join("")}</ul>` : "";
   const sec = (t, inner, act = "") => (inner ? `<div class="sec"><div class="sec-h"><h3>${t}</h3>${act ? `<span class="act">${act}</span>` : ""}</div>${inner}</div>` : "");
-  d.setBody(`${sec("Price", price, edit ? `<button class="btn sm" type="button" data-act="price">${icon("tag")}Change price</button>` : "")}${sec("Details", spec)}${sec("Consignment terms", cons)}
+  // the website and the intake (SPEC-CAR-INTAKE 6.6): a chip, List on website / Try again, papers to follow, Dad's banner
+  const SITE = { live: ["On the website", "pos"], on_files: ["On the website files", "info"], waiting: ["Website: sending", "warn"], problem: ["Website: waiting", "neg"], not_listed: ["Not on the website", ""] };
+  const ss = c.site_state || { state: "not_listed" };
+  const siteBtns = edit ? (ss.state === "problem" ? `<button class="btn sm" type="button" data-act="site-retry">${icon("refresh")}Try again</button>` : ss.state === "not_listed" && ["incoming", "refurb", "available"].includes(c.status) ? `<button class="btn sm" type="button" data-act="site-list">${icon("globe")}List on website</button>` : "") : "";
+  const siteHtml = `<p class="site-line">${badge(SITE[ss.state]?.[0] || ss.state, SITE[ss.state]?.[1] || "")} ${ss.note ? `<span class="muted">${esc(ss.note)}</span>` : ""}</p>`
+    + ((c.papers_to_follow || []).length ? `<ul class="list">${c.papers_to_follow.map((p) => `<li><span class="grow"><div class="t">${esc(p.paper)}</div><div class="s">To follow by ${dateFmt(p.due, true)}</div></span>${p.due && p.due < state.today ? badge("Overdue", "neg") : badge("To follow", "warn")}</li>`).join("")}</ul>` : "");
+  const moneyBanner = owner && c.ownership === "invested" && c.purchase_price == null && !["delivered", "returned_to_owner", "written_off"].includes(c.status)
+    ? `<div class="note-card warn">${icon("alert", "")}<p><b>Add the buying price.</b> The website does not wait for it, but the car cannot be delivered without it.</p>${c.intake_id ? `<a class="btn sm primary" href="#/intake/${c.intake_id}?step=owner">Open the owner step</a>` : ""}</div>` : "";
+  d.setBody(`${moneyBanner}${sec("Website", siteHtml, siteBtns)}${sec("Price", price, edit ? `<button class="btn sm" type="button" data-act="price">${icon("tag")}Change price</button>` : "")}${sec("Details", spec)}${sec("Consignment terms", cons)}
     <div class="sec"><div class="sec-h"><h3>Papers</h3><span class="badge ${c.papers_pct >= 90 ? "pos" : c.papers_pct >= 60 ? "warn" : "neg"}">${c.papers_pct}% complete</span></div><div id="docs">${data.documents ? docsHtml(data.documents, pns ? EXPECTED.park_n_sell : EXPECTED.invested) : '<p class="muted">Papers are managed by the office.</p>'}</div></div>
     ${owner ? sec("Cost ledger", costs || `<p class="muted">No costs recorded.</p>`, `<button class="btn sm" type="button" data-act="cost">${icon("plus")}Add cost</button>`) : ""}${sec("Workshop", edit ? refurb : "")}${sec("Deals", deals)}${sec("Where it has been", timeline, edit && !["delivered", "booked", "returned_to_owner", "written_off"].includes(c.status) ? `<button class="btn sm" type="button" data-act="status">Move to…</button>` : "")}${sec("Price history", prices)}`);
-  d.setFoot(edit ? `<button class="btn" type="button" data-act="edit">${icon("edit")}Edit details</button>` : null);
+  const sold = can("stock.intake") && ["incoming", "refurb", "available", "booked"].includes(c.status) ? `<a class="btn" href="#/intake/new?kind=sold&car=${c.id}">${icon("tag")}Sold</a>` : "";
+  d.setFoot(edit || sold ? `${sold}${edit ? `<button class="btn" type="button" data-act="edit">${icon("edit")}Edit details</button>` : ""}` : null);
   const done = () => { d.close(); reload?.(); setTimeout(() => ctxRef && openCar(id, ctx, reload), 300); };
   const reopen = () => { reload?.(); openCar(id, ctx, reload); };
   const docs = d.el.querySelector("#docs");
@@ -156,6 +166,7 @@ export async function openCar(id, ctx, reload) {
     if (a === "price") priceForm(c, reopen);
     if (a === "cost") costForm(c, reopen);
     if (a === "status") statusForm(c, reopen);
+    if (a === "site-list" || a === "site-retry") api.post(`cars/${c.id}/website`, { action: a === "site-list" ? "list" : "retry" }).then(() => { toast("The website job is on its way", "ok"); reopen(); }).catch((er) => toast(er.message, "err"));
   });
 }
 const aging = (c) => `<span class="aging"><i data-c="${agingColor(agingBucketOf(c.days_in_stock ?? 0))}"></i>${num(c.days_in_stock)} days</span>`;

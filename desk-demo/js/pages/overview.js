@@ -2,7 +2,7 @@
 // everyone else gets the same page built from operational numbers.
 import { get } from "../api.js";
 import { state, can, pnlWindow, periodLabel, compareLabel, isMonthPeriod, bandLabel, bandColor, bandShort } from "../state.js";
-import { dateFmt, esc, icon, inr, lakh, monthLabel, mount, num, pct, title } from "../util.js";
+import { ago, dateFmt, esc, icon, inr, lakh, monthLabel, mount, num, pct, title } from "../util.js";
 import { alpha, bandHex, catAxis, donutOption, gridBox, legendBox, mountChart, moneyAxisFmt, profitByMonthOption, tipHtml, tooltip, valAxis } from "../charts.js";
 import { pageHead } from "../ui.js";
 import { activateGauges, alertsHtml, bindAlertGroups, card, delta, funnelHtml, gaugeHtml, insightsHtml, kpiTile, pts } from "./_shared.js";
@@ -15,7 +15,7 @@ const settle = (p) => p.then((v) => v, () => null);
 export async function render(ctx) {
   const p = ctx.period, win = pnlWindow(p);
   const money = can("money.view"), profitSeen = can("deals.profit.view", "money.view");
-  const [k, pnl, ins, alerts, aging, funnel, analytics, deals, fb, waiting, asks] = await Promise.all([
+  const [k, pnl, ins, alerts, aging, funnel, analytics, deals, fb, waiting, asks, sc] = await Promise.all([
     get("kpis", { period: p }),
     money ? settle(get("pnl", { from: win.from, to: win.to })) : null,
     money ? settle(get("insights", { period: p })) : null,
@@ -25,6 +25,7 @@ export async function render(ctx) {
     can("activity.use") ? settle(get("feedback")) : null,
     can("expenses.approve") ? settle(get("expenses", { status: "pending" })) : null,
     can("approvals.manage") ? settle(get("approvals")) : null,
+    can("records.all") ? settle(get("standing-context")) : null,
   ]);
   if (!ctx.alive()) return;
   const K = k.kpis, B = k.breakdown || {}, months = pnl?.months || [];
@@ -56,6 +57,7 @@ export async function render(ctx) {
   ].filter(([n]) => n !== undefined && n !== null);
   const brief = `<section class="brief rise"><div><div class="eyebrow">${esc(dateFmt(state.today))}</div><h2>${esc(greeting())}, <em>${esc(firstName())}</em>.</h2></div>
     ${yl.text ? `<p class="line">${yl.text}</p>` : ""}
+    ${sc?.standing ? `<p class="line keep" id="standing-recap">Standing line for the agents: <b>${esc(sc.standing.text)}</b> <span class="muted">(${esc(String(sc.standing.set_by || "").replace(/\s*\(demo\)/, ""))}, ${esc(ago(sc.standing.set_at))})</span></p>` : ""}
     <div class="brief-todo">${chips.map(([n, l, h]) => `<a class="todo-chip${n === 0 ? " ok" : ""}" href="${h}"><b>${num(n)}</b>${esc(l)}</a>`).join("")}</div>
     ${healthHtml(health)}</section>`;
 

@@ -462,6 +462,7 @@ a.approvals-note { text-decoration: none; color: inherit; display: flex; }
   .brief { padding: 14px; gap: 10px; }
   .brief h2 { font-size: 28px; }
   .brief .line { display: none; }
+  .brief .line.keep { display: block; font-size: 13px; }   /* the agents' standing line (MD-5) stays: it is one short line */
   .brief-todo { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; margin: 0 -14px; padding: 0 14px; }
   .brief-todo .todo-chip { flex: none; }
   .health { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; white-space: nowrap; }

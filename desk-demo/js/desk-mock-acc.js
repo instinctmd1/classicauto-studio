@@ -19,6 +19,13 @@ const SPOKE = new Set(OUTCOMES.filter((o) => o.spoke).map((o) => o.code));
 const RECIPIENTS = { pass: ["manager", "owner"], missed_brief: ["sales_manager", "manager"], missing_proof: ["sales_manager", "manager"], warning: ["sales_manager", "manager"],
   escalated: ["manager", "owner"], proof_review: ["sales_manager", "manager"], review_flag: ["owner"] };
 const TIMER_KEYS = ["office_hours", "claim_sla_min", "call_sla_min", "brief_prompt_min", "proof_due_min"];
+// The AI's reading of the two demo screenshots (SPEC-SCREENSHOT-AI 2.8): the engine's exact chip words, made-up digits
+const TICK_41 = { source: "ai", state: "done", verdict: "spoke", ok: true, rank: 2, chip: "✓ Spoke - number matches, 10:12, 2:14", flag: null, flag_chip: null,
+  row: { date: D, time: "10:12", duration_s: 134, direction: "outgoing", call_status: "connected", last4: "0139" } };
+const TICK_43 = { source: "ai", state: "done", verdict: "too_short", ok: false, rank: 0, chip: "! Too short (0:08)", flag: "brief_says_spoke", flag_chip: "! Brief says spoke",
+  row: { date: D, time: "10:18", duration_s: 8, direction: "outgoing", call_status: "connected", last4: "0133" } };
+const TICK_33 = { source: "ai", state: "done", verdict: "spoke", ok: true, rank: 2, chip: "✓ Spoke - number matches, 16:20, 4:11", flag: null, flag_chip: null,
+  row: { date: "2026-10-04", time: "16:20", duration_s: 251, direction: "outgoing", call_status: "connected", last4: "0131" } };
 
 const brief = (o) => ({ id: 0, attempt_id: null, seat: K, state: "submitted", prompt_at: null, due_at: null, submitted_at: null, outcome: null, customer_said: null, plan: null, next_step: null, next_step_at: null, interest: null, ...o });
 const attempt = (o) => ({ id: 0, ts: null, seat: K, source: "app_tel", status: "logged", answered: null, duration_s: null, talk_s: null, verified: 0, has_recording: false, ...o });
@@ -30,11 +37,12 @@ const OK_CHECKS = { image: true, after_call_press: true, in_window: true, on_tim
 export function accData() {
   return {
     server_now: at("11:20"),
-    settings: { settings: { enabled: true, office_hours: "10:00-21:00", claim_sla_min: 15, claim_sla_by_tier: {}, call_sla_min: 15, brief_prompt_min: 10, proof_due_min: 30,
+    settings: { settings: { enabled: true, office_hours: "10:00-21:00", claim_sla_min: 15, claim_sla_by_tier: {}, call_sla_min: 15, brief_prompt_min: 3, proof_due_min: 30,
       missing_proof_action: "escalate", max_rounds: 2, after_max_rounds: "owners", recipients: RECIPIENTS, sales_manager: null, block_claim_on_overdue_brief: true,
       review_sample_pct: 100, night_distribution: true, release_wave_size: 3, release_wave_every_min: 20, weekly_off: { [R]: "tue" },
-      exotel: { enabled: false, hide_number: true, record: false, min_connected_sec: 20 } },
-    advanced: { brief_reminder_every_min: 5, brief_max_reminders: 3, warning_window_days: 30 }, brief_outcomes: OUTCOMES, interest: ["hot", "warm", "cold", "none"], version: "demo-1",
+      exotel: { enabled: false, hide_number: true, record: false, min_connected_sec: 20 }, ai_proof_check: false, ai_proof_daily_cap: 200, proof_reader: "local" },
+    advanced: { brief_reminder_every_min: 5, brief_max_reminders: 3, warning_window_days: 30, ai_proof_model: "claude-haiku-4-5", ai_proof_escalate_model: "claude-sonnet-5-5" },
+    ai_today: { read: 3, claude: 0, last_at: at("10:31") }, brief_outcomes: OUTCOMES, interest: ["hot", "warm", "cold", "none"], version: "demo-1",
     live: { exotel_keys: false, hours_by_day: null, closed_dates: [], tiers: [{ name: "Luxury 50L+", key: "luxury", claim_sla_min: 15 }, { name: "Premium 20-50L", key: "premium", claim_sla_min: 15 }, { name: "Core under 20L", key: "core", claim_sla_min: 15 }],
       staff: [{ name: K, role: "sales" }, { name: R, role: "sales" }, { name: Z, role: "sales" }, { name: A, role: "sales" }, { name: M, role: "manager" }, { name: P, role: "owner" }] } },
     todo: {
@@ -51,18 +59,18 @@ export function accData() {
         attempts: [attempt({ id: 301, ts: at("10:12") })],
         briefs: [brief({ id: 88, attempt_id: 301, prompt_at: at("10:22"), due_at: at("10:39"), submitted_at: at("10:21"), outcome: "spoke_visit", customer_said: "Wants the white Creta, coming this evening at 5 with family",
           plan: "Keep the car washed and ready, check the exchange value of his old i20", next_step: "Confirm the visit an hour before", next_step_at: at("16:00"), interest: "hot" })],
-        proof: proof({ id: 41, state: "submitted", due_at: at("10:39"), submitted_at: at("10:30"), file_id: "demo1", image_url: "img/demo-proof-1.svg", declared_call_at: at("10:12"), declared_duration_s: 134, checks: OK_CHECKS }),
+        proof: proof({ id: 41, state: "submitted", due_at: at("10:39"), submitted_at: at("10:30"), file_id: "demo1", image_url: "img/demo-proof-1.svg", declared_call_at: at("10:12"), declared_duration_s: 134, checks: OK_CHECKS, tick: TICK_41 }),
         passes: [{ ts: at("10:05"), from: null, to: K, reason: "new", round: 0, pass_no: 0, by: null }], warnings: [] },
       1031: { state: state({ claimed_at: at("16:14", "2026-10-04"), call_due_at: at("16:29", "2026-10-04"), first_call_at: at("16:20", "2026-10-04"), proof_due_at: at("16:44", "2026-10-04") }),
         attempts: [attempt({ id: 288, ts: at("16:20", "2026-10-04") }), attempt({ id: 305, ts: at("11:05") })],
         briefs: [brief({ id: 71, attempt_id: 288, submitted_at: at("16:29", "2026-10-04"), outcome: "spoke_callback", customer_said: "Wants a 7-seater for the family, will bring his father for a drive", plan: "Book a test drive slot for Sunday", next_step: "Call back after the test drive", next_step_at: at("11:00"), interest: "warm" }),
           brief({ id: 90, attempt_id: 305, state: "open", prompt_at: at("11:15"), due_at: at("11:30") })],
-        proof: proof({ id: 33, state: "approved", due_at: at("16:44", "2026-10-04"), submitted_at: at("16:31", "2026-10-04"), declared_call_at: at("16:20", "2026-10-04"), declared_duration_s: 251, checks: OK_CHECKS, reviewed_by: M, reviewed_at: at("17:02", "2026-10-04") }),
+        proof: proof({ id: 33, state: "approved", due_at: at("16:44", "2026-10-04"), submitted_at: at("16:31", "2026-10-04"), declared_call_at: at("16:20", "2026-10-04"), declared_duration_s: 251, checks: OK_CHECKS, reviewed_by: M, reviewed_at: at("17:02", "2026-10-04"), tick: TICK_33 }),
         passes: [{ ts: at("16:10", "2026-10-04"), from: null, to: K, reason: "new", round: 0, pass_no: 0, by: null }], warnings: [] },
       1033: { state: state({ holder: A, claimed_at: at("10:03"), call_due_at: at("10:18"), first_call_at: at("10:18"), proof_due_at: at("10:33") }),
         attempts: [attempt({ id: 299, ts: at("10:18"), seat: A })],
         briefs: [brief({ id: 86, attempt_id: 299, seat: A, submitted_at: at("10:26"), outcome: "spoke_interested", customer_said: "Asked for the battery health report and the charging cable", plan: "Send the battery report on WhatsApp", next_step: "Follow up on the report", next_step_at: at("15:00"), interest: "warm" })],
-        proof: proof({ id: 43, state: "submitted", due_at: at("10:33"), submitted_at: at("10:31"), file_id: "demo2", image_url: "img/demo-proof-2.svg", declared_call_at: at("10:18"), declared_duration_s: 8, checks: { ...OK_CHECKS, duration_vs_brief: false } }),
+        proof: proof({ id: 43, state: "submitted", due_at: at("10:33"), submitted_at: at("10:31"), file_id: "demo2", image_url: "img/demo-proof-2.svg", declared_call_at: at("10:18"), declared_duration_s: 8, checks: { ...OK_CHECKS, duration_vs_brief: false }, tick: TICK_43 }),
         passes: [{ ts: at("10:00"), from: null, to: A, reason: "night", round: 0, pass_no: 0, by: null }], warnings: [] },
       1038: { state: state({ holder: R, claimed_at: at("10:05"), call_due_at: at("10:20"), first_call_at: at("10:12"), proof_due_at: at("10:35") }),
         attempts: [attempt({ id: 297, ts: at("10:12"), seat: R })],
@@ -78,11 +86,11 @@ export function accData() {
         proof: proof({ id: 21, state: "approved", due_at: at("12:13", "2026-10-02"), submitted_at: at("12:05", "2026-10-02"), declared_call_at: at("11:50", "2026-10-02"), declared_duration_s: 312, checks: OK_CHECKS, reviewed_by: M }),
         passes: [{ ts: at("11:40", "2026-10-02"), from: null, to: K, reason: "new", round: 0, pass_no: 0, by: null }], warnings: [] },
     },
-    queue: [
-      { proof_id: 41, lead_id: 1037, seat: K, submitted_at: at("10:30"), due_at: at("10:39"), late: 0, file_id: "demo1", image_url: "img/demo-proof-1.svg", declared_call_at: at("10:12"), declared_duration_s: 134,
-        first_call_at: at("10:12"), brief_outcome: "spoke_visit", checks: OK_CHECKS, customer: "Demo Customer 0139", car: "Hyundai Creta 2022", tier: "Core under 20L", phone_last4: "•••• 0139", phone: null },
+    queue: [            // the engine's order: the one that looks wrong first (rank 0), then oldest
       { proof_id: 43, lead_id: 1033, seat: A, submitted_at: at("10:31"), due_at: at("10:33"), late: 0, file_id: "demo2", image_url: "img/demo-proof-2.svg", declared_call_at: at("10:18"), declared_duration_s: 8,
-        first_call_at: at("10:18"), brief_outcome: "spoke_interested", checks: { ...OK_CHECKS, duration_vs_brief: false }, customer: "Demo Customer 0133", car: "Tata Nexon EV 2023", tier: "Core under 20L", phone_last4: "•••• 0133", phone: null },
+        first_call_at: at("10:18"), brief_outcome: "spoke_interested", checks: { ...OK_CHECKS, duration_vs_brief: false }, customer: "Demo Customer 0133", car: "Tata Nexon EV 2023", tier: "Core under 20L", phone_last4: "•••• 0133", phone: null, tick: TICK_43 },
+      { proof_id: 41, lead_id: 1037, seat: K, submitted_at: at("10:30"), due_at: at("10:39"), late: 0, file_id: "demo1", image_url: "img/demo-proof-1.svg", declared_call_at: at("10:12"), declared_duration_s: 134,
+        first_call_at: at("10:12"), brief_outcome: "spoke_visit", checks: OK_CHECKS, customer: "Demo Customer 0139", car: "Hyundai Creta 2022", tier: "Core under 20L", phone_last4: "•••• 0139", phone: null, tick: TICK_41 },
     ],
     warnings: [
       w(114, at("11:01"), R, 1040, "no_claim", { detail: "round 1 of 2" }), w(113, at("11:16"), Z, 1040, "no_claim", { detail: "round 2 of 2" }),
@@ -98,16 +106,16 @@ export function accData() {
       how: "Your share of new leads goes up with sales, fast first calls and few warnings; it never drops below half a normal share. Score: 50% sales, 30% speed to the first call, 20% warnings.",
       data: [
         sc(K, { received: 18, claimed: 17, claim_rate_pct: 94.4, passed_on: 1, median_claim_min: 3.5, calls: 26, called_in_time_pct: 94.1, median_first_call_min: 3.0,
-          proofs: { approved: 14, approved_auto: 0, rejected: 0, pending: 1, missed: 0, verified: 0, waived: 1 }, briefs: { due: 26, on_time: 25, late: 0, missed: 1, on_time_pct: 96.2 },
+          proofs: { approved: 14, approved_auto: 0, rejected: 0, pending: 1, missed: 0, verified: 0, waived: 1, spoke_ticks: 13, ai_mismatch: 0, ai_look: 1 }, briefs: { due: 26, on_time: 25, late: 0, missed: 1, on_time_pct: 96.2 },
           visits_booked: 5, test_drives: 3, sold: 2, lost: 3, conversion_pct: 11.8, warnings: { active: 2, excused: 1, by_type: { no_call: 1, rollcall_missed: 1, missed_brief: 1 } }, score: 71, weight: 1.18 }),
         sc(R, { received: 16, claimed: 13, claim_rate_pct: 81.3, passed_on: 3, median_claim_min: 7.0, calls: 19, called_in_time_pct: 84.6, median_first_call_min: 6.5,
-          proofs: { approved: 10, approved_auto: 0, rejected: 1, pending: 0, missed: 2, verified: 0, waived: 0 }, briefs: { due: 19, on_time: 16, late: 2, missed: 1, on_time_pct: 84.2 },
+          proofs: { approved: 10, approved_auto: 0, rejected: 1, pending: 0, missed: 2, verified: 0, waived: 0, spoke_ticks: 8, ai_mismatch: 2, ai_look: 1 }, briefs: { due: 19, on_time: 16, late: 2, missed: 1, on_time_pct: 84.2 },
           visits_booked: 4, test_drives: 2, sold: 1, lost: 4, conversion_pct: 7.7, warnings: { active: 4, excused: 0, by_type: { no_claim: 2, missing_proof: 1, no_call: 1 } }, score: 54, weight: 0.9, flag: "watch" }),
         sc(Z, { received: 14, claimed: 13, claim_rate_pct: 92.9, passed_on: 1, median_claim_min: 4.5, calls: 17, called_in_time_pct: 92.3, median_first_call_min: 4.0,
-          proofs: { approved: 11, approved_auto: 0, rejected: 0, pending: 0, missed: 0, verified: 0, waived: 1 }, briefs: { due: 17, on_time: 16, late: 1, missed: 0, on_time_pct: 94.1 },
+          proofs: { approved: 11, approved_auto: 0, rejected: 0, pending: 0, missed: 0, verified: 0, waived: 1, spoke_ticks: 11, ai_mismatch: 0, ai_look: 0 }, briefs: { due: 17, on_time: 16, late: 1, missed: 0, on_time_pct: 94.1 },
           visits_booked: 4, test_drives: 3, sold: 2, lost: 2, conversion_pct: 15.4, warnings: { active: 2, excused: 0, by_type: { no_claim: 1, manual: 1 } }, score: 66, weight: 1.1, off_today: false }),
         sc(A, { received: 15, claimed: 11, claim_rate_pct: 73.3, passed_on: 4, median_claim_min: 9.5, calls: 14, called_in_time_pct: 72.7, median_first_call_min: 11.0,
-          proofs: { approved: 7, approved_auto: 0, rejected: 1, pending: 1, missed: 2, verified: 0, waived: 0 }, briefs: { due: 14, on_time: 10, late: 2, missed: 2, on_time_pct: 71.4 },
+          proofs: { approved: 7, approved_auto: 0, rejected: 1, pending: 1, missed: 2, verified: 0, waived: 0, spoke_ticks: 5, ai_mismatch: 3, ai_look: 1 }, briefs: { due: 14, on_time: 10, late: 2, missed: 2, on_time_pct: 71.4 },
           visits_booked: 2, test_drives: 1, sold: 0, lost: 5, conversion_pct: 0, warnings: { active: 5, excused: 0, by_type: { no_claim: 1, no_call: 1, missed_brief: 1, missing_proof: 1, customer_denied: 1 } }, score: 41, weight: 0.68, flag: "review" }),
       ],
     },
@@ -201,8 +209,10 @@ export function createAccStore({ role, myName, src, leads, fire, stamp }) {
         if (role === "staff" || !visibleTo(id)) throw notFound();
         const a = clone(lead(id));
         a.enabled = true; a.brief_outcomes = OUTCOMES;
-        if (role === "salesman") a.warnings = a.warnings.filter((x) => x.seat === myName);
-        else {
+        if (role === "salesman") {
+          a.warnings = a.warnings.filter((x) => x.seat === myName);
+          if (a.proof) delete a.proof.tick;          // the AI's verdict is for reviewers only
+        } else {
           const tier = rowOf(id)?.tier_key, band = TIER_SEATS[tier] || [];
           a.seats = [...SEATS, P].map((s) => ({ seat: s, band: band.includes(s) }));
         }
@@ -210,6 +220,16 @@ export function createAccStore({ role, myName, src, leads, fire, stamp }) {
         return a;
       }
       if (path === "acc/review") { await data(); if (role === "salesman" || role === "staff") throw new ApiError(403, "forbidden", "You do not have access to this."); return { data: clone(db.queue) }; }
+      if (path === "acc/proofs") {                    // the Checked tab: every proof that is not waiting, newest first
+        await data();
+        if (role === "salesman" || role === "staff") throw new ApiError(403, "forbidden", "You do not have access to this.");
+        const rows = Object.entries(db.lead).map(([lid, L]) => ({ lid: +lid, L })).filter(({ L }) => L.proof && !["due", "cancelled"].includes(L.proof.state))
+          .map(({ lid, L }) => ({ proof_id: L.proof.id, lead_id: lid, seat: L.state?.holder || K, state: L.proof.state, submitted_at: L.proof.submitted_at, file_id: L.proof.file_id,
+            image_url: L.proof.image_url, reviewed_by: L.proof.reviewed_by, reviewed_at: L.proof.reviewed_at, tick: L.proof.tick || null, phone_last4: null, customer: null }))
+          .filter((x) => (!p.seat || x.seat === p.seat) && (!p.verdict || x.tick?.verdict === p.verdict))
+          .sort((a, b) => String(b.submitted_at || "").localeCompare(String(a.submitted_at || "")));
+        return { data: clone(rows), page: 1, page_size: 100, total: rows.length };
+      }
       if (path === "acc/warnings") {
         await data();
         let rows = db.warnings.slice();
@@ -227,7 +247,9 @@ export function createAccStore({ role, myName, src, leads, fire, stamp }) {
       }
       if (path === "acc/scorecard") {
         await data();
-        const rows = role === "salesman" ? db.scorecard.data.filter((x) => x.seat === myName) : db.scorecard.data;
+        const rows = role === "salesman"
+          ? clone(db.scorecard.data.filter((x) => x.seat === myName)).map((x) => { ["spoke_ticks", "ai_mismatch", "ai_look"].forEach((k) => delete x.proofs[k]); return x; })
+          : db.scorecard.data;
         const sum = (f) => db.scorecard.data.reduce((a, x) => a + (x[f] || 0), 0);
         const team = role === "salesman" ? null : { seat: null, received: sum("received"), claimed: sum("claimed"), passed_on: sum("passed_on"), called_in_time_pct: 86.6, median_first_call_min: 4.5,
           briefs: { on_time_pct: 87.9, missed: 4 }, warnings: { active: db.warnings.filter((x) => x.status === "active").length, excused: db.warnings.filter((x) => x.status === "excused").length }, sold: sum("sold") };

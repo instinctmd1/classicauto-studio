@@ -1,7 +1,7 @@
 // Settings: staff, rules and rates, the lead engine link, and live sessions. Users and access live on their own page.
 import * as api from "../api.js";
 import { get } from "../api.js";
-import { state, can } from "../state.js";
+import { state, can, isSuper } from "../state.js";
 import { ago, badge, dateFmt, esc, icon, mount, num, sentence } from "../util.js";
 import { bindTabs, confirmDialog, formDrawer, pageHead, save, tabsHtml, toast } from "../ui.js";
 import { card } from "./_shared.js";
@@ -25,6 +25,7 @@ const RULES = [
 export async function render(ctx) {
   const tab = ctx.query.get("tab") || "staff";
   const tabs = [{ id: "staff", label: "Staff" }, { id: "rules", label: "Rules and rates" }, { id: "engine", label: "Lead engine" }, { id: "sessions", label: "Signed-in now" }];
+  if (isSuper()) tabs.push({ id: "ask", label: "Ask Claude answers" });          // SPEC-ASK-CLAUDE-CHAT 5.3: the super-admin only
   mount(ctx.root, pageHead({ title: "Settings", sub: "Staff, the rules the dashboard uses, and the link to the lead engine." }) + `<section class="card flush rise">${tabsHtml(tabs, tab, "Settings sections")}<div id="pane"></div></section>`);
   const pane = ctx.root.querySelector("#pane");
   const show = async (t) => {
@@ -33,6 +34,7 @@ export async function render(ctx) {
       if (t === "staff") await staffPane(pane, ctx);
       else if (t === "rules") await rulesPane(pane, ctx);
       else if (t === "engine") await enginePane(pane, ctx);
+      else if (t === "ask") await askPane(pane, ctx);
       else await sessionsPane(pane, ctx);
     } catch (e) { pane.innerHTML = `<div class="err-box" role="alert">${icon("alert", "")}<div><b>Could not load this section.</b><span class="muted">${esc(e.message)}</span></div></div>`; }
   };
@@ -97,5 +99,31 @@ async function sessionsPane(pane, ctx) {
     const b = e.target.closest("[data-end]"); if (!b) return;
     if (!(await confirmDialog({ title: "End this session?", text: "They are signed out on their next click.", confirmLabel: "End session", danger: true }))) return;
     await save(b, () => api.del(`admin/sessions/${b.dataset.end}`), { ok: "Session ended" }) && ctx.refresh();
+  });
+}
+
+
+// ------------------------------------------------------------------ Ask Claude answers (SPEC-ASK-CLAUDE-CHAT 5.3, 3.6)
+async function askPane(pane, ctx) {
+  const r = await get("ask/settings");
+  if (!ctx.alive()) return;
+  const c = r.caps || {};
+  pane.innerHTML = `<form id="askf" class="pad-box stack-form ask-set" novalidate>
+    <section><div class="mini-h">The switch</div>
+      <label class="radio"><input type="checkbox" name="ask_ai_chat"${r.ask_ai_chat ? " checked" : ""}> Ask Claude answers free questions and free car messages</label>
+      <p class="hint">Off: the three formats, the cards, Yes, approvals and the website jobs still work. Today: ${num(r.today?.turns || 0)} answers, US$${Number(r.today?.cost_usd || 0).toFixed(2)}.</p></section>
+    <section><div class="mini-h">Daily caps</div><div class="form-grid">
+      <div class="field"><label for="ac1">Questions a person a day</label><input class="input" id="ac1" name="ask_ai_turns_per_user_day" type="number" min="0" max="5000" step="1" value="${+c.ask_ai_turns_per_user_day || 0}"></div>
+      <div class="field"><label for="ac2">Questions in all a day</label><input class="input" id="ac2" name="ask_ai_turns_day" type="number" min="0" max="5000" step="1" value="${+c.ask_ai_turns_day || 0}"></div>
+      <div class="field"><label for="ac3">Spend a day (US$)</label><input class="input" id="ac3" name="ask_ai_usd_day" type="number" min="0" max="100" step="0.5" value="${Number(c.ask_ai_usd_day || 0)}"></div></div></section>
+    <section><div class="mini-h">What is sent to Anthropic, and only while the switch is on</div><ul class="plain-list">${(r.sent || []).map((x) => `<li>${esc(x)}</li>`).join("")}</ul></section>
+    <div class="form-actions"><button class="btn primary" type="submit">Save</button></div></form>`;
+  pane.querySelector("#askf").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const f = e.currentTarget;
+    const body = { ask_ai_chat: f.ask_ai_chat.checked, ask_ai_turns_per_user_day: Math.round(+f.ask_ai_turns_per_user_day.value),
+      ask_ai_turns_day: Math.round(+f.ask_ai_turns_day.value), ask_ai_usd_day: +f.ask_ai_usd_day.value };
+    const ok = await save(f.querySelector("[type=submit]"), () => api.post("ask/settings", body));
+    if (ok) askPane(pane, ctx);
   });
 }

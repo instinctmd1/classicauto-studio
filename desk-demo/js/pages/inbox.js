@@ -6,6 +6,7 @@ import { pageHead, toast } from "../ui.js";
 import * as desk from "../desk-api.js";
 import { blockedHelp, canPromptInstall, channelLabel, clockHtml, deskAgo, enableNotifications, every, isAndroid, isIOS, isStandalone, notifyState, onFeed, onWindow, promptInstall, setServerNow, STAGE_LABEL, startTicker, tierShort } from "../desk.js";
 import { accOn, rowChip, todoStrip } from "./_acc.js";
+import { rollcallStrip } from "./_rollcall.js";
 
 const OWN = () => !can("records.all");
 const VIEWS_OWN = [["mine", "Mine"], ["grabs", "Grab"], ["closed", "Closed"]];
@@ -34,6 +35,7 @@ export async function render(ctx) {
   ctx.root.innerHTML = `${pageHead({ title: "Inbox", sub: esc(sub) })}
     <div id="ib-strips"></div>
     <div id="ib-todo"></div>
+    <div id="ib-roll"></div>
     <div class="ib-bar">
       <div class="seg ib-views${views.length > 4 ? " five" : ""}" role="tablist" aria-label="Which leads">${views.map(([v, label]) => `<button type="button" role="tab" data-view="${v}" aria-selected="${v === st.view}"${v === "night" ? ' title="Night queue: leads that came in after closing"' : ""}>${v === "night" ? `${icon("moon", "")}<span class="sr">Night queue</span>` : esc(label)}<span class="n" data-count="${v}"></span></button>`).join("")}</div>
       <div class="ib-tools">
@@ -46,6 +48,7 @@ export async function render(ctx) {
     <div class="ib-more" id="ib-more"></div>`;
   startTicker();
   strips(ctx, ns);
+  rollcallStrip($("#ib-roll"), ctx.alive);            // the evening roll-call, when one is waiting (APP-SPEC 12)
 
   // the To do strip (call accountability): calls, briefs and screenshots due, with live countdowns. Fail closed: an
   // engine that does not answer hides it.

@@ -1,9 +1,9 @@
 // Manager command centre: the floor, today. No rupee figure appears anywhere on this page; the API strips them anyway.
-import { get } from "../api.js";
+import { get, put } from "../api.js";
 import { state, can, periodLabel, chan, bandShort } from "../state.js";
-import { ago, dateFmt, duration, esc, icon, minutes, minutesSince, mount, nowIstStr, num, pct, sentence, title } from "../util.js";
+import { ago, badge, dateFmt, duration, esc, icon, minutes, minutesSince, mount, nowIstStr, num, pct, sentence, title } from "../util.js";
 import { catAxis, gridBox, legendBox, mountChart, tipHtml, tooltip, valAxis } from "../charts.js";
-import { pageHead } from "../ui.js";
+import { formDrawer, pageHead } from "../ui.js";
 import { card, followupInfo } from "./_shared.js";
 import { firstName, greeting, healthHtml, loadHealth } from "./_brief.js";
 import { improveHtml, improvements } from "./_improve.js";
@@ -15,13 +15,14 @@ const hhmm = (ts) => String(ts || "").slice(11, 16);
 
 export async function render(ctx) {
   const p = ctx.period;
-  const [today, lb, analytics, aging, K, fbRes, rto, appr, nv] = await Promise.all([
+  const [today, lb, analytics, aging, K, fbRes, rto, appr, nv, sc] = await Promise.all([
     settle(get("today")), can("team.view") ? settle(get("team/leaderboard", { period: p })) : null,
     can("leads.view") ? settle(get("leads/analytics", { period: p })) : null,
     settle(get("cars/aging")), settle(get("kpis", { period: p })),
     can("activity.use") ? settle(get("feedback")) : null, can("rto.view") ? settle(get("rto-cases")) : null,
     can("approvals.manage") ? settle(get("approvals")) : null,
     can("team.view") && can("records.all") ? settle(get("leads/never-visited", { days: 7 })) : null,
+    can("records.all") ? settle(get("standing-context")) : null,
   ]);
   if (!ctx.alive()) return;
   const T = today || {};
@@ -62,7 +63,7 @@ export async function render(ctx) {
   for (const l of unclaimed) { const e = bySalesman.get(l.salesman) || bySalesman.set(l.salesman, { name: l.salesman, assigned: 0, missed: 0, waiting: [] }).get(l.salesman); e.waiting.push(l); }
   const people = [...bySalesman.values()].sort((a, b) => b.waiting.length - a.waiting.length || b.missed - a.missed);
   const waitingList = unclaimed.length
-    ? `<ul class="list">${unclaimed.sort((a, b) => b.wait - a.wait).map((l) => `<li><span class="grow"><div class="t">${esc(l.name)} · ${esc(l.car || "No car named")}</div><div class="s">${esc(chan(l.channel))} · ${esc(short(l.salesman))} · arrived ${hhmm(l.first_seen_ts)}${l.band && l.band !== "unknown" ? " · " + esc(bandShort(l.band)) : ""}</div></span>${l.wait > slaMin ? `<span class="timer" title="Waiting past the ${slaMin} minute target">${duration(l.wait)}</span>` : `<span class="pill pos">${duration(l.wait)}</span>`}</li>`).join("")}</ul>`
+    ? `<ul class="list">${unclaimed.sort((a, b) => b.wait - a.wait).map((l) => `<li><span class="grow"><div class="t">${esc(l.name)} · ${esc(l.car || "No car named")}${l.returning ? ` ${badge("Returning", "pos")}` : ""}</div><div class="s">${esc(chan(l.channel))} · ${esc(short(l.salesman))} · arrived ${hhmm(l.first_seen_ts)}${l.band && l.band !== "unknown" ? " · " + esc(bandShort(l.band)) : ""}</div>${l.returning && l.returning_note ? `<div class="s">${esc(short(l.returning_note))}</div>` : ""}</span>${l.wait > slaMin ? `<span class="timer" title="Waiting past the ${slaMin} minute target">${duration(l.wait)}</span>` : `<span class="pill pos">${duration(l.wait)}</span>`}</li>`).join("")}</ul>`
     : `<div class="empty">${icon("check", "")}<b>No lead is waiting</b><p>Every lead that came in has been claimed.</p></div>`;
   const smRows = people.length ? `<div class="salesman-grid">${people.map((s) => `<div class="sm-row"><div class="nm"><span class="avatar sm">${esc(short(s.name).slice(0, 2).toUpperCase())}</span><span>${esc(short(s.name))}<small>${s.waiting.length ? `${s.waiting.length} waiting now` : "Nothing waiting"}</small></span></div>
       <div class="m${s.missed > 3 ? " bad" : ""}"><b>${num(s.missed)}</b><span>Missed</span></div><div class="m"><b>${s.median != null ? s.median : "—"}</b><span>Median min</span></div><div class="m${s.conv >= 10 ? " ok" : s.conv === 0 && s.assigned >= 5 ? " bad" : ""}"><b>${s.conv != null ? pct(s.conv, 0) : "—"}</b><span>Converted</span></div></div>`).join("")}</div>` : "";
@@ -91,12 +92,19 @@ export async function render(ctx) {
   const apprList = waitingAppr.length ? `<ul class="list">${waitingAppr.slice(0, 5).map((a) => `<li><a class="grow" href="#/approvals"><div class="t">${esc(KIND[a.kind] || sentence(a.kind))} · ${esc(a.stock_no)} ${esc(a.make)} ${esc(a.model)}</div><div class="s">${esc(short(a.requested_by_name || ""))} · ${esc(ago(a.requested_at))}${a.until ? ` · for ${esc(dateFmt(a.until, false))}` : a.change_pct != null ? ` · ${esc(pct(Math.abs(a.change_pct)))} ${a.change_pct < 0 ? "below" : "above"} asking` : ""}</div></a>${a.below_floor ? `<span class="badge neg">Below floor</span>` : `<span class="badge warn">Waiting</span>`}</li>`).join("")}</ul>`
     : `<div class="empty">${icon("check", "")}<b>Nothing is waiting for your OK</b><p>Price changes, discounts, test drives and holds that salesmen ask for land here.</p></div>`;
 
+  // --- the standing line for the content and ad agents (MD-5); no agent reads it yet, so the copy says so
+  const S = sc?.standing;
+  const scBody = S ? `<ul class="list"><li><span class="grow"><div class="t">${esc(S.text)}</div><div class="s">Set by ${esc(short(S.set_by || ""))} · ${esc(ago(S.set_at))}. Post and ad drafts will follow it once those agents are connected.</div></span></li></ul>`
+    : `<div class="empty">${icon("inbox", "")}<b>No standing line set</b><p>One line on what to push, for example "Push SUVs under 15 L this week".</p></div>`;
+  const returningN = unclaimed.filter((l) => l.returning).length;
+
   mount(ctx.root, pageHead({ title: "Manager desk", sub: `${esc(greeting())}, ${esc(firstName())}. ${esc(dateFmt(state.today))}. Everything the floor needs today, in the order to do it.` })
     + (healthHtml(health) ? `<div class="health-bar rise">${healthHtml(health)}</div>` : "")
     + strip + monthStrip
     + `<div class="cmd sec-gap">
+      ${sc ? card({ title: "Standing line for the agents", sub: "What to push right now. It also shows in the owner's morning recap.", cls: "c12", id: "standing", actions: sc.can_edit ? `<button class="btn sm" type="button" id="sc-edit">${S ? "Change" : "Set a line"}</button>` : "", body: scBody }) : ""}
       ${card({ title: "What to do next", sub: "Each line says what to do", cls: "c7", body: improveHtml(next, 5) })}
-      ${card({ title: "Leads waiting", sub: `${unclaimed.length} unclaimed. The target is ${slaMin} minutes.`, cls: "c5", body: waitingList })}
+      ${card({ title: "Leads waiting", sub: `${unclaimed.length} unclaimed${returningN ? `, ${returningN} from returning customers` : ""}. The target is ${slaMin} minutes.`, cls: "c5", body: waitingList })}
       ${nv ? card({ title: "Claimed, never visited", sub: `${num(nv.total)} open ${nv.total === 1 ? "lead" : "leads"} claimed 7 or more days ago with no showroom visit or test drive logged.`, cls: "c7", actions: `<a class="btn sm" href="#/team?view=never">See all ${icon("right")}</a>`, body: neverVisitedCompact(nv) }) : ""}
       ${appr ? card({ title: "Waiting for your OK", sub: `${num(waitingAppr.length)} ${waitingAppr.length === 1 ? "request" : "requests"}, oldest first`, cls: "c5", actions: `<a class="btn sm" href="#/approvals">Approvals ${icon("right")}</a>`, body: apprList }) : ""}
       ${card({ title: "Today's schedule", sub: "Test drives and follow-ups in time order. The highlighted one is next.", cls: "c5", body: scheduleList })}
@@ -107,6 +115,11 @@ export async function render(ctx) {
       ${card({ title: "Feedback to resolve", sub: `${feedbackOpen.length} unresolved, oldest first`, cls: "c5", actions: `<a class="btn sm" href="#/feedback">All feedback ${icon("right")}</a>`, body: fbList })}
     </div>`);
   ctx.root.querySelectorAll("[data-at]").forEach((n) => n.style.setProperty("--at", n.dataset.at + "%"));
+  ctx.root.querySelector("#sc-edit")?.addEventListener("click", () => formDrawer({
+    title: "Standing line for the agents", sub: "One line, kept until you change it. Leave it empty to clear it.", submit: "Save", ok: "Saved",
+    fields: [{ name: "text", label: "What should the agents push?", full: true, value: S?.text || "", placeholder: "Push SUVs under 15 L this week", hint: `At most ${sc.max_len || 160} characters. No phone numbers.` }],
+    onSubmit: async (vals) => { await put("standing-context", { text: vals.text ?? "" }); ctx.refresh(); },
+  }));
 
   if (resp.length) {
     const names = resp.map((r) => short(r.salesman));

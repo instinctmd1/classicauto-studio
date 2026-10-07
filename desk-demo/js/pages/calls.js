@@ -53,7 +53,8 @@ async function salesman(ctx, host) {
         <div><dt>Claim a lead within</dt><dd class="big">${esc(t.claim_sla_min ?? "—")} min</dd></div>
         <div><dt>First call within</dt><dd class="big">${esc(t.call_sla_min ?? "—")} min</dd></div>
         <div><dt>Brief asked for</dt><dd class="big">${esc(t.brief_prompt_min ?? "—")} min</dd><dd class="muted">after you press Call</dd></div>
-        <div><dt>Screenshot and brief by</dt><dd class="big">${esc(t.proof_due_min ?? "—")} min</dd><dd class="muted">after you claim</dd></div></dl>`);
+        <div><dt>Screenshot and brief by</dt><dd class="big">${esc(t.proof_due_min ?? "—")} min</dd><dd class="muted">after you claim</dd></div></dl>
+        ${t.followup && t.followup.enabled ? `<p class="muted small-note cw-fu-line">${icon("flag", "")}Follow-up list every ${esc(t.followup.cycle_days)} day${t.followup.cycle_days === 1 ? "" : "s"} at ${esc(t.followup.run_at)}${t.followup.heads_up ? "; you are warned the day before" : ""}. <a href="#/followups">My follow-ups</a></p>` : ""}`);
     } catch (e) { box.querySelector(".skel")?.replaceWith(unavailable(e)); }
   };
   const todo = async () => {
@@ -103,7 +104,10 @@ function scoreBlock(r) {
       ${tile("Briefs on time", pctOr(b.on_time_pct), `${num(b.on_time ?? 0)} on time · ${num(b.late ?? 0)} late · ${num(b.missed ?? 0)} missed`)}
       ${tile("Conversion", pctOr(r.conversion_pct), `${num(r.sold ?? 0)} sold · ${num(r.visits_booked ?? 0)} visits · ${num(r.test_drives ?? 0)} drives`)}
       ${tile("Screenshots", `${num((p.approved ?? 0) + (p.approved_auto ?? 0) + (p.verified ?? 0))}`, `approved · ${num(p.pending ?? 0)} waiting · ${num((p.missed ?? 0) + (p.rejected ?? 0))} missed or rejected`)}
+      ${p.spoke_ticks !== undefined ? tile("Spoke ✓", num(p.spoke_ticks ?? 0), "screenshot or Exotel shows he spoke") : ""}
+      ${p.ai_mismatch !== undefined ? tile("Mismatch", num(p.ai_mismatch ?? 0), `the AI says look first · ${num(p.ai_look ?? 0)} to look at`) : ""}
       ${tile("Warnings", num(w.active ?? 0), `${num(w.excused ?? 0)} excused · passed on ${num(r.passed_on ?? 0)} time${r.passed_on === 1 ? "" : "s"}`)}
+      ${r.reshuffled_away !== undefined ? tile("Moved away", num(r.reshuffled_away ?? 0), "leads moved by the follow-up list") : ""}
     </div>`;
 }
 
@@ -156,9 +160,13 @@ async function teamView(ctx, host) {
 const COLS = [
   ["seat", "Salesman"], ["score", "Score"], ["received", "Leads"], ["claim_rate_pct", "Claimed"], ["passed_on", "Passed on"],
   ["median_first_call_min", "First call"], ["called_in_time_pct", "Called in time"], ["briefs_on_time", "Briefs on time"],
-  ["proofs_open", "Screenshots"], ["warnings_active", "Warnings"], ["visits_booked", "Visits"], ["sold", "Sold"], ["conversion_pct", "Conv."],
+  ["proofs_open", "Screenshots"], ["spoke_ticks", "Spoke ✓"], ["ai_mismatch", "Mismatch"], ["warnings_active", "Warnings"],
+  ["reshuffled_away", "Moved away"], ["visits_booked", "Visits"],
+  ["sold", "Sold"], ["conversion_pct", "Conv."],
 ];
-const sortVal = (r, k) => (k === "briefs_on_time" ? r.briefs?.on_time_pct : k === "warnings_active" ? r.warnings?.active : k === "proofs_open" ? (r.proofs?.pending ?? 0) + (r.proofs?.missed ?? 0) : r[k]);
+const AI_COLS = new Set(["spoke_ticks", "ai_mismatch"]);       // the AI screenshot check (SPEC-SCREENSHOT-AI 2.10): reviewers' scorecards only
+const sortVal = (r, k) => (k === "briefs_on_time" ? r.briefs?.on_time_pct : k === "warnings_active" ? r.warnings?.active : k === "proofs_open" ? (r.proofs?.pending ?? 0) + (r.proofs?.missed ?? 0)
+  : AI_COLS.has(k) ? r.proofs?.[k] : r[k]);
 
 async function teamTab(ctx, pane, st) {
   let r;
@@ -173,6 +181,8 @@ async function teamTab(ctx, pane, st) {
       return ((va ?? -1) - (vb ?? -1)) * st.dir;
     });
     const t = r.team || {};
+    const ai = (r.data || []).some((x) => x.proofs && x.proofs.spoke_ticks !== undefined);
+    const cols = COLS.filter(([k]) => ai || !AI_COLS.has(k));
     pane.innerHTML = `<div class="cw-bar"><div class="seg" role="group" aria-label="Period" id="tw-per">${PERIODS.map(([k, l]) => `<button type="button" data-p="${k}" aria-pressed="${k === st.period}">${l}</button>`).join("")}</div>
       <p class="muted cw-how">${esc(r.how || "")}</p></div>
       <div class="kpis four">
@@ -182,14 +192,16 @@ async function teamTab(ctx, pane, st) {
         ${kpi("Warnings", num(t.warnings?.active ?? 0), `${num(t.warnings?.excused ?? 0)} excused`)}
       </div>
       <section class="card flush rise"><div class="card-h"><div><h2>Scorecards</h2><div class="card-sub">Tap a name for that salesman's to-dos and warnings. Tap a column to sort.</div></div></div>
-      ${rows.length ? `<div class="scroll-x"><table class="tbl sc-tbl"><thead><tr>${COLS.map(([k, l]) => `<th scope="col"><button type="button" class="th-sort" data-sort="${k}" aria-sort="${st.sort === k ? (st.dir > 0 ? "ascending" : "descending") : "none"}">${esc(l)}${st.sort === k ? icon(st.dir > 0 ? "up" : "down", "") : ""}</button></th>`).join("")}</tr></thead>
+      ${rows.length ? `<div class="scroll-x"><table class="tbl sc-tbl"><thead><tr>${cols.map(([k, l]) => `<th scope="col"><button type="button" class="th-sort" data-sort="${k}" aria-sort="${st.sort === k ? (st.dir > 0 ? "ascending" : "descending") : "none"}">${esc(l)}${st.sort === k ? icon(st.dir > 0 ? "up" : "down", "") : ""}</button></th>`).join("")}</tr></thead>
       <tbody>${rows.map((x) => `<tr class="lb-row" tabindex="0" role="button" data-seat="${esc(x.seat)}" aria-label="Open ${esc(x.seat)}">
         <td><div class="who2"><span class="cell-main"><b>${esc(x.seat)}</b><small>${flagChip(x.flag)}${x.off_today ? `<span class="badge">Off today</span>` : ""}${!x.rated ? `<span class="muted">new, not rated</span>` : ""}</small></span></div></td>
         <td><b>${x.score ?? "—"}</b><small class="muted"> ${x.rated && x.weight ? `${x.weight.toFixed(2)}×` : ""}</small></td>
         <td>${num(x.received ?? 0)}</td><td>${pctOr(x.claim_rate_pct)}</td><td>${x.passed_on ? `<span class="badge warn">${num(x.passed_on)}</span>` : "0"}</td>
         <td>${minOr(x.median_first_call_min)}</td><td>${pctOr(x.called_in_time_pct)}</td><td>${pctOr(x.briefs?.on_time_pct)}</td>
         <td>${num((x.proofs?.approved ?? 0) + (x.proofs?.approved_auto ?? 0) + (x.proofs?.verified ?? 0))}${x.proofs?.pending ? ` <span class="badge info">${num(x.proofs.pending)} waiting</span>` : ""}${(x.proofs?.missed ?? 0) + (x.proofs?.rejected ?? 0) ? ` <span class="badge neg">${num((x.proofs.missed ?? 0) + (x.proofs.rejected ?? 0))}</span>` : ""}</td>
+        ${ai ? `<td>${x.proofs?.spoke_ticks ? `<span class="badge tick tick-ok">${num(x.proofs.spoke_ticks)}</span>` : "0"}</td><td>${x.proofs?.ai_mismatch ? `<span class="badge tick tick-bad">${num(x.proofs.ai_mismatch)}</span>` : "0"}</td>` : ""}
         <td>${x.warnings?.active ? `<span class="badge ${x.flag === "review" ? "neg" : x.flag === "watch" ? "warn" : ""}">${num(x.warnings.active)}</span>` : "0"}</td>
+        <td>${x.reshuffled_away ? `<span class="badge warn">${num(x.reshuffled_away)}</span>` : "0"}</td>
         <td>${num(x.visits_booked ?? 0)}</td><td><b>${num(x.sold ?? 0)}</b></td><td>${pctOr(x.conversion_pct)}</td></tr>`).join("")}</tbody></table></div>` : `<div class="empty">${icon("team", "")}<b>No salesmen in the rotation yet</b></div>`}</section>`;
     pane.querySelector("#tw-per").addEventListener("click", (e) => { const b = e.target.closest("[data-p]"); if (!b) return; st.period = b.dataset.p; teamTab(ctx, pane, st); });
     pane.querySelectorAll("[data-sort]").forEach((b) => b.addEventListener("click", () => { const k = b.dataset.sort; st.dir = st.sort === k ? -st.dir : k === "seat" ? 1 : -1; st.sort = k; draw(); }));

@@ -202,6 +202,26 @@ export const every = (ms, fn) => { scope.timers.push(setInterval(fn, ms)); };
 function dispatchFeed(row) {
   scope.feed.slice().forEach((fn) => { try { fn(row); } catch (e) { console.error(e); } });
   scheduleBadges();
+  if (row.kind === "lead.changed" && row.why === "brief_prompt" && row.lead_id) briefBanner(+row.lead_id);
+}
+
+// ------------------------------------------------------------------ "How did the call go?" (SPEC-SCREENSHOT-AI 4.2)
+// The engine asks for the brief a few open minutes after Call. While the app is open, the salesman whose brief it is gets
+// a banner at the top; on that lead's own page the brief sheet opens instead (pages/lead.js). Fixed words, no AI call.
+async function briefBanner(leadId) {
+  if (!can("acc.own") || location.hash.startsWith(`#/lead/${leadId}`)) return;
+  let t;
+  try { t = await desk.get("acc/todo", {}, { background: true }); } catch { return; }
+  if (!(t?.items || []).some((i) => i.kind === "brief" && +i.lead_id === leadId && i.state !== "missed")) return;
+  document.querySelector(".brief-ask")?.remove();
+  const n = document.createElement("div");
+  n.className = "brief-ask rise";
+  n.setAttribute("role", "alert");
+  n.innerHTML = `${icon("edit", "")}<span><b>How did the call with lead #${leadId} go?</b><small>Tell me what the customer said and the plan of action.</small></span>
+    <a class="btn primary sm" href="#/lead/${leadId}?brief=1" data-fill>Fill now</a><button class="btn sm ghost icon-only" type="button" data-x aria-label="Later">${icon("x", "")}</button>`;
+  n.addEventListener("click", (e) => { if (e.target.closest("[data-fill], [data-x]")) n.remove(); });
+  document.body.appendChild(n);
+  setTimeout(() => n.remove(), 5 * 60000);
 }
 window.addEventListener("desk:feed", (e) => dispatchFeed(e.detail || {}));
 
@@ -361,11 +381,12 @@ export async function refreshBadges() {
     const n = (r.data || []).reduce((a, x) => a + (x.unread || 0), 0);
     total += n; paint("chat", n, "Unread messages");
   }).catch(() => {}));
-  if (can("desk.ask") && Date.now() > askQuietUntil) jobs.push(desk.get("ask/tasks", {}, bg).then((r) => {
-    const seen = safeStore("ca.askSeen") || "";
-    const n = (r.data || []).filter((t) => ["done", "needs_medhansh", "failed"].includes(t.status) && (t.updated_at || "") > seen).length;
+  // the Ask Claude chat (SPEC-ASK-CLAUDE-CHAT 9): answers and cards since the person last looked at the thread
+  if (can("desk.ask") && Date.now() > askQuietUntil) jobs.push(desk.get("ask/thread", {}, bg).then((r) => {
+    const seen = Number(safeStore("ca.askSeenId") || 0);
+    const n = (r.messages || []).filter((m) => m.role !== "user" && m.id > seen).length;
     paint("ask", n, "Answers since you last looked");
-  }).catch((e) => { if (e.code === "assistant_down") askQuietUntil = Date.now() + 5 * 60000; }));   // resting: ask again in 5 minutes, not on every feed row
+  }).catch(() => { askQuietUntil = Date.now() + 5 * 60000; }));
   await Promise.all(jobs);
   try { if ("setAppBadge" in navigator && isStandalone()) total ? navigator.setAppBadge(total) : navigator.clearAppBadge(); } catch { /* not supported */ }
 }

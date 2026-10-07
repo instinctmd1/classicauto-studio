@@ -18,11 +18,17 @@ const NAV = [
     { id: "inbox", label: "Inbox", icon: "inbox", any: ["desk.inbox"], badge: "inbox" },
     { id: "chat", label: "Team chat", icon: "chat", any: ["chat.use"], badge: "chat" },
     { id: "ask", label: "Ask Claude", icon: "spark", any: ["desk.ask"], badge: "ask" },
+    // car intake (SPEC-CAR-INTAKE 6.6): in More and the desktop Desk group, no new bottom tab
+    { id: "intake/new?kind=new_car", label: "New car", icon: "plus", any: ["stock.intake"] },
+    { id: "intake/new?kind=sold", label: "Car sold", icon: "tag", any: ["stock.intake"] },
     // call accountability (ACCOUNTABILITY-SPEC 11.4): in More and the desktop Desk group, no new bottom tab. Call rules also
     // shows while accountability is off (the owners switch it on there), once the engine knows about it.
     { id: "calls", label: "Calls and warnings", icon: "flag", any: ["acc.own", "acc.team"], onlyIf: () => !!state.deskFlags?.acc },
     { id: "proofs", label: "Screenshots to check", icon: "image", any: ["acc.review"], onlyIf: () => !!state.deskFlags?.acc },
     { id: "rules", label: "Call rules", icon: "clock", any: ["acc.settings"], onlyIf: () => "acc" in (state.deskFlags || {}) },
+    // the evening roll-call and the owner reports (APP-SPEC 12): live app only (the demo bundle has no engine to answer them)
+    { id: "rollcall", label: "Roll-call", icon: "moon", any: ["desk.inbox"], onlyIf: () => !DEMO },
+    { id: "reports", label: "Owner reports", icon: "reports", any: ["records.all"], onlyIf: () => !DEMO && (isSuper() || ["owner", "manager"].includes(state.user?.role)) },
     { id: "install", label: "Install the app", icon: "download", any: [], onlyIf: () => !isStandalone() } ] },
   { group: null, items: [
     { id: "home", label: "Home", icon: "overview", any: [], period: true },
@@ -35,6 +41,7 @@ const NAV = [
     { id: "bank", label: "Bank and finance", icon: "bank", any: ["bank.view"] } ] },
   { group: "The lot", items: [
     { id: "inventory", label: "Stock", icon: "car", any: ["stock.view"] },
+    { id: "intakes", label: "Cars in and out", icon: "repeat", any: ["stock.intake", "stock.manage"] },
     { id: "pns", label: "Park-N-Sell", icon: "repeat", any: ["stock.manage"] },
     { id: "deals", label: "Deals", icon: "tag", any: ["deals.view"] },
     { id: "approvals", label: "Approvals", icon: "flag", any: ["approvals.manage", "approvals.request"] },
@@ -53,7 +60,7 @@ const NAV = [
     { id: "admin", label: "Settings", icon: "settings", any: ["settings.manage"] },
     { id: "audit", label: "Audit log", icon: "history", any: ["audit.view"] } ] },
 ];
-const EXTRA = { lead: { label: "Lead", any: ["desk.inbox"] }, overview: { label: "Profit overview", any: ["money.view"], all: ["records.all"], period: true }, security: { label: "Security", any: [] }, mine: { label: "Home", any: [] }, manager: { label: "Home", any: [] } };
+const EXTRA = { intake: { label: "Car intake", any: ["stock.intake", "stock.manage"] }, lead: { label: "Lead", any: ["desk.inbox"] }, overview: { label: "Profit overview", any: ["money.view"], all: ["records.all"], period: true }, security: { label: "Security", any: [] }, mine: { label: "Home", any: [] }, manager: { label: "Home", any: [] } };
 const ALL = Object.fromEntries([...NAV.flatMap((g) => g.items).map((p) => [p.id, p]), ...Object.entries(EXTRA).map(([k, v]) => [k, { id: k, ...v }])]);
 const app = document.getElementById("app");
 
@@ -426,7 +433,7 @@ function onRoute(restoreY = 0) {
 // ------------------------------------------------------------------ boot
 // The demo recordings predate the Desk capabilities: the demo adds the role defaults (APP-SPEC 8.2) when they are missing.
 const ACC_TEAM = ["acc.own", "acc.team", "acc.review", "acc.reassign", "acc.warnings.manage"];
-const DESK_DEMO_CAPS = { owner: ["desk.inbox", "desk.leads.act", "desk.ai_call", "chat.use", "desk.ask", ...ACC_TEAM, "acc.settings"], manager: ["desk.inbox", "desk.leads.act", "desk.ai_call", "chat.use", "desk.ask", ...ACC_TEAM], salesman: ["desk.inbox", "desk.leads.act", "desk.ai_call", "chat.use", "acc.own"] };
+const DESK_DEMO_CAPS = { owner: ["desk.inbox", "desk.leads.act", "desk.ai_call", "chat.use", "desk.ask", ...ACC_TEAM, "acc.settings", "stock.intake"], manager: ["desk.inbox", "desk.leads.act", "desk.ai_call", "chat.use", "desk.ask", ...ACC_TEAM, "stock.intake"], salesman: ["desk.inbox", "desk.leads.act", "desk.ai_call", "chat.use", "acc.own", "stock.intake"] };
 function applyMe(me) {
   if (DEMO) me.capabilities = [...new Set([...(me.capabilities || []), ...(DESK_DEMO_CAPS[me.user.role] || [])])];
   state.user = me.user;

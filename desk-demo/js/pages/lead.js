@@ -7,8 +7,8 @@ import { confirmDialog, formDrawer, toast } from "../ui.js";
 import * as desk from "../desk-api.js";
 import { DEMO } from "../api.js";
 import { channelLabel, clockHtml, deskAgo, deskNow, deskTime, onFeed, setServerNow, STAGE_LABEL, STAGES, startTicker } from "../desk.js";
-import { BRIEF_STATE, CALL_STATUS, INTEREST_LABEL, OUTCOMES, PASS_WHY, PROOF_STATE, SOURCE, WARN, briefToFill, dueChip, exotelOn, fmtDur, openBrief,
-  openProof, openReassign, outcomeLabel } from "./_acc.js";
+import { BRIEF_STATE, CALL_STATUS, INTEREST_LABEL, OUTCOMES, PASS_WHY, PROOF_STATE, SOURCE, VERDICT_SHORT, WARN, briefToFill, dueChip, exotelOn, flagChip,
+  fmtDur, openBrief, openProof, openReassign, outcomeLabel, shows, tickChip } from "./_acc.js";
 
 const LOST = [["price", "Price too high"], ["finance_rejected", "Loan not approved"], ["bought_elsewhere", "Bought elsewhere"], ["car_already_sold", "Car already sold"],
   ["exchange_value", "Exchange value too low"], ["customer_unreachable", "Could not reach the customer"], ["not_serious", "Not serious"], ["location", "Too far away"], ["other", "Other reason"]];
@@ -22,20 +22,22 @@ const KIND = {
   brief_submitted: ["Brief filled", "edit"], brief_late: ["Brief filled late", "edit"], brief_missed: ["Brief missed", "clock"],
   proof_submitted: ["Call screenshot sent", "camera"], proof_approved: ["Screenshot approved", "check"], proof_rejected: ["Screenshot rejected", "x"],
   proof_waived: ["Screenshot waived", "check"], proof_missed: ["No call screenshot", "clock"], proof_verified: ["Call verified", "check"],
+  proof_ai: ["Screenshot read", "image"],
   pass: ["Passed on", "repeat"], released: ["Released", "clock"], reassigned_manual: ["Moved by hand", "repeat"], warning: ["Warning", "flag"],
   warning_excused: ["Warning excused", "check"], followup_due: ["Follow-up due", "bell"], lost_override: ["Closed by a manager", "x"],
 };
 const ACC_KINDS = new Set(["call_attempt", "call_result", "brief_prompt", "brief_reminder", "brief_submitted", "brief_late", "brief_missed", "proof_submitted",
-  "proof_approved", "proof_rejected", "proof_waived", "proof_missed", "proof_verified", "pass", "released", "reassigned_manual", "escalated", "warning",
+  "proof_approved", "proof_rejected", "proof_waived", "proof_missed", "proof_verified", "proof_ai", "pass", "released", "reassigned_manual", "escalated", "warning",
   "warning_excused", "followup_due"]);
 const TO_SEAT = new Set(["pass", "reassigned", "reassigned_manual", "escalated"]);
 const PURPOSES = [["callback", "Call back the customer"], ["post_visit_followup", "Follow up after a visit"], ["feedback", "Ask for feedback"]];
+const AI_CHANNELS = [["call", "Call"], ["whatsapp", "WhatsApp"]];
 
 export async function render(ctx) {
   const id = Number(ctx.id);
   if (!Number.isInteger(id) || id <= 0) { ctx.root.innerHTML = `<div class="lead-wrap">${notFound()}</div>`; return; }
   startTicker();
-  let d = null, acc = null, accErr = false, autoOpened = false;
+  let d = null, acc = null, accErr = false, autoOpened = false, briefAsked = false;
   ctx.root.innerHTML = `<div class="lead-wrap"><div class="skel lead-skel tall"></div><div class="skel lead-skel"></div></div>`;
   const wrap = ctx.root.firstElementChild;          // listeners live on this node, so they end with the page
 
@@ -67,6 +69,11 @@ export async function render(ctx) {
       autoOpened = true;
       if (ctx.query.get("brief") === "1" && a.brief) fillBrief();
       else if (ctx.query.get("proof") === "1" && a.proof_upload) addProof();
+    } else if (briefAsked && acc && a.brief) {
+      // the app asked for the brief while this lead was open (SPEC-SCREENSHOT-AI 4.2): the sheet opens straight away
+      briefAsked = false;
+      const b = briefToFill(acc, state.user?.engine_name || null);
+      if (b && b.seat === state.user?.engine_name && !document.querySelector(".brief-sheet")) fillBrief(+b.id);
     }
   }
   function paintAcc() {
@@ -220,22 +227,27 @@ export async function render(ctx) {
   }
 
   function aiCallForm() {
-    const f = formDrawer({ title: "Ask Anita to call", sub: "Anita is the AI caller. You will see what she will say before anything happens.", submit: "Preview", ok: "",
+    const f = formDrawer({ title: "Ask Anita to call or WhatsApp", sub: "Anita is the AI assistant. She calls or messages only in calling hours. You will see what she will say before anything happens.", submit: "Preview", ok: "",
       fields: [
+        { name: "channel", label: "How", type: "select", required: true, full: true, options: AI_CHANNELS, value: "call" },
         { name: "purpose", label: "What for", type: "select", required: true, full: true, options: PURPOSES, value: "callback" },
         { name: "when", label: "When", required: true, full: true, placeholder: "e.g. today 5 pm, kal 11 baje" },
         { name: "note", label: "Anything she should mention (optional)", type: "textarea", full: true }],
       onSubmit: async (v, dr) => {
-        const r = await desk.post(`desk/leads/${id}/ai-call`, { purpose: v.purpose, when: v.when, note: v.note || "" });
-        setTimeout(() => confirmAi(r), 300);
+        const r = await desk.post(`desk/leads/${id}/ai-call`, { purpose: v.purpose, channel: v.channel || "call", when: v.when, note: v.note || "" });
+        setTimeout(() => confirmAi(r, (r.channel || v.channel) === "whatsapp"), 300);   // the engine says which channel it stored
         void dr;
       } });
     f.el.classList.add("sheet");
+    const how = f.form.elements.channel, what = f.form.elements.purpose; let picked = false;   // feedback is a WhatsApp survey:
+    how.addEventListener("change", () => { picked = true; });                                   // it defaults to WhatsApp until
+    what.addEventListener("change", () => { if (!picked) how.value = what.value === "feedback" ? "whatsapp" : "call"; });   // "How" is set by hand
   }
-  function confirmAi(r) {
-    const f = formDrawer({ title: "Confirm the call", sub: r.due_at ? `Planned for ${esc(deskTime(r.due_at))}` : "", submit: "Yes, book the call", ok: "", cancel: "Cancel",
-      before: `<div class="ai-preview">${icon("phone", "")}<p>${esc(r.preview || "")}</p></div>`, fields: [],
-      onSubmit: async () => { await desk.post(`desk/ai-actions/${r.action_id}/confirm`, {}); desk.done("AI call booked"); load(true); } });
+  function confirmAi(r, wa) {
+    const f = formDrawer({ title: wa ? "Confirm the WhatsApp" : "Confirm the call", sub: r.due_at ? `Planned for ${esc(deskTime(r.due_at))}` : "",
+      submit: wa ? "Yes, send the WhatsApp" : "Yes, book the call", ok: "", cancel: "Cancel",
+      before: `<div class="ai-preview">${icon(wa ? "send" : "phone", "")}<p>${esc(r.preview || "")}</p></div>`, fields: [],
+      onSubmit: async () => { await desk.post(`desk/ai-actions/${r.action_id}/confirm`, {}); desk.done(wa ? "AI WhatsApp booked" : "AI call booked"); load(true); } });
     f.el.classList.add("sheet");
     f.el.querySelector("[data-x]")?.addEventListener("click", () => { desk.post(`desk/ai-actions/${r.action_id}/cancel`, {}).catch(() => {}); });
   }
@@ -258,7 +270,11 @@ export async function render(ctx) {
     btn.disabled = false;
   }
 
-  onFeed((row) => { if (/^lead\./.test(row.kind || "") && (!row.lead_id || row.lead_id === id)) load(true); });
+  onFeed((row) => {
+    if (!/^lead\./.test(row.kind || "") || (row.lead_id && row.lead_id !== id)) return;
+    if (row.why === "brief_prompt" && row.lead_id === id) briefAsked = true;
+    load(true);
+  });
   await load();
 }
 
@@ -308,8 +324,10 @@ function accCard(d, acc, accErr) {
   }).join("")}</ol>` : "";
   const [plab, pcls] = p ? PROOF_STATE[p.state] || [p.state, ""] : [];
   const checks = p && p.checks && typeof p.checks === "object" ? Object.entries(p.checks).filter(([, v]) => v === false).map(([k]) => k) : [];
-  const proofHtml = p ? `<div class="acc-proof">${p.image_url ? `<a class="acc-thumb" href="${esc(p.image_url)}" target="_blank" rel="noopener"><img src="${esc(p.image_url)}" alt="Call-history screenshot for this lead" loading="lazy"></a>` : `<span class="acc-thumb none">${icon("camera", "")}</span>`}
-      <div><b>Call screenshot</b> <span class="badge ${pcls}">${esc(plab)}</span>${p.late ? ` <span class="badge warn">Late</span>` : ""}
+  // the AI's tick next to the screenshot: only sent to people who check screenshots (SPEC-SCREENSHOT-AI 2.10)
+  const tick = p && p.tick ? `<div class="acc-tick">${tickChip(p.tick)}${flagChip(p.tick)}</div>${shows(p.tick) ? `<p class="muted acc-shows">${esc(shows(p.tick))}</p>` : ""}` : "";
+  const proofHtml = p ? `<div class="acc-proof">${p.image_url ? `<a class="acc-thumb" href="${esc(p.image_url)}" target="_blank" rel="noopener"><img src="${esc(p.image_url)}" alt="Call-history screenshot for this lead" loading="lazy"></a>` : `<span class="acc-thumb none">${icon(p.tick?.source === "exotel" ? "phone" : "camera", "")}</span>`}
+      <div><b>Call screenshot</b> <span class="badge ${pcls}">${esc(plab)}</span>${p.late ? ` <span class="badge warn">Late</span>` : ""}${tick}
       <p class="muted">${p.declared_call_at ? `Call at ${esc(deskTime(p.declared_call_at))} · ${esc(fmtDur(p.declared_duration_s))}` : p.due_at ? `Due ${esc(deskTime(p.due_at))}` : ""}</p>
       ${checks.length ? `<p class="acc-flags">${icon("alert", "")}Check: ${checks.map((k) => esc({ after_call_press: "time before the Call press", in_window: "time before the claim", on_time: "sent late", duration_vs_brief: "duration vs brief", duplicate: "screenshot used before" }[k] || k)).join(", ")}</p>` : ""}
       ${p.review_note ? `<p><span class="muted">Manager:</span> ${esc(p.review_note)}</p>` : ""}</div></div>` : "";
@@ -360,7 +378,7 @@ function contactRow(l, a, locked, accOn = false) {
 function actionGrid(l, a) {
   const B = (k, label, ic, cls = "") => (a[k] ? `<button class="btn act-btn ${cls}" type="button" data-act="${k === "ai_call" ? "ai" : k}">${icon(ic)}<span>${esc(label)}</span></button>` : "");
   const list = [B("contacted", "Contacted", "phone"), B("visit_booked", "Visit booked", "calendar"), B("test_drive", "Test drive", "car"),
-    B("sold", "Sold", "tag", "good"), B("lost", "Lost", "x", "bad"), B("note", "Add note", "edit"), B("ai_call", "Ask Anita to call", "spark"),
+    B("sold", "Sold", "tag", "good"), B("lost", "Lost", "x", "bad"), B("note", "Add note", "edit"), B("ai_call", "Ask Anita (call or WhatsApp)", "spark"),
     B("reassign", "Move to another salesman", "repeat")].filter(Boolean);
   if (!list.length) return l.status === "new" ? "" : `<p class="muted ld-readonly">${icon("check", "")}Nothing more to do on this lead.</p>`;
   return `<section class="ld-actions" aria-label="Update this lead"><h2 class="eyebrow">Update the lead</h2><div class="act-grid">${list.join("")}</div></section>`;
@@ -409,6 +427,7 @@ function accNote(kind, note) {
   if (kind === "brief_reminder") return p[1] ? `Reminder ${p[1]}` : null;
   if (kind === "brief_submitted" || kind === "brief_late") return outcomeLabel(p[1]) || null;
   if (kind === "warning") return WARN[p[0]] || p[0] || null;
+  if (kind === "proof_ai") return VERDICT_SHORT[p[1]] || null;          // the verdict's words, no time or duration
   return null;
 }
 
