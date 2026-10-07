@@ -55,6 +55,7 @@ export async function render(ctx) {
     try {
       const t = await desk.get("acc/todo", {}, { background: true });
       if (!ctx.alive()) return;
+      setServerNow(t?.server_now);          // the countdowns run on the server's clock, never the phone's
       todoHost.innerHTML = t && t.enabled ? todoStrip(t) : "";
     } catch { if (ctx.alive()) todoHost.innerHTML = ""; }
   }

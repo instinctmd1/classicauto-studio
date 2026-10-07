@@ -7,7 +7,7 @@ import { $, $$, esc, icon, monthLabel, initials, safeStore, setClockShift } from
 import { closeDrawer, closeMenu, confirmDialog, followInPlace, formHtml, openDrawer, openMenu, overlayClosed, overlayOpened, readForm, save, showErrors, toast } from "./ui.js";
 import { disposeCharts } from "./charts.js";
 import { disposeGrids } from "./grid.js";
-import { forgetThisDevice, isStandalone, registerServiceWorker, resetPageScope, sendTestNotification, startBadges, startFeed, stopFeed, syncPush } from "./desk.js";
+import { forgetThisDevice, isStandalone, registerServiceWorker, resetPageScope, sendTestNotification, setServerNow, startBadges, startFeed, stopFeed, syncPush } from "./desk.js";
 import { get as deskGet, resetDeskStore } from "./desk-api.js";
 
 const FIN = ["money.view", "deals.profit.view", "accounts.view", "expenses.view", "bank.view"];
@@ -468,8 +468,11 @@ const onHash = (e) => {
 let flagsAt = 0;
 async function loadDeskFlags() {
   flagsAt = Date.now();
-  try { state.deskFlags = (await deskGet("desk/config", null, { background: true }))?.flags || {}; }
-  catch { state.deskFlags = {}; }
+  try {
+    const c = await deskGet("desk/config", null, { background: true });
+    state.deskFlags = c?.flags || {};
+    setServerNow(c?.server_now);              // every desk countdown and "today" uses the server's clock from the start
+  } catch { state.deskFlags = {}; }
 }
 /** On a page change at most once a minute: call accountability switched on or off shows in the menu without a reload. */
 async function refreshDeskFlags() {

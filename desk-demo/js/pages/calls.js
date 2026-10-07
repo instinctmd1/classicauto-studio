@@ -6,7 +6,7 @@ import { can, state } from "../state.js";
 import { esc, icon, num, pct } from "../util.js";
 import { bindTabs, formDrawer, pageHead, tabsHtml, toast } from "../ui.js";
 import * as desk from "../desk-api.js";
-import { deskNow, deskTime, every, onFeed, openSheet, startTicker } from "../desk.js";
+import { deskNow, deskTime, every, onFeed, openSheet, setServerNow, startTicker } from "../desk.js";
 import { CATEGORY, WARN, accOn, leaveListHtml, openLeaveAdd, todoStrip } from "./_acc.js";
 
 const PERIODS = [["today", "Today"], ["week", "This week"], ["month", "This month"]];
@@ -57,7 +57,7 @@ async function salesman(ctx, host) {
     } catch (e) { box.querySelector(".skel")?.replaceWith(unavailable(e)); }
   };
   const todo = async () => {
-    try { const t = await desk.get("acc/todo", {}, { background: true }); if (ctx.alive()) host.querySelector("#cw-todo").innerHTML = t.enabled ? todoStrip(t, { max: 8 }) : ""; }
+    try { const t = await desk.get("acc/todo", {}, { background: true }); setServerNow(t?.server_now); if (ctx.alive()) host.querySelector("#cw-todo").innerHTML = t.enabled ? todoStrip(t, { max: 8 }) : ""; }
     catch { /* the strip hides: fail closed */ }
   };
   const score = async () => {
@@ -148,7 +148,7 @@ async function teamView(ctx, host) {
   const paneFor = { team: teamTab, warnings: warningsTab, night: nightTab, leave: leaveTab };
   const show = (t) => { tab = t; history.replaceState(null, "", `#/calls${t === "team" ? "" : "?tab=" + t}`); pane.innerHTML = `<div class="skel card h160"></div>`; paneFor[t](ctx, pane, st); };
   bindTabs(host, show);
-  try { const t = await desk.get("acc/todo", {}, { background: true }); if (t.enabled && (t.items?.length || t.review_queue)) host.querySelector("#cw-todo").innerHTML = todoStrip(t); } catch { /* hidden */ }
+  try { const t = await desk.get("acc/todo", {}, { background: true }); setServerNow(t?.server_now); if (t.enabled && (t.items?.length || t.review_queue)) host.querySelector("#cw-todo").innerHTML = todoStrip(t); } catch { /* hidden */ }
   onFeed((row) => { if (row.kind === "acc.changed" && ctx.alive()) show(tab); });
   show(tab);
 }
@@ -210,6 +210,7 @@ async function seatSheet(row, st) {
     body: `${scoreBlock(row)}<div id="ss-todo" class="cw-sub"><div class="skel h60"></div></div><h3 class="eyebrow cw-sub">Warnings, last 30 days</h3><div id="ss-warn"><div class="skel h60"></div></div>` });
   try {
     const t = await desk.get("acc/todo", { seat: row.seat });
+    setServerNow(t?.server_now);
     d.el.querySelector("#ss-todo").innerHTML = t.items?.length ? todoStrip({ items: t.items }, { max: 12, seatLabel: row.seat }) : `<p class="muted">${icon("check", "")} Nothing due right now.</p>`;
   } catch (e) { d.el.querySelector("#ss-todo").replaceChildren(unavailable(e)); }
   const from = new Date(deskNow() + 5.5 * 36e5 - 30 * 864e5).toISOString().slice(0, 10);

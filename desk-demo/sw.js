@@ -1,7 +1,7 @@
 // Classic Auto Desk service worker. Scope "./" so the same file works at / (live) and inside the demo folder.
 // Caches only the app shell (styles, scripts, fonts, icons). Never caches /api, the demo's data/ answers, non-GET or
 // cross-origin requests, and never serves a cached index.html: a sign-in redirect (Cloudflare Access) must reach the browser.
-const VERSION = "desk-2026-10-07.1";
+const VERSION = "desk-2026-10-07.2";
 const CACHE = `ca-desk-${VERSION}`;
 const SHELL = [
   "offline.html", "js/theme-init.js", "js/offline.js", "icons/icon-192.png", "icons/badge-96.png",

@@ -22,12 +22,13 @@ const KIND = {
   brief_submitted: ["Brief filled", "edit"], brief_late: ["Brief filled late", "edit"], brief_missed: ["Brief missed", "clock"],
   proof_submitted: ["Call screenshot sent", "camera"], proof_approved: ["Screenshot approved", "check"], proof_rejected: ["Screenshot rejected", "x"],
   proof_waived: ["Screenshot waived", "check"], proof_missed: ["No call screenshot", "clock"], proof_verified: ["Call verified", "check"],
-  pass: ["Passed on", "repeat"], released: ["Released: no call", "clock"], reassigned_manual: ["Moved by hand", "repeat"], warning: ["Warning", "flag"],
+  pass: ["Passed on", "repeat"], released: ["Released", "clock"], reassigned_manual: ["Moved by hand", "repeat"], warning: ["Warning", "flag"],
   warning_excused: ["Warning excused", "check"], followup_due: ["Follow-up due", "bell"], lost_override: ["Closed by a manager", "x"],
 };
 const ACC_KINDS = new Set(["call_attempt", "call_result", "brief_prompt", "brief_reminder", "brief_submitted", "brief_late", "brief_missed", "proof_submitted",
   "proof_approved", "proof_rejected", "proof_waived", "proof_missed", "proof_verified", "pass", "released", "reassigned_manual", "escalated", "warning",
   "warning_excused", "followup_due"]);
+const TO_SEAT = new Set(["pass", "reassigned", "reassigned_manual", "escalated"]);
 const PURPOSES = [["callback", "Call back the customer"], ["post_visit_followup", "Follow up after a visit"], ["feedback", "Ask for feedback"]];
 
 export async function render(ctx) {
@@ -400,7 +401,7 @@ function accNote(kind, note) {
   const p = String(note || "").split("|").map((x) => x.trim());
   if (kind === "pass") return `${p[1] || "?"} → ${p[2] || "?"} · ${PASS_WHY[p[0]] || p[0]}${p[3] ? ` · round ${p[3]} of ${p[4] || "?"}` : ""}`;
   if (kind === "reassigned_manual") return `${p[1] || "?"} → ${p[2] || "?"} · by ${p[0] || "a manager"}`;
-  if (kind === "released") return "No call in time: back to new";
+  if (kind === "released") return p[0] === "missing_proof" ? "No call screenshot in time: moved on" : "No call in time: moved on";
   if (kind === "escalated") return p[0] === "max_rounds" ? `Went round the team ${p[1] || ""} times: now with the partners or manager` : note;
   if (kind === "call_attempt") return SOURCE[p[1]] || null;
   if (kind === "call_result") return `${CALL_STATUS[p[1]] || p[1] || ""}${+p[2] ? ` · talked ${fmtDur(+p[2])}` : ""}`;
@@ -420,6 +421,9 @@ function timeline(d) {
     if (ACC_KINDS.has(r.kind)) note = accNote(r.kind, note);
     if (r.kind === "lost" && LOST_LABEL[note]) note = LOST_LABEL[note];
     if (r.kind === "visit_booked" && note && /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}/.test(note)) note = `For ${visitWhen(note)}`;
-    return `<li class="k-${esc(r.kind)}"><span class="ic">${icon(ic, "")}</span><div><b>${esc(label)}</b>${r.who ? ` <span class="muted">by ${esc(r.who)}</span>` : ""}${note ? `<p>${esc(note)}</p>` : ""}<time>${esc(deskTime(r.ts))}</time></div></li>`;
+    // the engine writes these on the seat that RECEIVED the lead: "→ Bhavin", never "by Bhavin"
+    const rel = TO_SEAT.has(r.kind) ? "→" : r.kind === "released" ? "from" : r.kind === "warning" || r.kind === "warning_excused" ? "for" : "by";
+    const who = r.who ? ` <span class="muted">${rel} ${esc(r.who)}</span>` : "";
+    return `<li class="k-${esc(r.kind)}"><span class="ic">${icon(ic, "")}</span><div><b>${esc(label)}</b>${who}${note ? `<p>${esc(note)}</p>` : ""}<time>${esc(deskTime(r.ts))}</time></div></li>`;
   }).join("")}</ol>${d.annotation?.lost_reason ? `<p class="muted small-note">Lost because: ${esc(LOST_LABEL[d.annotation.lost_reason] || d.annotation.lost_reason)}</p>` : ""}`;
 }
