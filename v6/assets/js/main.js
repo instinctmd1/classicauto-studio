@@ -80,19 +80,20 @@
   }
 
   /* "You save" (gap plan P1-4, done our way), one method for every car: our price against TODAY'S NEW EQUIVALENT on the road in
-     Mumbai, because a used car's price already includes its registration. `new_price` in data/cars.json names that new car
+     Mumbai, because a used car is already registered (its one-time road tax was paid when new). `new_price` in data/cars.json names that new car
      (the same model's nearest current variant, else the nearest new car of its class, with the reason), the maker's
-     ex-showroom price with its page and the date it was read, and the on-road breakdown: Maharashtra road tax for that fuel
-     and price band, registration and smart-card fees, and first-year insurance estimated as a % of ex-showroom. The saving is
-     rounded DOWN to the nearest Rs 10,000. Shown only when the figure is under 90 days old, the car is for sale with a price,
+     ex-showroom price with its page and the date it was read (plus `note`: how to find the price on that page, and
+     `extra_sources`: supporting pages, each dated), and the on-road breakdown: Maharashtra road tax for that fuel and price
+     band (a flat 20% for an imported car), registration and smart-card fees, and first-year insurance estimated as a % of
+     ex-showroom. The saving is rounded DOWN to the nearest Rs 10,000. Shown only when the figure is under 90 days old, the car is for sale with a price,
      and the saving is at least Rs 50,000; otherwise not at all. The sources for the tax, fees, insurance and TCS rules are
      below, with the date each was read. */
   var NEW_PRICE_MAX_DAYS = 90, NEW_PRICE_MIN_GAP = 50000;
   var ON_ROAD_SOURCES = {
-    roadTax: { name: "Maharashtra one-time tax slabs from 1 Jul 2025 (PTI, The Week)", url: "https://www.theweek.in/wire-updates/business/2025/07/01/bom2-mh-vehicles-revised-tax.html", asOf: "2026-10-07" },
+    roadTax: { name: "Maharashtra one-time tax slabs from 1 Jul 2025, and the flat 20% on imported cars (PTI, The Week)", url: "https://www.theweek.in/wire-updates/business/2025/07/01/bom2-mh-vehicles-revised-tax.html", asOf: "2026-10-07" },
     registration: { name: "Central Motor Vehicles Rules, rule 81 fee table: ₹600 registration + ₹200 smart card", url: "https://himachal.gov.in/WriteReadData/l892s/3_l892s/rule81_cmvr-74305708.pdf", asOf: "2026-10-07" },
     insurance: { name: "Spinny guide: comprehensive cover is usually 3 to 4% of the car's value (we use 3%)", url: "https://www.spinny.com/blog/car-price-difference-between-ex-showroom-and-on-road-price/", asOf: "2026-10-07" },
-    tcs: { name: "Income-tax Act 2025, section 394(1): 1% TCS on a car over ₹10 lakh", url: "https://cleartax.in/s/section-394-income-tax-act-2025", asOf: "2026-10-07" }
+    tcs: { name: "TaxAj guide to Income-tax Act 2025, section 394(1): 1% TCS on a car over ₹10 lakh, collected by a company, a firm or a business with turnover over ₹1 crore", url: "https://www.taxaj.com/learn/?p=945", asOf: "2026-10-07" }
   };
   function newPrice(c) {
     var np = c && c.new_price, o = np && np.on_road;
@@ -106,6 +107,8 @@
     if (save < NEW_PRICE_MIN_GAP) return null;
     return { exShowroom: np.ex_showroom, onRoad: o, total: o.total, diff: diff, save: save, compareName: np.compare_name, sameModel: !!np.same_model,
       basis: np.basis || "", area: np.price_area || "India", source: np.source_name, url: np.source_url, asOf: np.as_of, asOfText: fmtDate(np.as_of),
+      note: np.note || "", extra: (np.extra_sources || []).filter(function (s) { return s && s.name && s.as_of && /^https:\/\//.test(s.url || ""); })
+        .map(function (s) { return { name: s.name, url: s.url, asOf: s.as_of }; }),
       sources: ON_ROAD_SOURCES };
   }
 

@@ -86,24 +86,25 @@
       "price_on_request": false,
       "notes": "Single owner, five seats, diesel automatic, 53,700 km driven.",
       "new_price": {
-        "ex_showroom": 8200000,
-        "variant": "E-Class long-wheelbase saloon, lowest listed price",
-        "compare_name": "2026 Mercedes-Benz E-Class (long wheelbase)",
+        "ex_showroom": 6481000,
+        "variant": "A6 Premium Plus TFSI S tronic (2.0 petrol, automatic), model year 2025",
+        "compare_name": "Audi A6 Premium Plus petrol automatic",
         "same_model": false,
-        "basis": "Jaguar sells no saloon in India today, so this is a different maker and model: the nearest new luxury saloon of the XF's size. We used its lowest listed price and the 13% petrol road-tax rate (the diesel rate is 15%), which keeps the figure on the low side.",
+        "basis": "Jaguar sells no saloon in India today, so this is a different maker and model: the Audi A6, a mid-size luxury saloon like the XF, in its lower-priced Premium Plus version. The A6 is sold here only with a petrol engine, so the petrol road-tax rate applies; this XF is a diesel.",
         "price_area": "India",
-        "source_name": "Mercedes-Benz India website",
-        "source_url": "https://www.mercedes-benz.co.in/passengercars/models/saloon/e-class/overview.html",
+        "source_name": "Audi India online store (myAudi), A6 versions and prices",
+        "source_url": "https://myaudi.in/en/vehicleSales/models/35/configure?uid=a6&year=2025",
         "as_of": "2026-10-07",
         "on_road": {
           "road_tax_pct": 13,
-          "road_tax_basis": "petrol rate, over ₹20 lakh",
-          "road_tax": 1066000,
+          "road_tax_basis": "petrol, over ₹20 lakh",
+          "road_tax": 842530,
           "registration": 800,
           "insurance_pct": 3,
-          "insurance": 246000,
-          "total": 9512800
-        }
+          "insurance": 194430,
+          "total": 7518760
+        },
+        "note": "Audi India's own online store. The Premium Plus is the lower-priced of the two A6 versions it lists."
       }
     },
     {
@@ -155,7 +156,8 @@
           "insurance_pct": 3,
           "insurance": 50547,
           "total": 1938435
-        }
+        },
+        "note": "On that page choose Maharashtra and Mumbai, then the Carens Clavis, to see each version's price."
       }
     },
     {
@@ -207,7 +209,8 @@
           "insurance_pct": 3,
           "insurance": 51657,
           "total": 1980985
-        }
+        },
+        "note": "On that page choose Maharashtra and Mumbai, then the Seltos, to see each version's price."
       }
     },
     {
@@ -260,7 +263,8 @@
           "insurance_pct": 3,
           "insurance": 16827,
           "total": 640226
-        }
+        },
+        "note": "Renault's page fills its price table from its Kwid price sheet dated 3 Jul 2026; we read the Mumbai row."
       }
     },
     {
@@ -351,20 +355,32 @@
         "variant": "Tiguan R-Line 2.0 TSI DSG 4MOTION",
         "compare_name": "2026 Volkswagen Tiguan R-Line",
         "same_model": true,
-        "basis": "The same model and variant, bought new today.",
+        "basis": "The same model and variant, bought new today. Volkswagen sells the Tiguan R-Line in India as a fully built import, and Maharashtra charges an imported car a flat 20% road tax whatever its price, so that rate is used here.",
         "price_area": "India",
         "source_name": "Volkswagen India website",
         "source_url": "https://www.volkswagen.co.in/en/models/tiguan-r-line.html",
         "as_of": "2026-10-07",
         "on_road": {
-          "road_tax_pct": 13,
-          "road_tax_basis": "petrol, over ₹20 lakh",
-          "road_tax": 612432,
+          "road_tax_pct": 20,
+          "road_tax_basis": "imported car, any price",
+          "road_tax": 942203,
           "registration": 800,
           "insurance_pct": 3,
           "insurance": 141330,
-          "total": 5465575
-        }
+          "total": 5795346
+        },
+        "extra_sources": [
+          {
+            "name": "Autocar India, 14 Apr 2025: the Tiguan R-Line is sold here as a fully built (CBU) import",
+            "url": "https://www.autocarindia.com/car-news/new-gen-volkswagen-tiguan-india-price-starts160at160rs16049160lakh-435079",
+            "as_of": "2026-10-07"
+          },
+          {
+            "name": "CarWale, Tiguan R-Line on-road price in Mumbai: ₹9,86,547 registration on the same ex-showroom price, in line with the 20% rate",
+            "url": "https://www.carwale.com/volkswagen-cars/tiguan-r-line/price-in-mumbai/",
+            "as_of": "2026-10-07"
+          }
+        ]
       }
     }
   ]

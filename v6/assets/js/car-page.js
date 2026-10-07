@@ -71,8 +71,10 @@
       '</dl>' +
       '<p class="nc-note">' + (np.basis ? e(np.basis) + " " : "") +
         'Ours is a used ' + car.year + ' car with ' + fmt.formatKm(car.kms) + ' on it, not a new one: this compares what you pay, not two identical cars. ' +
-        'Left out: 1% TCS, collected on any car over ₹10 lakh, new or used, and claimable against your income tax; and dealer extras such as accessories, FASTag and extended warranty. Prices change, so check before you decide.</p>' +
-      '<p class="nc-note">Sources: new-car price from <a href="' + e(np.url) + '" target="_blank" rel="noopener">' + e(np.source) + '</a> (read ' + np.asOfText + '); ' +
+        (car.rto && !/^MH-/.test(car.rto) ? 'This car is registered outside Maharashtra (' + e(car.rto) + '): kept here, it has to be re-registered with its own Maharashtra road tax and fees, which are not taken off this figure. Ask us for that amount. ' : '') +
+        'Left out: 1% TCS, which a company, a firm or a business with turnover over ₹1 crore must collect on a car over ₹10 lakh, new or used, and which you can claim back against your income tax; and dealer extras such as accessories, FASTag and extended warranty. Prices change, so check before you decide.</p>' +
+      '<p class="nc-note">Sources: new-car price from <a href="' + e(np.url) + '" target="_blank" rel="noopener">' + e(np.source) + '</a> (read ' + np.asOfText + (np.note ? "; " + e(np.note) : "") + '); ' +
+        np.extra.map(function (s) { return link(s) + "; "; }).join("") +
         'road tax: ' + link(np.sources.roadTax) + '; fees: ' + link(np.sources.registration) + '; insurance: ' + link(np.sources.insurance) + '; TCS: ' + link(np.sources.tcs) + '.</p>' +
       '</details>';
     nc.hidden = false;
