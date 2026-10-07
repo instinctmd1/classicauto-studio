@@ -32,7 +32,14 @@
       "band": "50plus",
       "source": "ig:Ddv_dDqDj09",
       "price_on_request": false,
-      "notes": "Single owner, diesel automatic M Sport, 17,900 km driven."
+      "notes": "Single owner, diesel automatic M Sport, 17,900 km driven.",
+      "new_price": {
+        "ex_showroom": 7820000,
+        "variant": "X3 xDrive20d M Sport, diesel automatic",
+        "source_name": "BMW India configurator",
+        "source_url": "https://configure.bmw.in/en_IN/configure/G45",
+        "as_of": "2026-10-07"
+      }
     },
     {
       "id": "jaguar-xf-2013",

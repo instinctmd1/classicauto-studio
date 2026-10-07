@@ -8,7 +8,8 @@ var CARS = [
     colour: "White", paint: "#f4f4f2", reg_city: "", rto: "MH-09",
     seats: null, insurance_until: "2028-11-05", insurance_note: "", photos: ["assets/photos/cars/bmw-x3-2025/01.webp"],
     status: "available", ex_demo: false, body: "luxury-suv", segment: "owned",
-    band: "50plus", source: "ig:Ddv_dDqDj09", price_on_request: false, notes: "Single owner, diesel automatic M Sport, 17,900 km driven."
+    band: "50plus", source: "ig:Ddv_dDqDj09", price_on_request: false, notes: "Single owner, diesel automatic M Sport, 17,900 km driven.",
+    new_price: {"ex_showroom": 7820000, "variant": "X3 xDrive20d M Sport, diesel automatic", "source_name": "BMW India configurator", "source_url": "https://configure.bmw.in/en_IN/configure/G45", "as_of": "2026-10-07"}
   },
   {
     id: "jaguar-xf-2013", make: "Jaguar", model: "XF", variant: "2.2L Diesel",
