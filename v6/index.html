@@ -48,7 +48,8 @@
   },
   "sameAs": [
     "https://instagram.com/classicauto_1974"
-  ]
+  ],
+  "openingHours": "Mo-Su 10:00-21:00"
 }
 </script>
 <!-- /ca:dealer-jsonld -->
@@ -189,6 +190,7 @@
   <section class="section section--panel" id="whyChapter" data-chapter="04 / WHY US" aria-labelledby="whyTitle">
     <div class="container why">
       <div class="why-lead" data-reveal>
+        <div class="orbit orbit--halo" aria-hidden="true"><svg class="orbit-ring o1" viewBox="0 0 200 200" focusable="false"><circle cx="100" cy="100" r="98" stroke-dasharray="1 6"/></svg><svg class="orbit-ring o2" viewBox="0 0 200 200" focusable="false"><circle cx="100" cy="100" r="86" stroke-dasharray="60 14 4 14"/></svg><svg class="orbit-ring o3" viewBox="0 0 200 200" focusable="false"><circle cx="100" cy="100" r="72"/><circle class="orbit-dot" cx="100" cy="28" r="2.4"/></svg><svg class="orbit-ring o4" viewBox="0 0 200 200" focusable="false"><circle cx="100" cy="100" r="58" stroke-dasharray="110 255"/></svg></div>
         <span class="eyebrow">Why Classic Auto</span>
         <h2 id="whyTitle">Pre-owned cars. Since 1974.</h2>
         <span class="serif">Buy, sell, exchange, upgrade.</span>
@@ -205,8 +207,25 @@
     </div>
   </section>
 
-  <!-- 05 / VISIT -->
-  <section class="section" id="testDriveSection" data-chapter="05 / VISIT" aria-labelledby="visitTitle">
+  <!-- 05 / THE KEYS: the key handover (handover.js, key3d.js) -->
+  <section class="section handover" id="handoverChapter" data-chapter="05 / THE KEYS" aria-labelledby="handoverTitle">
+    <div class="container handover-grid">
+      <div class="handover-copy" data-reveal>
+        <span class="eyebrow">The handover</span>
+        <h2 id="handoverTitle">The keys are yours.</h2>
+        <span class="serif">The last step, and the best one.</span>
+        <p class="lead">Pick the car, take it for a drive, and agree the price. We handle the RC transfer paperwork, so the last thing left is the keys, in your hand.</p>
+        <a class="link-arrow" href="stock.html">Find your car</a>
+      </div>
+      <div class="handover-stage" id="handoverStage">
+        <div class="orbit orbit--floor" aria-hidden="true"><svg class="orbit-ring o1" viewBox="0 0 200 200" focusable="false"><circle cx="100" cy="100" r="98" stroke-dasharray="1 6"/></svg><svg class="orbit-ring o2" viewBox="0 0 200 200" focusable="false"><circle cx="100" cy="100" r="86" stroke-dasharray="60 14 4 14"/></svg><svg class="orbit-ring o3" viewBox="0 0 200 200" focusable="false"><circle cx="100" cy="100" r="72"/><circle class="orbit-dot" cx="100" cy="28" r="2.4"/></svg><svg class="orbit-ring o4" viewBox="0 0 200 200" focusable="false"><circle cx="100" cy="100" r="58" stroke-dasharray="110 255"/></svg></div>
+        <svg class="handover-fallback" viewBox="0 0 200 200" aria-hidden="true" focusable="false"><rect x="72" y="58" width="56" height="104" rx="22"/><circle cx="100" cy="36" r="20"/><circle cx="100" cy="98" r="7"/><circle cx="100" cy="120" r="7"/><circle class="hf-red" cx="100" cy="142" r="7"/></svg>
+      </div>
+    </div>
+  </section>
+
+  <!-- 06 / VISIT -->
+  <section class="section" id="testDriveSection" data-chapter="06 / VISIT" aria-labelledby="visitTitle">
     <div class="container visit">
       <div class="visit-info" data-reveal>
         <span class="eyebrow">Visit us</span>
@@ -278,5 +297,6 @@
 <script src="assets/js/testdrive.js" defer></script>
 <script src="assets/js/anita.js" defer></script>
 <script type="module" src="assets/js/home.js"></script>
+<script type="module" src="assets/js/handover.js"></script>
 </body>
 </html>

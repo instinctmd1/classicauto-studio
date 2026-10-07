@@ -271,7 +271,7 @@
     var studio = c ? "\nTab tak isse 3D Studio mein dekhiye: " +
       '<a href="studio.html?id=' + encodeURIComponent(c.id) + '" data-cta="studio" data-at="anita">Open the ' + esc(c.make + " " + c.model) + ' in the 3D Studio</a>' +
       (c.scan ? "" : "\nStudio ka 3D model illustrative hai, yeh exact gaadi nahi.") : "";
-    pushBot(slot ? "Request bhej di: " + slot + (c ? " (" + c.make + " " + c.model + ")" : "") + ". Hamari team message karke confirm karegi." : "Note kar liya. Hamari team message karegi.", null, studio);
+    pushBot(slot ? "Request bhej di: " + slot + (c ? " (" + c.make + " " + c.model + ")" : "") + ". Hamari team message karke confirm karegi." + (CA_SITE.hours ? "\nShowroom ka time: " + CA_SITE.hours + "." : "") : "Note kar liya. Hamari team message karegi.", null, studio);
   }
 
   /* ------------------------------------------------------------------

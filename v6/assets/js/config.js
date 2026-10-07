@@ -18,7 +18,7 @@ window.CA_SITE = {
                   "Next to Shankar Mandir, near Malad Railway Station",
                   "Malad West, Mumbai"],
   maps_url: null,       // null => https://www.google.com/maps/search/?api=1&query=<url-encoded address>
-  hours: null,          // e.g. "Mon-Sun 10:00-19:00" once Dad confirms (CarWale shows 10-7: unverified)
+  hours: "Mon-Sun 10:00-21:00",  // the showroom hours (engine config dealer.hours, set 7 Oct 2026). JSON-LD writes it as "Mo-Su 10:00-21:00"
   google_review_url: null, google_profile_url: null,
   google_rating: null,  // { value: 4.6, count: 120, as_of: "YYYY-MM-DD" }, typed from the Business Profile, never guessed
   facebook: null, youtube: null,           // only verified URLs
