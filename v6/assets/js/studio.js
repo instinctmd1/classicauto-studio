@@ -30,7 +30,11 @@ import { sanitizeCarModel } from "./carSanitize.js";
 import { OneEuro } from "./oneEuro.js";
 
 var ILLUSTRATIVE = "models/car.glb";
-var HDRI = { daylight: "assets/hdri/daylight.hdr" };
+/* phones: the same model with each surface stored once (double-sided materials) instead of twice, no UVs and the badges
+   cut out of the file; it renders the same, at 0.60 MB instead of 1.68 MB (tools/make_lite_model.mjs). studio.html
+   starts this download early on non-Apple phones. */
+var ILLUSTRATIVE_LITE = "models/car-lite.glb";
+var HDRI ={ daylight: "assets/hdri/daylight.hdr" };
 /* phones: the same sky, tone-mapped once to an 8-bit JPEG (44 KB instead of the 1.4 MB HDR; about 0.3 s on 3G instead of 6 s) */
 var SKY_JPG = { daylight: "assets/hdri/daylight_sky_1k.jpg" };
 var ROAD_DIR = "assets/textures/asphalt/";
@@ -422,9 +426,19 @@ function initStudio(car) {
 
   /* ------------------------------------------------------------------ model */
   var draco = new DRACOLoader(); draco.setDecoderPath("assets/vendor/three/examples/jsm/libs/draco/gltf/");
+  draco.preload();                                                      // fetch the decoder while the model downloads, not after it
   var loader = new GLTFLoader(); loader.setDRACOLoader(draco);
-  function load(url) { return new Promise(function (res, rej) { loader.load(url, res, undefined, rej); }); }
-  (scanUrl ? load(scanUrl).then(function (g) { isScan = true; return g; }, function () { return load(ILLUSTRATIVE); }) : load(ILLUSTRATIVE))
+  /* The loading card counts up while the file downloads, then says what it is doing while the model is unpacked and the
+     shaders compile. Hosts that gzip the file report its compressed size, so the count stops at 99 until it is done. */
+  var loadingText = loadingEl.querySelector("span");
+  function onProgress(e) {
+    if (!loadingText || !e || !e.total) return;
+    var pct = Math.min(99, Math.floor(e.loaded / e.total * 100));
+    loadingText.textContent = pct >= 99 ? "Preparing the 3D view…" : "Loading the 3D model… " + pct + "%";
+  }
+  function load(url) { return new Promise(function (res, rej) { loader.load(url, res, onProgress, rej); }); }
+  function loadIllustrative() { return mobile ? load(ILLUSTRATIVE_LITE).catch(function () { return load(ILLUSTRATIVE); }) : load(ILLUSTRATIVE); }
+  (scanUrl ? load(scanUrl).then(function (g) { isScan = true; return g; }, loadIllustrative) : loadIllustrative())
     .then(onModel, function () { loadingEl.innerHTML = "<span>Couldn't load the 3D model. Please try again shortly.</span>"; });
 
   function onModel(gltf) {
@@ -437,14 +451,14 @@ function initStudio(car) {
       if (n.name === "yellow_trim") n.visible = false;                    // shield badges (rule N4)
       if (n.name === "body" && n.material) {
         var old = n.material;
-        bodyMat = new THREE.MeshPhysicalMaterial({ color: old.color ? old.color.clone() : new THREE.Color(car.paint), metalness: 0.05, roughness: 0.3, clearcoat: 1, clearcoatRoughness: 0.03 });
+        bodyMat = new THREE.MeshPhysicalMaterial({ color: old.color ? old.color.clone() : new THREE.Color(car.paint), metalness: 0.05, roughness: 0.3, clearcoat: 1, clearcoatRoughness: 0.03, side: old.side });   // the phone model is double-sided
         n.material = bodyMat;
       }
       if (/^rim_/.test(n.name) && n.material) { n.material = n.material.clone(); rimMats.push(n.material); }   // the base material is shared with tyres' hubs and brakes
       if (n.name === "glass" && n.material) {
         glassMat = desktop
           ? new THREE.MeshPhysicalMaterial({ color: 0x0b1018, metalness: 0, roughness: 0.04, transmission: 0.94, thickness: 0.06, ior: 1.45 })
-          : new THREE.MeshStandardMaterial({ color: 0x0b1018, metalness: 0, roughness: 0.05, transparent: true, opacity: 0.4, depthWrite: false });
+          : new THREE.MeshStandardMaterial({ color: 0x0b1018, metalness: 0, roughness: 0.05, transparent: true, opacity: 0.4, depthWrite: false, side: n.material.side });
         n.material = glassMat;
       }
     });

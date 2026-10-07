@@ -12,6 +12,12 @@ and in the Studio is an illustrative 3D model, never a car for sale.
   The three.js examples file (three.js r170, examples/models/gltf/ferrari.glb), used as published (it is Draco-compressed).
   The maker badge and lettering are removed on the live model at load time (assets/js/carSanitize.js).
 
+3D model: models/car-lite.glb (the Studio on phones)
+----------------------------------------------------
+  The same model, changed by Classic Auto (7 Oct 2026): each surface stored once with double-sided materials instead
+  of twice, unused texture coordinates dropped, the maker badges and lettering cut out of the file, re-compressed with
+  Draco. Same credit and licence as above (CC BY 4.0).
+
 Where the model is used:
   - Home page, live: the interactive car in the showroom and at the end of the cloth reveal (assets/js/live3d.js).
   - Home page, baked: hero-frames/ holds frames rendered in Blender from the same model with a dust sheet over it, for

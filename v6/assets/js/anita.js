@@ -260,18 +260,22 @@
     });
     // Called straight from the visitor's send for the visit flow (so a DM / WhatsApp window is not popup-blocked); the
     // ENQUIRY flow arrives from the 420 ms typing pause and may be blocked, in which case the box's link is the way in.
+    // The "send this on Instagram / WhatsApp" box goes into the conversation (boxHost), above the closing message, so it
+    // never covers the Studio link the way the page-level dialog did.
     window.ClassicAutoLeads.submitLead({
       name: d.name, phone: d.phone, car: state.car ? fmt.carLeadLabel(state.car) : "", message: msg,
       budget: state.car && state.car.price ? state.car.price : (state.budget || ""), visit_at: slot, page: "chat"
-    }).then(function (r) {
+    }, { boxHost: body }).then(function (r) {
       if (window.CA_TRACK) window.CA_TRACK("form_submit", { form: "enquiry", mode: r.mode, ok: true });
+      if (r.mode !== "endpoint") scrollDown();
     });
     // when the chat knows the car, end on its Studio page (360 view, paint, km and price side by side)
     var c = state.car;
     var studio = c ? "\nTab tak isse 3D Studio mein dekhiye: " +
       '<a href="studio.html?id=' + encodeURIComponent(c.id) + '" data-cta="studio" data-at="anita">Open the ' + esc(c.make + " " + c.model) + ' in the 3D Studio</a>' +
       (c.scan ? "" : "\nStudio ka 3D model illustrative hai, yeh exact gaadi nahi.") : "";
-    pushBot(slot ? "Request bhej di: " + slot + (c ? " (" + c.make + " " + c.model + ")" : "") + ". Hamari team message karke confirm karegi." + (CA_SITE.hours ? "\nShowroom ka time: " + CA_SITE.hours + "." : "") : "Note kar liya. Hamari team message karegi.", null, studio);
+    var sent = !!window.CA_ENDPOINT;   // without the lead endpoint the request only reaches the team once the visitor sends the message
+    pushBot(slot ? (sent ? "Request bhej di: " : "Request taiyaar hai: ") + slot + (c ? " (" + c.make + " " + c.model + ")" : "") + (sent ? ". Hamari team message karke confirm karegi." : ". Message bhejte hi hamari team confirm karegi.") + (CA_SITE.hours ? "\nShowroom ka time: " + CA_SITE.hours + "." : "") : (sent ? "Note kar liya. Hamari team message karegi." : "Note kar liya. Message bhejte hi hamari team aapko batayegi."), null, studio);
   }
 
   /* ------------------------------------------------------------------

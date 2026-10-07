@@ -263,6 +263,14 @@ body.nav-open .sticky-bar { transform: translateY(110%); }
 .ca-fallback-sub { margin: 8px 0 16px; font-size: var(--fs-small); }
 .ca-fallback textarea { width: 100%; background: var(--bg); border: 1px solid var(--line-2); border-radius: var(--r-2); padding: 12px; color: var(--ink); resize: vertical; }
 .ca-fallback-row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; justify-content: flex-end; }
+/* inline in the chat (Anita): a message in the conversation, not a dialog over it */
+.ca-fallback.is-inline { position: static; z-index: auto; transform: none; width: auto; align-self: stretch; flex-shrink: 0; background: var(--bg-3); border-color: var(--line); border-radius: 4px 14px 14px 14px; padding: 12px 14px; box-shadow: none; }
+.ca-fallback.is-inline .ca-fallback-title { font-size: 1.35rem; }
+.ca-fallback.is-inline .ca-fallback-sub { margin: 6px 0 10px; color: var(--ink-2); }
+.ca-fallback.is-inline textarea { padding: 8px 10px; font-size: var(--fs-small); height: 6.5em; resize: none; }
+.ca-fallback.is-inline .ca-fallback-row { margin-top: 10px; justify-content: flex-start; gap: 4px 8px; }
+.ca-fallback.is-inline .btn { min-height: 44px; }
+.ca-fallback.is-inline .btn-primary { order: -1; flex: 1 1 100%; }   /* the DM button first, full width; Copy again and Close under it */
 
 /* ---- Progress rail + chapter label ---- */
 .progress-rail { position: fixed; z-index: 10; top: 0; right: 0; width: 2px; height: 100%; background: rgba(245, 242, 236, 0.06); pointer-events: none; }
@@ -273,7 +281,9 @@ body.nav-open .sticky-bar { transform: translateY(110%); }
   font-size: var(--fs-label); font-weight: 700; letter-spacing: 0.18em; color: var(--ink-3); pointer-events: none; font-variant-numeric: tabular-nums;
 }
 @media (max-width: 899px) { .chapter-label { display: none; } }   /* it runs behind the stacked CTAs below the desktop layout */
-@media (min-width: 900px) { .chapter-label { bottom: 28px; left: 32px; } }
+/* Desktop: set vertically down the left edge (reads bottom to top), inside the 32px page gutter, so it never sits on a
+   section's text. Laid flat at left: 32px it covered "Pick the car..." in 05 / THE KEYS at 1280 wide (7 Oct). */
+@media (min-width: 900px) { .chapter-label { bottom: 28px; left: 10px; writing-mode: vertical-rl; transform: rotate(180deg); line-height: 1; } }
 
 /* ---- Chapter 00: Ignition ---- */
 .intro { display: none; position: fixed; inset: 0; z-index: 500; background: var(--bg); display: flex; align-items: center; justify-content: center; }

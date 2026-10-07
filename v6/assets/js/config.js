@@ -119,15 +119,17 @@ window.CA_WHATSAPP_NUMBER = window.CA_SITE.whatsapp || "";   // back-compat for 
     return Promise.resolve(false);
   }
 
-  /* Selectable fallback box so the lead is never silently lost (rule: step 3). */
-  function showFallbackBox(text, via) {
+  /* Selectable fallback box so the lead is never silently lost (rule: step 3).
+     host (optional): an element to put the box in, inline, instead of a dialog over the page. The chat passes its
+     message list, so the box sits in the conversation and never covers the chat's last message. */
+  function showFallbackBox(text, via, host) {
     var old = document.getElementById("caFallback");
     if (old) old.remove();
     var wa = via === "whatsapp";
     var box = document.createElement("div");
-    box.className = "ca-fallback";
+    box.className = "ca-fallback" + (host ? " is-inline" : "");
     box.id = "caFallback";
-    box.setAttribute("role", "dialog");
+    box.setAttribute("role", host ? "group" : "dialog");
     box.setAttribute("aria-label", wa ? "Send your message on WhatsApp" : "Send your message on Instagram");
     box.innerHTML =
       '<p class="ca-fallback-title">' + (wa ? "Send this on WhatsApp" : "Send this on Instagram") + '</p>' +
@@ -139,12 +141,13 @@ window.CA_WHATSAPP_NUMBER = window.CA_SITE.whatsapp || "";   // back-compat for 
         '<button type="button" class="btn btn-ghost" data-act="close">Close</button>' +
       '</div>';
     box.querySelector("textarea").value = text;
-    document.body.appendChild(box);
+    (host || document.body).appendChild(box);
     box.addEventListener("click", function (e) {
       var act = e.target.getAttribute && e.target.getAttribute("data-act");
       if (act === "close") box.remove();
       if (act === "copy") { var ta = box.querySelector("textarea"); ta.select(); copyText(text); }
     });
+    if (host) return;                                       // inline: focus stays in the chat
     var ta = box.querySelector("textarea");
     ta.focus(); ta.select();
   }
@@ -171,8 +174,9 @@ window.CA_WHATSAPP_NUMBER = window.CA_SITE.whatsapp || "";   // back-compat for 
           otherwise copy the message and open the Instagram DM, with the text in a box
        3. endpoint failed (the gesture is gone after the await, and a popup would be blocked): no window is opened.
           The box shows the message with an Open WhatsApp / Open Instagram DM link the visitor taps.
+     opts.boxHost (optional): where the box goes instead of over the page (the chat passes its message list).
      ----------------------------------------------------------------------- */
-  function submitLead(lead) {
+  function submitLead(lead, opts) {
     var payload = {
       name: lead.name || "",
       phone: lead.phone || "",
@@ -188,7 +192,7 @@ window.CA_WHATSAPP_NUMBER = window.CA_SITE.whatsapp || "";   // back-compat for 
       var via = S.whatsapp ? "whatsapp" : "instagram";
       copyText(text);
       if (canOpen) window.open(via === "whatsapp" ? waLink(text) : igDm(), "_blank", "noopener");
-      if (via === "instagram" || !canOpen) showFallbackBox(text, via);
+      if (via === "instagram" || !canOpen) showFallbackBox(text, via, opts && opts.boxHost);
       return { ok: true, mode: via, opened: !!canOpen };
     }
 
