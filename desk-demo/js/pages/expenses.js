@@ -99,13 +99,53 @@ function expenseForm(x, banks, vendors, refresh) {
     ...(!edit && can("expenses.approve") ? [{ name: "approve", label: "Approve it now", type: "checkbox", full: true }] : []),
   ];
   const note = edit ? "" : `<div class="callout sec">${icon("info", "")}<div><b>${can("expenses.approve") ? "You can approve as you save." : "It goes to the approval queue."}</b><p>Add the receipt after saving. PDF or a photo.</p></div></div>`;
-  formDrawer({ title: edit ? "Edit expense" : "Add expense", sub: edit ? "An approved expense that changes goes back to the queue unless you are an approver." : "", fields, after: note, submit: edit ? "Save changes" : "Save expense", ok: edit ? "Expense updated" : "Expense saved",
+  // Read a bill photo (free, read on the office computer): it fills the form for the person to check. Nothing is kept
+  // until the expense is saved; the photo then becomes its receipt.
+  const reader = edit ? "" : `<div class="callout" id="rb">${icon("camera", "")}<div><b>Have the bill?</b><p>Read a bill photo and the form fills itself. Check every figure before you save: anything the reader is not sure of is left blank.</p>
+    <div class="pill-row"><button class="btn" type="button" id="rb-btn">${icon("camera")}Read a bill photo</button><input type="file" id="rb-file" accept="image/jpeg,image/png,image/webp" hidden></div><div id="rb-out" class="sec" role="status" aria-live="polite" hidden></div></div></div><div class="sec" aria-hidden="true"></div>`;
+  let bill = null; // { file, vendor, gstin } once a photo was read
+  const d = formDrawer({ title: edit ? "Edit expense" : "Add expense", sub: edit ? "An approved expense that changes goes back to the queue unless you are an approver." : "", fields, before: reader, after: note, submit: edit ? "Save changes" : "Save expense", ok: edit ? "Expense updated" : "Expense saved",
     onSubmit: async (v) => {
       const body = { ...v, bank_account_id: v.bank_account_id ? +v.bank_account_id : null, paid_on: v.paid_on || null };
       if (!body.vendor) delete body.vendor; if (!body.approve) delete body.approve; else body.approve = true;
-      if (edit) { await api.patch(`expenses/${x.id}`, { ...body, version: x.version }); } else { const r = await api.post("expenses", body); if (r?.id) { refresh(); openExpense({ id: r.id, status: body.approve ? "approved" : "pending", date: body.date, category: body.category, vendor: body.vendor }, banks, vendors, refresh); return; } }
+      if (bill?.gstin && body.vendor && body.vendor === bill.vendor) body.vendor_gstin = bill.gstin;
+      if (edit) { await api.patch(`expenses/${x.id}`, { ...body, version: x.version }); } else { const r = await api.post("expenses", body); if (r?.id) {
+        if (bill?.file) await attachBill(r.id, bill.file);
+        refresh(); openExpense({ id: r.id, status: body.approve ? "approved" : "pending", date: body.date, category: body.category, vendor: body.vendor }, banks, vendors, refresh); return; } }
       refresh();
     } });
+  if (!edit) bindBillReader(d, (b) => { bill = b; });
+}
+
+async function attachBill(id, file) {
+  const fd = new FormData();
+  fd.append("file", file); fd.append("entity_type", "expense"); fd.append("entity_id", String(id)); fd.append("doc_type", "bill");
+  try { await api.upload("documents", fd); } catch (e) { if (e.code !== "demo") toast(`Expense saved, but the bill photo did not attach: ${e.message} Attach it from the expense.`, "err"); }
+}
+
+const BILL_LABEL = { amount: "Amount", date: "Date", vendor: "Paid to", invoice_no: "Invoice number", gstin: "GSTIN" };
+function bindBillReader(d, onRead) {
+  const root = d.el, form = d.form, btn = root.querySelector("#rb-btn"), inp = root.querySelector("#rb-file"), out = root.querySelector("#rb-out");
+  if (!btn) return;
+  btn.addEventListener("click", () => inp.click());
+  inp.addEventListener("change", async () => {
+    const file = inp.files[0]; inp.value = "";
+    if (!file) return;
+    const fd = new FormData(); fd.append("file", file);
+    const r = await save(btn, () => api.upload("expenses/read-bill", fd), { ok: "" });
+    if (!r || !r.draft) return;
+    const v = r.draft, set = (name, val) => { const c = form.querySelector(`[name="${name}"]`); if (c) { c.value = val ?? ""; c.dispatchEvent(new Event("input", { bubbles: true })); } };
+    set("amount", v.amount); set("date", v.date); set("vendor", v.vendor); set("reference", v.invoice_no);
+    onRead({ file, vendor: v.vendor || "", gstin: v.gstin || "" });
+    const got = Object.keys(BILL_LABEL).filter((k) => v[k] != null);
+    const blank = Object.keys(BILL_LABEL).filter((k) => v[k] == null);
+    const shown = { amount: v.amount != null ? inr(v.amount) : "", date: v.date ? dateFmt(v.date) : "", vendor: v.vendor, invoice_no: v.invoice_no, gstin: v.gstin };
+    out.hidden = false;
+    out.innerHTML = got.length
+      ? `<div class="mini-h">Read from the bill: check each one</div><div>${got.map((k) => `<div class="kv"><span>${BILL_LABEL[k]}</span><b${k === "gstin" || k === "invoice_no" ? ' class="mono"' : ""}>${esc(shown[k])}</b></div>`).join("")}</div>${blank.length ? `<p class="muted">Left blank, fill by hand: ${esc(blank.map((k) => BILL_LABEL[k]).join(", "))}.</p>` : ""}<p class="muted">The photo is attached as the receipt when you save.</p>`
+      : `<p class="warn-text"><b>Could not read this bill.</b> Fill the form by hand, or try a sharper photo taken straight on in good light.</p><p class="muted">The photo is still attached as the receipt when you save.</p>`;
+    form.querySelector(got.length ? '[name="category"]' : '[name="amount"]')?.focus();
+  });
 }
 
 // ------------------------------------------------------------------ approvals

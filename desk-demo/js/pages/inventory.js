@@ -8,6 +8,7 @@ import { confirmDialog, formHtml, openDrawer, pageHead, readForm, save, showErro
 import { col, cellMain, columnsButton, exportButtons, makeGrid } from "../grid.js";
 import { bindDocs, docsHtml, EXPECTED } from "./_docs.js";
 import { bankField, bankPick, commissionText, kpiTile, roleNote } from "./_shared.js";
+import { shrink } from "./intake.js";
 
 const FUEL = ["petrol", "diesel", "cng", "petrol_cng", "hybrid", "electric", "other"];
 const LOC = ["showroom", "yard", "workshop", "with_customer", "with_owner"];
@@ -146,7 +147,10 @@ export async function openCar(id, ctx, reload) {
   // the website and the intake (SPEC-CAR-INTAKE 6.6): a chip, List on website / Try again, papers to follow, Dad's banner
   const SITE = { live: ["On the website", "pos"], on_files: ["On the website files", "info"], waiting: ["Website: sending", "warn"], problem: ["Website: waiting", "neg"], not_listed: ["Not on the website", ""] };
   const ss = c.site_state || { state: "not_listed" };
-  const siteBtns = edit ? (ss.state === "problem" ? `<button class="btn sm" type="button" data-act="site-retry">${icon("refresh")}Try again</button>` : ss.state === "not_listed" && ["incoming", "refurb", "available"].includes(c.status) ? `<button class="btn sm" type="button" data-act="site-list">${icon("globe")}List on website</button>` : "") : "";
+  // P1 Add photos: a car on the website gets new photos through the website job (shrunk on the phone, no EXIF or GPS)
+  const addPhotos = edit && c.website_id && c.intake_id && ["incoming", "refurb", "available", "booked"].includes(c.status)
+    ? `<label class="btn sm">${icon("image")}Add photos<input type="file" accept="image/jpeg,image/png,image/webp" multiple data-add-photos hidden></label>` : "";
+  const siteBtns = edit ? (ss.state === "problem" ? `<button class="btn sm" type="button" data-act="site-retry">${icon("refresh")}Try again</button>` : ss.state === "not_listed" && ["incoming", "refurb", "available"].includes(c.status) ? `<button class="btn sm" type="button" data-act="site-list">${icon("globe")}List on website</button>` : "") + addPhotos : "";
   const siteHtml = `<p class="site-line">${badge(SITE[ss.state]?.[0] || ss.state, SITE[ss.state]?.[1] || "")} ${ss.note ? `<span class="muted">${esc(ss.note)}</span>` : ""}</p>`
     + ((c.papers_to_follow || []).length ? `<ul class="list">${c.papers_to_follow.map((p) => `<li><span class="grow"><div class="t">${esc(p.paper)}</div><div class="s">To follow by ${dateFmt(p.due, true)}</div></span>${p.due && p.due < state.today ? badge("Overdue", "neg") : badge("To follow", "warn")}</li>`).join("")}</ul>` : "");
   const moneyBanner = owner && c.ownership === "invested" && c.purchase_price == null && !["delivered", "returned_to_owner", "written_off"].includes(c.status)
@@ -160,6 +164,21 @@ export async function openCar(id, ctx, reload) {
   const reopen = () => { reload?.(); openCar(id, ctx, reload); };
   const docs = d.el.querySelector("#docs");
   if (docs) bindDocs(docs, { entityType: "car", entityId: id, onDone: reopen });
+  d.el.querySelector("[data-add-photos]")?.addEventListener("change", async (e) => {
+    const files = [...e.target.files]; if (!files.length) return;
+    let ok = 0; const failed = [];
+    toast(`Uploading ${files.length} photo${files.length === 1 ? "" : "s"}…`, "ok");
+    for (const f of files) {
+      try {
+        const small = await shrink(f);
+        const fd = new FormData(); fd.append("file", small, small.name); fd.append("slot", "photo");
+        await api.upload(`intakes/${c.intake_id}/files`, fd); ok += 1;
+      } catch (er) { failed.push(er.message || "did not upload"); if (er.code === "demo") break; }
+    }
+    if (ok) toast(`${ok} photo${ok === 1 ? "" : "s"} on the way to the website`, "ok");
+    if (failed.length) toast(`${failed.length} photo${failed.length === 1 ? "" : "s"} did not upload: ${failed[0]}`, "err");
+    if (ok) reopen();
+  });
   d.el.addEventListener("click", (e) => {
     const a = e.target.closest("[data-act]")?.dataset.act;
     if (a === "edit") carForm(c, ctx, reload, data.purchase_payment);

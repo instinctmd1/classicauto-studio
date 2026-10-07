@@ -53,6 +53,19 @@ const CITY = { make: "Honda", model: "City", variant: "VX CVT", mfg_month: "2020
 const SOLD_KWID = { stock_no: "CA104", stage: "booked", date: "2026-10-05", buyer_type: "individual", buyer_name: "Demo Buyer 0203", sale_price: 395000,
   token: { amount: 25000, date: "2026-10-05", mode: "upi" }, sold_by: "Aarav (demo)" };
 
+// "Already on the website?" (P1): made-up website cars that no Desk car is linked to yet, and what picking one fills in
+const SITE_CARS = [
+  { website_id: "toyota-innova-2019", label: "2019 Toyota Innova Crysta 2.4 VX", make: "Toyota", model: "Innova Crysta", variant: "2.4 VX", year: 2019, colour: "Silver (demo)",
+    kms: 78500, fuel: "Diesel", trans: "Manual", status: "available", price: 1450000, price_on_request: false,
+    fill: { make: "Toyota", model: "Innova Crysta", variant: "2.4 VX", reg_month: "2019-06", fuel: "diesel", transmission: "manual", trans_detail: "MT", kms: 78500,
+      colour: "Silver (demo)", owner_serial: 1, body_type: "mpv", seats: 7, asking_price: 1450000, ownership: "invested" } },
+  { website_id: "maruti-baleno-2020", label: "2020 Maruti Baleno Alpha", make: "Maruti", model: "Baleno", variant: "Alpha", year: 2020, colour: "Blue (demo)",
+    kms: 61000, fuel: "Petrol", trans: "Manual", status: "available", price: 545000, price_on_request: false,
+    fill: { make: "Maruti", model: "Baleno", variant: "Alpha", reg_month: "2020-01", fuel: "petrol", transmission: "manual", trans_detail: "MT", kms: 61000,
+      colour: "Blue (demo)", owner_serial: 2, body_type: "hatchback", seats: 5, asking_price: 545000, ownership: "invested" } },
+];
+const brief = ({ fill, ...c }) => c;
+
 /** The intake part of the demo store: one copy per demo role, changed in memory only. */
 export function createIntakeStore({ role, me, myName, now }) {
   const meId = me?.id ?? 1, other = 9001, mgr = 9002;
@@ -67,6 +80,9 @@ export function createIntakeStore({ role, me, myName, now }) {
     { id: 299, kind: "sold", state: "saved", via: "form", version: 4, data: clone(SOLD_KWID), files: [], money: {}, money_state: null,
       created_by: salesman ? other : mgr, created_by_name: "Demo Manager", created_at: ago(26 * 60), updated_at: ago(25 * 60), decision_note: null, car_id: 104, stock_no: "CA104", site_jobs: [] },
   ].filter((x) => !salesman || x.created_by === meId);
+  const linkedIds = new Set();
+  const siteCar = (wid) => SITE_CARS.find((c) => c.website_id === String(wid || "").toLowerCase()) || null;
+  const unlinked = () => SITE_CARS.filter((c) => !linkedIds.has(c.website_id));
   function ago(min) { return now(-min); }
   const find = (id) => { const it = list.find((x) => x.id === +id); if (!it) throw new ApiError(404, "not_found", "This intake is not in the demo."); return it; };
 
@@ -76,19 +92,22 @@ export function createIntakeStore({ role, me, myName, now }) {
     return { must_in: MUST.filter((a) => have.has(a)).length, must: MUST.length, have: ph.length, missing_must: MUST.filter((a) => !have.has(a)) };
   }
   function checks(it) {
-    const d = it.data, missing = [], site = [];
+    const d = it.data, missing = [], site = [], problems = {};
     const empty = (v) => v == null || v === "" || (Array.isArray(v) && !v.length);
     if (it.kind === "new_car") {
       for (const [k, t, s] of REQ_NEW) if (empty(d[k])) missing.push({ field: k, text: t, step: s });
       if (empty(d.asking_price) && !d.price_on_request) missing.push({ field: "asking_price", text: "Asking price (or on request)", step: "price" });
       for (const k of Object.keys(PAPER_NAMES)) if (!(d.papers || {})[k]?.state) missing.push({ field: "papers", text: `${PAPER_NAMES[k]} (upload it or mark it to follow)`, step: "papers" });
       const ph = photosOf(it);
-      if (ph.missing_must.length) { missing.push({ field: "photos", text: `${ph.missing_must.length} must-have photo${ph.missing_must.length === 1 ? "" : "s"}`, step: "photos" }); site.push("the 8 must-have photos"); }
+      if (d.website_id) { /* linked to a car already on the website: its photos are there */ }
+      else if (ph.missing_must.length) { missing.push({ field: "photos", text: `${ph.missing_must.length} must-have photo${ph.missing_must.length === 1 ? "" : "s"}`, step: "photos" }); site.push("the 8 must-have photos"); }
       if (empty(d.summary)) site.push("a summary");
     } else {
       for (const [k, t, s] of REQ_SOLD) if (empty(d[k])) missing.push({ field: k, text: t, step: s });
+      const sc = d.stock_no ? siteCar(d.stock_no) : null;
+      if (sc && !linkedIds.has(sc.website_id)) problems.car_id = `${sc.website_id} is only on the website, not in the Desk yet. Link it first with "Already on the website?" in New car (step 1), then send this again.`;
     }
-    return { missing, problems: {}, warnings: [], site_missing: site };
+    return { missing, problems, warnings: [], site_missing: site };
   }
   function readback(it) {
     const d = it.data, out = [], add = (label, value, flag = null) => { if (value) out.push({ label, value, flag }); };
@@ -107,7 +126,13 @@ export function createIntakeStore({ role, me, myName, now }) {
       if (d.price_on_request) add("Asking price", "on request"); else if (d.asking_price) add("Asking price", inr(d.asking_price));
       const words = [d.headline, d.summary].filter(Boolean).map((x) => x.trim().replace(/\.$/, "") + ".").join(" ");
       if (words) add("Website words", `"${words.slice(0, 160)}${words.length > 160 ? "..." : ""}"`);
-      add("List on website", w(d.list_on_site || "now"));
+      if (d.website_id) add("Already on the website", `${siteCar(d.website_id)?.label || d.website_id} (${d.website_id}): linked, not listed again. The website copy gets these details.`);
+      else {
+        add("List on website", w(d.list_on_site || "now"));
+        const same = (a, b) => String(a || "").toLowerCase() === String(b || "").toLowerCase();
+        const show = ["draft", "submitted"].includes(it.state) ? unlinked().filter((c) => !d.make || (same(c.make, d.make) && (!d.model || same(c.model, d.model)))) : [];
+        if (show.length) add("Already on the website?", `${show.slice(0, 3).map((c) => `${c.label} (${c.website_id})`).join("; ")}. If it is this car, pick it in step 1 of the form so it is linked, not listed twice.`, "warn");
+      }
       add("Photos", `${ph.must_in} of ${ph.must} must-haves · ${ph.have} in all`, ph.missing_must.length ? "warn" : null);
       if (role === "owner" && it.money?.purchase_price) add("Buying price", inr(it.money.purchase_price), "owner");
       if (role === "owner" && it.money?.floor_price) add("Lowest price", inr(it.money.floor_price), "owner");
@@ -197,7 +222,8 @@ export function createIntakeStore({ role, me, myName, now }) {
     return it;
   }
   function submit(it) {
-    if (checks(it).missing.length) throw new ApiError(400, "validation", "Some things are still needed.", { checks: { missing: checks(it).missing } });
+    const chk = checks(it);
+    if (chk.missing.length || Object.keys(chk.problems).length) throw new ApiError(400, "validation", Object.values(chk.problems)[0] || "Some things are still needed.", { checks: { missing: chk.missing, problems: chk.problems } });
     touch(it);
     if (salesman && it.kind === "new_car") { it.state = "submitted"; return { state: "submitted", next: ["Sent to the manager for approval."] }; }
     return save(it);
@@ -206,6 +232,11 @@ export function createIntakeStore({ role, me, myName, now }) {
     it.state = "saved"; touch(it);
     if (it.kind === "new_car") {
       it.car_id = 900 + it.id; it.stock_no = `CA${nextStock++}`;
+      if (it.data.website_id) {
+        linkedIds.add(it.data.website_id);
+        it.site_jobs = [{ id: it.id, kind: "edit_car", state: "waiting", note: "Demo: in the real app the website car is linked to this Desk car now.", created_at: now(), updated_at: now() }];
+        return { state: "saved", next: [`Saved as ${it.stock_no} in Stock.`, `Linked to the website car ${it.data.website_id}: no new listing.`] };
+      }
       it.site_jobs = [{ id: it.id, kind: "add_car", state: "waiting", note: "Demo: in the real app the website job starts now.", created_at: now(), updated_at: now() }];
       return { state: "saved", next: [`Saved as ${it.stock_no} in Stock.`, "Website: sending."] };
     }
@@ -242,6 +273,7 @@ export function createIntakeStore({ role, me, myName, now }) {
     get(path, params = {}) {
       if (path === "intakes/format") return params.kind === "edit_car" ? undefined : { text: intakeFormat(params.kind, role) };
       if (path === "intakes") return { data: list.map(row) };
+      if (path === "intakes/site-cars") return { data: unlinked().map(brief) };
       const m = path.match(/^intakes\/(\d+)$/);
       if (m) return out(find(m[1]));
       return undefined;
@@ -257,6 +289,12 @@ export function createIntakeStore({ role, me, myName, now }) {
       if (m && method === "PATCH") {
         const it = find(m[1]);
         if (body.version !== it.version) throw new ApiError(409, "version_conflict", "Someone else changed this draft.");
+        const wid = (body.data || {}).website_id;
+        if (wid && wid !== it.data.website_id) {
+          const sc = siteCar(wid);
+          if (!sc || linkedIds.has(sc.website_id)) throw new ApiError(409, "website_linked", "That website car is already linked (demo).");
+          for (const [k, v] of Object.entries(sc.fill)) if (it.data[k] == null || it.data[k] === "") it.data[k] = v;
+        }
         for (const [k, v] of Object.entries(body.data || {})) { if (v == null) delete it.data[k]; else it.data[k] = ["asking_price", "sale_price"].includes(k) && typeof v === "string" ? rupees(v) ?? v : v; }
         touch(it);
         return out(it);

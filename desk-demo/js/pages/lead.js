@@ -65,6 +65,7 @@ export async function render(ctx) {
     catch { acc = null; accErr = true; }
     if (!ctx.alive()) return;
     paintAcc();
+    fuBanner();
     if (!autoOpened && acc) {
       autoOpened = true;
       if (ctx.query.get("brief") === "1" && a.brief) fillBrief();
@@ -75,6 +76,21 @@ export async function render(ctx) {
       const b = briefToFill(acc, state.user?.engine_name || null);
       if (b && b.seat === state.user?.engine_name && !document.querySelector(".brief-sheet")) fillBrief(+b.id);
     }
+  }
+  /** The follow-up list (SPEC-FOLLOWUP-RESHUFFLE 11.3): a banner on his own listed or at-risk lead, Decide for an approver. */
+  async function fuBanner() {
+    if (!can("acc.followup") && !can("acc.own")) return;
+    let r;
+    try { r = await desk.get("acc/followups", null, { background: true }); } catch { return; }
+    const host = wrap.querySelector("#ld-fu");
+    if (!ctx.alive() || !host || !r || !r.enabled) return;
+    const lid = +id, why = (x) => ((x.reasons || [])[0]?.label || "not followed up").replace(/^./, (c) => c.toLowerCase());
+    const risk = (r.at_risk || []).find((x) => +x.lead_id === lid);
+    const listed = (r.listed || []).find((x) => +x.lead_id === lid && x.state === "pending");
+    const open = (r.list?.state === "open" ? r.list.groups || [] : []).flatMap((g) => g.items).find((x) => +x.lead_id === lid && x.state === "pending");
+    host.innerHTML = listed ? `<div class="strip">${icon("flag", "")}<span><b>On the follow-up list: ${esc(why(listed))}.</b><span class="muted">Follow up now; the manager decides.</span></span></div>`
+      : risk ? `<div class="strip">${icon("flag", "")}<span><b>Goes on the follow-up list ${esc(deskTime(risk.cut_at))}: ${esc(why(risk))}.</b><span class="muted">Call and fill the brief before then. A WhatsApp from your own phone cannot be seen by the app.</span></span></div>`
+      : open && r.can_decide ? `<a class="strip notify" href="#/followups">${icon("flag", "")}<span><b>On the follow-up list</b><span class="muted">${esc(open.seat)} · ${esc(why(open))}</span></span><span class="btn sm">Decide</span></a>` : "";
   }
   function paintAcc() {
     const host = wrap.querySelector("#ld-acc"), duty = wrap.querySelector("#ld-duty");
@@ -100,7 +116,7 @@ export async function render(ctx) {
       </section>
       ${a.claim && act ? claimPanel(l) : l.claim ? `<div class="ld-clock">${clockHtml(l.claim, { big: true })}<span class="muted">${l.mine ? "Claim it before the clock runs out" : `Waiting for ${esc(l.salesman || "the salesman")} to claim`}</span></div>` : ""}
       ${contactRow(l, a, locked, accOn)}
-      ${accOn && !locked ? `<div id="ld-duty">${dutyPanel(d, acc, accErr)}</div>` : ""}
+      ${accOn && !locked ? `<div id="ld-duty">${dutyPanel(d, acc, accErr)}</div><div id="ld-fu" class="ld-fu"></div>` : ""}
       ${act ? actionGrid(l, a) : can("records.all") ? `<p class="muted ld-readonly">${icon("eye", "")}You can see this lead. Only the salesman, the manager and the partners can act on it.</p>` : ""}
       ${l.status === "sold" && can("deals.create") ? `<div class="strip">${icon("tag", "")}<span><b>Sold. Book the deal next.</b><span class="muted">Price, payment and papers go on the Deals page, not here.</span></span><a class="btn sm" href="#/deals">Book the deal</a></div>` : ""}
       ${accOn && !locked ? `<section class="card ld-acc" id="ld-acc" aria-live="polite">${accCard(d, acc, accErr)}</section>` : ""}

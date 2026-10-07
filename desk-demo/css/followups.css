@@ -1,0 +1,70 @@
+/* The follow-up list (SPEC-FOLLOWUP-RESHUFFLE 11). Tokens from tokens.css only. Phone first; every tap target 44 px. */
+.fu-page { padding-bottom: 96px; }
+.fu-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px 12px; padding: 14px 16px; margin-bottom: 16px; }
+.fu-head > div { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; }
+.fu-head b { font-size: 15px; }
+.fu-head .small-note { flex-basis: 100%; margin-top: 2px; }
+.fu-back { margin-bottom: 10px; min-height: 44px; }
+
+.fu-group { margin-bottom: 22px; }
+.fu-gh { position: sticky; top: var(--top-h, 0px); z-index: 3; display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap;
+  padding: 8px 0; margin-bottom: 8px; background: color-mix(in srgb, var(--bg) 92%, transparent); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
+.fu-gh h2 { font-size: 16px; margin: 0; }
+.fu-gh .btn { min-height: 44px; }
+.fu-items { display: grid; gap: 12px; }
+@media (min-width: 900px) { .fu-items { grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: start; } }
+
+.fu-card { background: var(--card); border: 1px solid var(--line); border-radius: var(--r-lg); padding: 14px 16px; display: grid; gap: 10px; min-width: 0; }
+.fu-card.done, .fu-card.own { opacity: 0.78; }
+.fu-top { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; min-width: 0; }
+.fu-id { font: 400 26px/1 var(--font-display); letter-spacing: 0.03em; color: var(--text); text-decoration: none; min-height: 44px; display: inline-flex; align-items: center; padding-right: 4px; }
+.fu-id:hover { text-decoration: underline; }
+.fu-name { font-weight: 700; margin-right: auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.fu-car { margin: -6px 0 0; font-size: 13px; overflow-wrap: anywhere; }
+.fu-why { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.fu-why li { display: grid; gap: 2px; justify-items: start; }
+.fu-why .badge { white-space: normal; text-align: left; }
+.fu-why .badge svg { width: 13px; height: 13px; flex: none; }
+.fu-why small { color: var(--muted); font-size: 12.5px; padding-left: 2px; }
+.fu-ev { display: grid; gap: 4px; margin: 0; font-size: 13px; }
+.fu-ev > div { display: flex; gap: 10px; justify-content: space-between; border-top: 1px solid var(--line); padding-top: 4px; }
+.fu-ev dt { color: var(--muted); flex: none; }
+.fu-ev dd { margin: 0; text-align: right; min-width: 0; overflow-wrap: anywhere; font-weight: 600; }
+.fu-after { display: flex; gap: 8px; align-items: center; margin: 0; padding: 8px 10px; border-radius: var(--r-md); background: var(--pos-bg); color: var(--pos); font-size: 13px; font-weight: 700; }
+.fu-after svg, .fu-out svg { width: 15px; height: 15px; flex: none; }
+.fu-out { display: flex; flex-wrap: wrap; gap: 4px 8px; align-items: center; margin: 0; font-size: 13.5px; font-weight: 600; }
+.fu-out small { flex-basis: 100%; color: var(--muted); font-weight: 500; }
+.fu-seg { display: flex; width: 100%; }
+.fu-seg button { flex: 1 1 0; min-height: 44px; justify-content: center; }
+.fu-more { display: grid; gap: 10px; }
+.fu-more .textarea { min-height: 64px; resize: vertical; }
+.fu-until { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); gap: 10px; }
+.fu-sel { display: flex; align-items: center; gap: 10px; min-height: 44px; font-size: 13.5px; font-weight: 600; cursor: pointer; }
+.fu-sel input { width: 20px; height: 20px; accent-color: var(--navy-bright); }
+.fu-acts { display: flex; flex-wrap: wrap; gap: 8px; }
+.fu-acts .btn { min-height: 44px; flex: 1 1 140px; justify-content: center; }
+
+.fu-sec { margin-bottom: 22px; }
+.fu-sec .eyebrow { margin: 0 0 8px; }
+.fu-alert { display: flex; gap: 10px; align-items: flex-start; padding: 12px 14px; margin-bottom: 12px; border-radius: var(--r-md); background: var(--warn-bg); font-size: 13.5px; }
+.fu-alert svg { width: 18px; height: 18px; flex: none; color: var(--warn); margin-top: 1px; }
+.fu-help svg { width: 15px; height: 15px; flex: none; }
+
+.fu-bar .btn { min-height: 44px; }
+.fu-result { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; }
+.fu-result li { display: flex; gap: 10px; align-items: flex-start; padding: 10px 0; border-top: 1px solid var(--line); font-size: 14px; }
+.fu-result li:first-child { border-top: 0; }
+.fu-result li svg { width: 16px; height: 16px; flex: none; margin-top: 2px; color: var(--muted); }
+.fu-result li.neg svg { color: var(--neg); }
+
+.fu-past { list-style: none; margin: 0; padding: 0; }
+.fu-past li + li { border-top: 1px solid var(--line); }
+.fu-prow { display: flex; align-items: center; gap: 10px; width: 100%; min-height: 60px; padding: 12px 16px; border: 0; background: transparent; color: inherit; text-align: left; cursor: pointer; flex-wrap: wrap; }
+.fu-prow:hover { background: color-mix(in srgb, var(--text) 4%, transparent); }
+.fu-prow > svg { width: 18px; height: 18px; color: var(--faint); margin-left: auto; flex: none; }
+.fu-pd { display: flex; align-items: center; gap: 8px; }
+.fu-pn { font-size: 13px; flex: 1 1 220px; min-width: 0; }
+@media (max-width: 559px) {
+  .fu-card { padding: 12px 14px; }
+  .fu-pn { flex-basis: 100%; order: 3; }
+}

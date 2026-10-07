@@ -387,6 +387,11 @@ export async function refreshBadges() {
     const n = (r.messages || []).filter((m) => m.role !== "user" && m.id > seen).length;
     paint("ask", n, "Answers since you last looked");
   }).catch(() => { askQuietUntil = Date.now() + 5 * 60000; }));
+  // the follow-up list (SPEC-FOLLOWUP-RESHUFFLE 11): the approver's leads to decide, the salesman's leads at risk
+  if (state.deskFlags?.acc && (can("acc.followup") || can("acc.own"))) jobs.push(desk.get("acc/followups", {}, bg).then((r) => {
+    const n = r.list ? (r.can_decide && r.list.state === "open" ? r.list.counts?.pending || 0 : 0) : (r.at_risk || []).length;
+    paint("followups", n, r.list ? "Follow-up list: leads to decide" : "Leads that go on the follow-up list unless you follow up");
+  }).catch(() => {}));
   await Promise.all(jobs);
   try { if ("setAppBadge" in navigator && isStandalone()) total ? navigator.setAppBadge(total) : navigator.clearAppBadge(); } catch { /* not supported */ }
 }

@@ -273,7 +273,7 @@ async function open(ctx, id) {
   }
   const h = (t, sub = "") => `<div class="step-h"><h2>${esc(t)}</h2>${sub ? `<p class="muted">${sub}</p>` : ""}</div>`;
   const NEW = {
-    car: () => h("Car, from the RC", "Copy it exactly as the RC shows it.") + (it.state === "draft" ? pasteBox() : "") + `<div class="form-stack">
+    car: () => h("Car, from the RC", "Copy it exactly as the RC shows it.") + (it.state === "draft" ? pasteBox() : "") + `<div id="site-pick" class="site-pick"></div><div class="form-stack">
       ${text("make", "Make", { req: 1, ph: "Hyundai" })}${text("model", "Model", { req: 1, ph: "Creta" })}${text("variant", "Variant", { req: 1, ph: "SX(O) 1.5 Diesel" })}
       ${text("mfg_month", "Made (month and year)", { req: 1, type: "month" })}${text("reg_month", "Registered (month and year)", { req: 1, type: "month" })}
       ${text("reg_no", "Registration number", { req: 1, ph: "MH02AB1234", hint: "The website shows only the RTO code (like MH-02)." })}${chips("reg_type", "Registration type", CH.reg_type)}
@@ -313,7 +313,7 @@ async function open(ctx, id) {
     check: () => checkStep(),
   };
   const SOLD = {
-    car: () => h("Car and stage") + `<div class="form-stack">${text("stock_no", "Stock number", { req: 1, ph: "CA123" })}${chips("stage", "Stage", CH.stage, { req: 1 })}${text("date", val("stage") === "delivered" ? "Delivered on" : "Booked on", { req: 1, type: "date" })}</div>`,
+    car: () => h("Car and stage") + `<div class="form-stack">${text("stock_no", "Stock number", { req: 1, ph: "CA123", hint: "A car only on the website? Link it first with \"Already on the website?\" in New car." })}${err("car_id")}${chips("stage", "Stage", CH.stage, { req: 1 })}${text("date", val("stage") === "delivered" ? "Delivered on" : "Booked on", { req: 1, type: "date" })}</div>`,
     buyer: () => h("Buyer") + `<div class="form-stack">${chips("buyer_type", "Buyer type", CH.buyer_type, { req: 1 })}${text("buyer_name", "Buyer name", { req: 1 })}${text("buyer_phone", "Buyer mobile", { req: 1, type: "tel", mode: "tel" })}
       ${can("records.all") ? text("sold_by", "Sold by (salesman's name)") : ""}${text("lead_id", "Lead number (optional)", { mode: "numeric" })}</div>`,
     price: () => h("Price and payments", "Full rupees only.") + `<div class="form-stack">${money("sale_price", "Final price", { req: 1 })}
@@ -329,6 +329,7 @@ async function open(ctx, id) {
     car: (b) => {
       b.querySelector("#chassis_old")?.addEventListener("change", (e) => setVal("chassis_old", e.target.checked));
       b.querySelector("#paste-go")?.addEventListener("click", pasteFormat);
+      if (it.kind === "new_car") sitePick(b);
     },
     specs: (b) => b.querySelectorAll("[data-feat]").forEach((x) => x.addEventListener("click", () => {
       const cur = new Set(val("features") || []); const on = x.getAttribute("aria-pressed") !== "true";
@@ -364,6 +365,40 @@ async function open(ctx, id) {
     t[f] = f === "amount" ? rupees(el.value) : el.value; if (Number.isNaN(t.amount)) return; setVal("token", t);
   }));
   const guessJob = (s) => { const t = s.toLowerCase(); return /dent|paint/.test(t) ? "denting_painting" : /detail|polish/.test(t) ? "detailing" : /tyre/.test(t) ? "tyres" : /electric/.test(t) ? "electrical" : /engine|service|mechanic/.test(t) ? "mechanical" : /\bac\b/.test(t) ? "ac" : /seat|interior/.test(t) ? "interior" : "other"; };
+
+  // ---------------------------------------------------------------- "Already on the website?" (P1, 4.6): link, never list twice
+  let siteCars = null;
+  async function sitePick(b) {
+    const box = b.querySelector("#site-pick"); if (!box) return;
+    const wid = val("website_id");
+    if (wid) {
+      const line = (it.readback || []).find((x) => x.label === "Already on the website");
+      box.innerHTML = `<div class="note-card">${icon("globe", "")}<p><b>Already on the website.</b> ${esc(line ? line.value : wid)}</p>${editable() ? `<button type="button" class="btn sm" id="site-unlink">Not this car</button>` : ""}</div>${err("website_id")}`;
+      box.querySelector("#site-unlink")?.addEventListener("click", () => linkTo(null));
+      return;
+    }
+    if (!editable()) return;
+    if (!siteCars) { try { siteCars = (await io.get("intakes/site-cars")).data || []; } catch { siteCars = []; } }
+    if (!ctx.alive() || step !== "car" || !siteCars.length || !box.isConnected) return;
+    const facts = (c) => [Number.isFinite(c.kms) ? `${new Intl.NumberFormat("en-IN").format(c.kms)} km` : "", c.colour, c.price_on_request ? "Price on request" : inrFmt(c.price)].filter(Boolean).join(" · ");
+    box.innerHTML = `<details class="paste"><summary>${icon("globe", "")}Already on the website? (${siteCars.length})</summary><p class="muted">These cars are on the website but not in the Desk yet. If this car is one of them, pick it: it is linked, not listed twice, and its website details fill in here.</p>
+      <ul class="list">${siteCars.map((c) => `<li><span class="grow"><div class="t">${esc(c.label)}</div><div class="s">${esc(facts(c))}</div></span><button type="button" class="btn sm" data-site="${esc(c.website_id)}">This car</button></li>`).join("")}</ul></details>${err("website_id")}`;
+    box.querySelectorAll("[data-site]").forEach((x) => x.addEventListener("click", () => linkTo(x.dataset.site)));
+  }
+  async function linkTo(wid) {
+    const send = { ...pending, website_id: wid };
+    pending = {};
+    try {
+      it = await io.patch(`intakes/${id}`, { version: it.version, data: send });
+      try { localStorage.removeItem(key); } catch { /* storage blocked */ }
+      siteCars = null;
+      toast(wid ? "Linked to the website car. Its details are filled in: check each step." : "Not linked. This car goes on the website as a new listing.", "ok");
+      paint();
+    } catch (e) {
+      delete send.website_id; pending = { ...send, ...pending };
+      toast(e.message || "Could not link it.", "err");
+    }
+  }
 
   function pasteBox() {
     return `<details class="paste"><summary>${icon("copy", "")}Paste the format</summary><p class="muted">Paste a filled NEW CAR format (from WhatsApp or Ask Claude). Lines it cannot place are shown back, never guessed.</p>

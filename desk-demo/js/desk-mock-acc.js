@@ -2,6 +2,7 @@
 // in-memory actions: press Call, fill a brief, send a screenshot, check one, move a lead, warnings, leave, call rules.
 // Every name is made up and there is no phone number anywhere: "tel_url" is always null here.
 import { ApiError } from "./api.js";
+import { FOLLOWUP_SETTINGS, createFollowupStore, followupData } from "./desk-mock-followup.js";
 
 const D = "2026-10-05";
 const at = (hm, day = D) => `${day} ${hm.length === 5 ? hm + ":00" : hm}`;
@@ -17,7 +18,7 @@ export const OUTCOMES = [
 ];
 const SPOKE = new Set(OUTCOMES.filter((o) => o.spoke).map((o) => o.code));
 const RECIPIENTS = { pass: ["manager", "owner"], missed_brief: ["sales_manager", "manager"], missing_proof: ["sales_manager", "manager"], warning: ["sales_manager", "manager"],
-  escalated: ["manager", "owner"], proof_review: ["sales_manager", "manager"], review_flag: ["owner"] };
+  escalated: ["manager", "owner"], proof_review: ["sales_manager", "manager"], review_flag: ["owner"], followup_approve: ["sales_manager", "manager"] };
 const TIMER_KEYS = ["office_hours", "claim_sla_min", "call_sla_min", "brief_prompt_min", "proof_due_min"];
 // The AI's reading of the two demo screenshots (SPEC-SCREENSHOT-AI 2.8): the engine's exact chip words, made-up digits
 const TICK_41 = { source: "ai", state: "done", verdict: "spoke", ok: true, rank: 2, chip: "✓ Spoke - number matches, 10:12, 2:14", flag: null, flag_chip: null,
@@ -37,17 +38,19 @@ const OK_CHECKS = { image: true, after_call_press: true, in_window: true, on_tim
 export function accData() {
   return {
     server_now: at("11:20"),
+    followups: followupData(),                       // the follow-up list (desk-mock-followup.js)
     settings: { settings: { enabled: true, office_hours: "10:00-21:00", claim_sla_min: 15, claim_sla_by_tier: {}, call_sla_min: 15, brief_prompt_min: 3, proof_due_min: 30,
       missing_proof_action: "escalate", max_rounds: 2, after_max_rounds: "owners", recipients: RECIPIENTS, sales_manager: null, block_claim_on_overdue_brief: true,
       review_sample_pct: 100, night_distribution: true, release_wave_size: 3, release_wave_every_min: 20, weekly_off: { [R]: "tue" },
-      exotel: { enabled: false, hide_number: true, record: false, min_connected_sec: 20 }, ai_proof_check: false, ai_proof_daily_cap: 200, proof_reader: "local" },
+      exotel: { enabled: false, hide_number: true, record: false, min_connected_sec: 20 }, ai_proof_check: false, ai_proof_daily_cap: 200, proof_reader: "local", followup: { ...FOLLOWUP_SETTINGS } },
     advanced: { brief_reminder_every_min: 5, brief_max_reminders: 3, warning_window_days: 30, ai_proof_model: "claude-haiku-4-5", ai_proof_escalate_model: "claude-sonnet-5-5" },
     ai_today: { read: 3, claude: 0, last_at: at("10:31") }, brief_outcomes: OUTCOMES, interest: ["hot", "warm", "cold", "none"], version: "demo-1",
     live: { exotel_keys: false, hours_by_day: null, closed_dates: [], tiers: [{ name: "Luxury 50L+", key: "luxury", claim_sla_min: 15 }, { name: "Premium 20-50L", key: "premium", claim_sla_min: 15 }, { name: "Core under 20L", key: "core", claim_sla_min: 15 }],
       staff: [{ name: K, role: "sales" }, { name: R, role: "sales" }, { name: Z, role: "sales" }, { name: A, role: "sales" }, { name: M, role: "manager" }, { name: P, role: "owner" }] } },
     todo: {
       [K]: [{ lead_id: 1035, seat: K, kind: "call", due_at: at("11:27"), state: "due" }, { lead_id: 1031, seat: K, kind: "brief", brief_id: 90, due_at: at("11:30"), state: "open" },
-        { lead_id: 1035, seat: K, kind: "proof", proof_id: 44, due_at: at("11:42"), state: "due" }],
+        { lead_id: 1035, seat: K, kind: "proof", proof_id: 44, due_at: at("11:42"), state: "due" },
+        { lead_id: 1037, seat: K, kind: "followup", item_id: 488, due_at: at("10:30", "2026-10-08"), state: "at_risk", reasons: ["next_step_overdue"] }],
       [R]: [{ lead_id: 1038, seat: R, kind: "proof", proof_id: 42, due_at: at("10:35"), state: "missed" }],
       [Z]: [], [A]: [],
     },
@@ -175,6 +178,7 @@ export function createAccStore({ role, myName, src, leads, fire, stamp }) {
   const dropTodo = (seat, id, kind) => { db.todo[seat] = (db.todo[seat] || []).filter((x) => !(x.lead_id === id && x.kind === kind)); };
   const bump = (id, why) => fire({ kind: "lead.changed", lead_id: id, why });
   const notFound = () => new ApiError(404, "not_found", "Not part of the sample data.");
+  const fu = createFollowupStore({ role, myName, mySeat, data, rowOf, lead, tierSeats: TIER_SEATS, fire, now, plus, nextId: () => nextId++ });
 
   return {
     async rowBadges(rows) {
@@ -189,11 +193,12 @@ export function createAccStore({ role, myName, src, leads, fire, stamp }) {
       return items.length;
     },
     async get(path, p = {}) {
+      if (path.startsWith("acc/followups")) return fu.get(path, p);
       if (path === "acc/settings") {
         const d = await data();
         if (role === "owner") return clone(d.settings);
         const s = d.settings.settings;
-        return { timers: Object.fromEntries(TIMER_KEYS.map((k) => [k, s[k]])), enabled: s.enabled, exotel: { enabled: !!s.exotel.enabled }, brief_outcomes: OUTCOMES, interest: ["hot", "warm", "cold", "none"] };
+        return { timers: { ...Object.fromEntries(TIMER_KEYS.map((k) => [k, s[k]])), followup: s.followup }, enabled: s.enabled, exotel: { enabled: !!s.exotel.enabled }, brief_outcomes: OUTCOMES, interest: ["hot", "warm", "cold", "none"] };
       }
       if (path === "acc/todo") {
         await data();
@@ -261,6 +266,7 @@ export function createAccStore({ role, myName, src, leads, fire, stamp }) {
     },
 
     async send(method, path, body = {}) {
+      if (path.startsWith("acc/followups")) return fu.post(path, body);
       let m = path.match(/^desk\/leads\/(\d+)\/(call-attempt|brief|reassign)$/);
       if (m) {
         await data();

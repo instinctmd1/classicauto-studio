@@ -25,6 +25,8 @@ const NAV = [
     // shows while accountability is off (the owners switch it on there), once the engine knows about it.
     { id: "calls", label: "Calls and warnings", icon: "flag", any: ["acc.own", "acc.team"], onlyIf: () => !!state.deskFlags?.acc },
     { id: "proofs", label: "Screenshots to check", icon: "image", any: ["acc.review"], onlyIf: () => !!state.deskFlags?.acc },
+    // the follow-up list (SPEC-FOLLOWUP-RESHUFFLE 11): the approvers decide it, a salesman sees his own leads at risk
+    { id: "followups", label: "Follow-up list", icon: "repeat", any: ["acc.followup", "acc.own"], badge: "followups", onlyIf: () => !!state.deskFlags?.acc },
     { id: "rules", label: "Call rules", icon: "clock", any: ["acc.settings"], onlyIf: () => "acc" in (state.deskFlags || {}) },
     // the evening roll-call and the owner reports (APP-SPEC 12): live app only (the demo bundle has no engine to answer them)
     { id: "rollcall", label: "Roll-call", icon: "moon", any: ["desk.inbox"], onlyIf: () => !DEMO },
