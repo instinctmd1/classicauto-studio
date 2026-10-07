@@ -49,16 +49,32 @@
   var priceEl = f("price"); priceEl.textContent = onRequest ? "Ask for price" : fmt.rupees(car.price);
   if (!onRequest) set("priceAlt", fmt.money(car.price));
 
-  /* ---- new-car comparison: only with the maker's own figure for the same variant, dated and sourced (main.js newPrice) ---- */
+  /* ---- "You save": our price against today's new equivalent on the road in Mumbai, with the working in a toggle
+     (main.js newPrice; every figure sourced and dated, the on-road total labelled an estimate) ---- */
   var np = fmt.newPrice(car);
   if (np) {
-    var nc = f("newCompare");
+    var nc = f("newCompare"), e = cardsApi.esc, o = np.onRoad;
+    var link = function (s) { return '<a href="' + e(s.url) + '" target="_blank" rel="noopener">' + e(s.name) + '</a> (read ' + fmt.fmtDate(s.asOf) + ')'; };
+    var row = function (k, v, cls) { return '<div class="nc-line' + (cls ? " " + cls : "") + '"><dt>' + k + '</dt><dd>' + v + '</dd></div>'; };
     nc.innerHTML =
-      '<div class="nc-row"><span class="nc-k">New: approx. ex-showroom</span><span class="nc-v">' + fmt.money(np.price) + '</span></div>' +
-      '<div class="nc-row nc-save"><span class="nc-k">You save approx.</span><span class="nc-v">' + fmt.money(np.save) + '</span></div>' +
-      '<p class="nc-note">Approximate. The new figure is the maker\'s listed ex-showroom price for the same variant' + (np.variant ? " (" + cardsApi.esc(np.variant) + ")" : "") +
-      ', from the <a href="' + cardsApi.esc(np.url) + '" target="_blank" rel="noopener">' + cardsApi.esc(np.source) + '</a>, read on ' + np.asOfText +
-      '. A new car also needs road tax, registration and insurance on top of that price.</p>';
+      '<div class="nc-row nc-save"><span class="nc-k">You save approx.</span><span class="nc-v">' + fmt.rupees(np.save) + '</span></div>' +
+      '<p class="nc-vs">vs a new ' + e(np.compareName) + ' on the road in Mumbai</p>' +
+      '<details class="nc-how"><summary>How we worked this out <span class="nc-tag">estimate</span></summary>' +
+      '<dl class="nc-list">' +
+        row("New " + e(np.compareName) + ", ex-showroom" + (np.area === "Mumbai" ? " Mumbai" : " (India price)"), fmt.rupees(np.exShowroom)) +
+        row("Road tax, Maharashtra (" + e(o.road_tax_basis) + ": " + o.road_tax_pct + "%)", fmt.rupees(o.road_tax)) +
+        row("Registration and smart-card RC fees", fmt.rupees(o.registration)) +
+        row("First-year insurance, estimated at " + o.insurance_pct + "% of ex-showroom", fmt.rupees(o.insurance)) +
+        row("New car on the road in Mumbai (estimate)", fmt.rupees(np.total), "nc-sum") +
+        row("Our price for this " + car.year + " " + e(car.model), "&minus; " + fmt.rupees(car.price)) +
+        row("Difference " + fmt.rupees(np.diff) + ", rounded down to the nearest ₹10,000", fmt.rupees(np.save), "nc-sum") +
+      '</dl>' +
+      '<p class="nc-note">' + (np.basis ? e(np.basis) + " " : "") +
+        'Ours is a used ' + car.year + ' car with ' + fmt.formatKm(car.kms) + ' on it, not a new one: this compares what you pay, not two identical cars. ' +
+        'Left out: 1% TCS, collected on any car over ₹10 lakh, new or used, and claimable against your income tax; and dealer extras such as accessories, FASTag and extended warranty. Prices change, so check before you decide.</p>' +
+      '<p class="nc-note">Sources: new-car price from <a href="' + e(np.url) + '" target="_blank" rel="noopener">' + e(np.source) + '</a> (read ' + np.asOfText + '); ' +
+        'road tax: ' + link(np.sources.roadTax) + '; fees: ' + link(np.sources.registration) + '; insurance: ' + link(np.sources.insurance) + '; TCS: ' + link(np.sources.tcs) + '.</p>' +
+      '</details>';
     nc.hidden = false;
   }
   var chips = [["Owner", car.owners], ["Driven", fmt.formatKm(car.kms)], ["Registered", car.reg_month]];

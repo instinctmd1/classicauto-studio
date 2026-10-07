@@ -9,7 +9,7 @@ var CARS = [
     seats: null, insurance_until: "2028-11-05", insurance_note: "", photos: ["assets/photos/cars/bmw-x3-2025/01.webp"],
     status: "available", ex_demo: false, body: "luxury-suv", segment: "owned",
     band: "50plus", source: "ig:Ddv_dDqDj09", price_on_request: false, notes: "Single owner, diesel automatic M Sport, 17,900 km driven.",
-    new_price: {"ex_showroom": 7820000, "variant": "X3 xDrive20d M Sport, diesel automatic", "source_name": "BMW India configurator", "source_url": "https://configure.bmw.in/en_IN/configure/G45", "as_of": "2026-10-07"}
+    new_price: {"ex_showroom": 7820000, "variant": "X3 xDrive20d M Sport, diesel automatic", "compare_name": "2026 BMW X3 xDrive20d M Sport", "same_model": true, "basis": "The same model and variant, bought new today.", "price_area": "India", "source_name": "BMW India configurator", "source_url": "https://configure.bmw.in/en_IN/configure/G45", "as_of": "2026-10-07", "on_road": {"road_tax_pct": 15, "road_tax_basis": "diesel, over ₹20 lakh", "road_tax": 1173000, "registration": 800, "insurance_pct": 3, "insurance": 234600, "total": 9228400}}
   },
   {
     id: "jaguar-xf-2013", make: "Jaguar", model: "XF", variant: "2.2L Diesel",
@@ -18,7 +18,8 @@ var CARS = [
     colour: "Green", paint: "#1f3a2e", reg_city: "", rto: "DD-03",
     seats: 5, insurance_until: null, insurance_note: "", photos: ["assets/photos/cars/jaguar-xf-2013/01.webp"],
     status: "available", ex_demo: false, body: "luxury-sedan", segment: "owned",
-    band: "u20", source: "ig:Dd8YvM0Eerj", price_on_request: false, notes: "Single owner, five seats, diesel automatic, 53,700 km driven."
+    band: "u20", source: "ig:Dd8YvM0Eerj", price_on_request: false, notes: "Single owner, five seats, diesel automatic, 53,700 km driven.",
+    new_price: {"ex_showroom": 8200000, "variant": "E-Class long-wheelbase saloon, lowest listed price", "compare_name": "2026 Mercedes-Benz E-Class (long wheelbase)", "same_model": false, "basis": "Jaguar sells no saloon in India today, so this is a different maker and model: the nearest new luxury saloon of the XF's size. We used its lowest listed price and the 13% petrol road-tax rate (the diesel rate is 15%), which keeps the figure on the low side.", "price_area": "India", "source_name": "Mercedes-Benz India website", "source_url": "https://www.mercedes-benz.co.in/passengercars/models/saloon/e-class/overview.html", "as_of": "2026-10-07", "on_road": {"road_tax_pct": 13, "road_tax_basis": "petrol rate, over ₹20 lakh", "road_tax": 1066000, "registration": 800, "insurance_pct": 3, "insurance": 246000, "total": 9512800}}
   },
   {
     id: "kia-carens-2023", make: "Kia", model: "Carens", variant: "G1.5 DCT Luxury Plus 7-seater",
@@ -27,7 +28,8 @@ var CARS = [
     colour: "Intense Red", paint: "#9e1b22", reg_city: "", rto: "MH-01",
     seats: 7, insurance_until: "2026-09-05", insurance_note: "", photos: ["assets/photos/cars/kia-carens-2023/01.webp"],
     status: "available", ex_demo: false, body: "mpv", segment: "owned",
-    band: "u20", source: "ig:Dd8bnN7EaF8", price_on_request: false, notes: "Single owner, seven seats, petrol DCT automatic, 32,392 km driven."
+    band: "u20", source: "ig:Dd8bnN7EaF8", price_on_request: false, notes: "Single owner, seven seats, petrol DCT automatic, 32,392 km driven.",
+    new_price: {"ex_showroom": 1684900, "variant": "Carens Clavis 1.5 T-GDi 7DCT HTK Plus, 7 seats", "compare_name": "2026 Kia Carens Clavis HTK Plus 1.5 turbo-petrol DCT 7-seater", "same_model": false, "basis": "Kia no longer sells the Carens with this engine and gearbox; the Carens Clavis replaced it. We used the lowest-priced Clavis with the same 1.5 turbo-petrol engine, DCT automatic and seven seats.", "price_area": "Mumbai", "source_name": "Kia India configurator, Mumbai", "source_url": "https://www.kia.com/in/buy/configure.html", "as_of": "2026-10-07", "on_road": {"road_tax_pct": 12, "road_tax_basis": "petrol, ₹10 to 20 lakh", "road_tax": 202188, "registration": 800, "insurance_pct": 3, "insurance": 50547, "total": 1938435}}
   },
   {
     id: "kia-seltos-2022", make: "Kia", model: "Seltos", variant: "G1.5 IVT HTX",
@@ -36,7 +38,8 @@ var CARS = [
     colour: "White", paint: "#f1f1ee", reg_city: "", rto: "MH-01",
     seats: null, insurance_until: "2027-01-07", insurance_note: "Comprehensive", photos: ["assets/photos/cars/kia-seltos-2022/01.webp"],
     status: "available", ex_demo: false, body: "suv", segment: "owned",
-    band: "u20", source: "ig:Dd0VMs1DkmD", price_on_request: false, notes: "Single owner, petrol IVT automatic, 23,000 km driven, comprehensive insurance."
+    band: "u20", source: "ig:Dd0VMs1DkmD", price_on_request: false, notes: "Single owner, petrol IVT automatic, 23,000 km driven, comprehensive insurance.",
+    new_price: {"ex_showroom": 1721900, "variant": "Seltos Smartstream G1.5 IVT HTX", "compare_name": "2026 Kia Seltos HTX 1.5 petrol IVT", "same_model": true, "basis": "The same model and trim name, with the same 1.5 petrol engine and IVT automatic. The Seltos is a newer generation now.", "price_area": "Mumbai", "source_name": "Kia India configurator, Mumbai", "source_url": "https://www.kia.com/in/buy/configure.html", "as_of": "2026-10-07", "on_road": {"road_tax_pct": 12, "road_tax_basis": "petrol, ₹10 to 20 lakh", "road_tax": 206628, "registration": 800, "insurance_pct": 3, "insurance": 51657, "total": 1980985}}
   },
   {
     id: "renault-kwid-2017", make: "Renault", model: "Kwid", variant: "RXT Climber EASY-R",
@@ -46,7 +49,8 @@ var CARS = [
     seats: null, insurance_until: null, insurance_status: "expired", insurance_note: "",
     photos: ["assets/photos/cars/renault-kwid-2017/01.webp"], status: "available", ex_demo: false, body: "hatchback",
     segment: "owned", band: "u20", source: "ig:DdxwV6OjvXh", price_on_request: false,
-    notes: "Single owner, petrol AMT, 7,879 km driven."
+    notes: "Single owner, petrol AMT, 7,879 km driven.",
+    new_price: {"ex_showroom": 560900, "variant": "Kwid Climber AMT, petrol", "compare_name": "2026 Renault Kwid Climber AMT", "same_model": true, "basis": "The same model and trim name, petrol with the AMT automatic. The Kwid sold new today is a newer version.", "price_area": "Mumbai", "source_name": "Renault India price page, Mumbai", "source_url": "https://www.renault.co.in/cars/renault-kwid/kwid-price.html", "as_of": "2026-10-07", "on_road": {"road_tax_pct": 11, "road_tax_basis": "petrol, up to ₹10 lakh", "road_tax": 61699, "registration": 800, "insurance_pct": 3, "insurance": 16827, "total": 640226}}
   },
   {
     id: "tata-safari-2025", make: "Tata", model: "Safari", variant: "Accomplished Plus (BS6)",
@@ -55,7 +59,8 @@ var CARS = [
     colour: "White", paint: "#f2f2ef", reg_city: "", rto: "MH-43",
     seats: null, insurance_until: "2028-04-22", insurance_note: "", photos: ["assets/photos/cars/tata-safari-2025/01.webp"],
     status: "available", ex_demo: false, body: "suv", segment: "owned",
-    band: "20to50", source: "ig:Dd8sy5EkR1T", price_on_request: false, notes: "Single owner, individual registration, diesel automatic, 24,400 km driven."
+    band: "20to50", source: "ig:Dd8sy5EkR1T", price_on_request: false, notes: "Single owner, individual registration, diesel automatic, 24,400 km driven.",
+    new_price: {"ex_showroom": 2559990, "variant": "Safari Accomplished X+ diesel AT, 7 seats", "compare_name": "2026 Tata Safari Accomplished X+ diesel automatic", "same_model": true, "basis": "Tata renamed its trims: the Accomplished Plus is no longer sold, and the Accomplished X+ is the nearest current diesel automatic seven-seater.", "price_area": "Mumbai", "source_name": "Tata Motors Safari price page, Mumbai", "source_url": "https://tata.cars/safari/ice/price.html", "as_of": "2026-10-07", "on_road": {"road_tax_pct": 15, "road_tax_basis": "diesel, over ₹20 lakh", "road_tax": 383999, "registration": 800, "insurance_pct": 3, "insurance": 76800, "total": 3021589}}
   },
   {
     id: "vw-tiguan-2025", make: "Volkswagen", model: "Tiguan", variant: "R-Line",
@@ -65,7 +70,7 @@ var CARS = [
     seats: null, insurance_until: "2029-02-22", insurance_note: "Zero depreciation", photos: ["assets/photos/cars/vw-tiguan-2025/01.webp"],
     status: "available", ex_demo: false, body: "suv", segment: "owned",
     band: "20to50", source: "ig:DdyL0O9jluc", price_on_request: false, notes: "Single owner, petrol automatic R-Line, 8,077 km driven, zero-depreciation insurance.",
-    new_price: {"ex_showroom": 4711013, "variant": "Tiguan R-Line 2.0 TSI DSG 4MOTION", "source_name": "Volkswagen India website", "source_url": "https://www.volkswagen.co.in/en/models/tiguan-r-line.html", "as_of": "2026-10-07"}
+    new_price: {"ex_showroom": 4711013, "variant": "Tiguan R-Line 2.0 TSI DSG 4MOTION", "compare_name": "2026 Volkswagen Tiguan R-Line", "same_model": true, "basis": "The same model and variant, bought new today.", "price_area": "India", "source_name": "Volkswagen India website", "source_url": "https://www.volkswagen.co.in/en/models/tiguan-r-line.html", "as_of": "2026-10-07", "on_road": {"road_tax_pct": 13, "road_tax_basis": "petrol, over ₹20 lakh", "road_tax": 612432, "registration": 800, "insurance_pct": 3, "insurance": 141330, "total": 5465575}}
   }
 ];
 

@@ -79,24 +79,34 @@
     return { value: py, per: "year", text: "About " + py.toLocaleString("en-IN") + " km a year", months: months };
   }
 
-  /* New-car comparison (gap plan P1-4, done our way): the maker's own ex-showroom price for the same variant, with its source and
-     the date it was read, kept in data/cars.json as `new_price`. Shown only when all of these hold, otherwise not at all:
-     the figure is under 90 days old; the car is 3 years old or less (older cars are a different generation or too far apart to
-     compare); the car is for sale with a price; and the new figure is above our price by at least Rs 50,000. Every figure on
-     screen says "approx.": the ex-showroom price leaves out the road tax, registration and insurance a new car also needs. */
-  var NEW_PRICE_MAX_DAYS = 90, NEW_PRICE_MAX_MONTHS = 36, NEW_PRICE_MIN_GAP = 50000;
+  /* "You save" (gap plan P1-4, done our way), one method for every car: our price against TODAY'S NEW EQUIVALENT on the road in
+     Mumbai, because a used car's price already includes its registration. `new_price` in data/cars.json names that new car
+     (the same model's nearest current variant, else the nearest new car of its class, with the reason), the maker's
+     ex-showroom price with its page and the date it was read, and the on-road breakdown: Maharashtra road tax for that fuel
+     and price band, registration and smart-card fees, and first-year insurance estimated as a % of ex-showroom. The saving is
+     rounded DOWN to the nearest Rs 10,000. Shown only when the figure is under 90 days old, the car is for sale with a price,
+     and the saving is at least Rs 50,000; otherwise not at all. The sources for the tax, fees, insurance and TCS rules are
+     below, with the date each was read. */
+  var NEW_PRICE_MAX_DAYS = 90, NEW_PRICE_MIN_GAP = 50000;
+  var ON_ROAD_SOURCES = {
+    roadTax: { name: "Maharashtra one-time tax slabs from 1 Jul 2025 (PTI, The Week)", url: "https://www.theweek.in/wire-updates/business/2025/07/01/bom2-mh-vehicles-revised-tax.html", asOf: "2026-10-07" },
+    registration: { name: "Central Motor Vehicles Rules, rule 81 fee table: ₹600 registration + ₹200 smart card", url: "https://himachal.gov.in/WriteReadData/l892s/3_l892s/rule81_cmvr-74305708.pdf", asOf: "2026-10-07" },
+    insurance: { name: "Spinny guide: comprehensive cover is usually 3 to 4% of the car's value (we use 3%)", url: "https://www.spinny.com/blog/car-price-difference-between-ex-showroom-and-on-road-price/", asOf: "2026-10-07" },
+    tcs: { name: "Income-tax Act 2025, section 394(1): 1% TCS on a car over ₹10 lakh", url: "https://cleartax.in/s/section-394-income-tax-act-2025", asOf: "2026-10-07" }
+  };
   function newPrice(c) {
-    var np = c && c.new_price;
-    if (!np || !(np.ex_showroom > 0) || !/^https:\/\//.test(np.source_url || "") || !np.as_of || !np.source_name) return null;
+    var np = c && c.new_price, o = np && np.on_road;
+    if (!np || !(np.ex_showroom > 0) || !/^https:\/\//.test(np.source_url || "") || !np.as_of || !np.source_name || !np.compare_name) return null;
+    if (!o || !(o.total > np.ex_showroom) || o.total !== np.ex_showroom + o.road_tax + o.registration + o.insurance) return null;
     if (c.price_on_request || c.price == null || c.status === "SOLD") return null;
     var asOf = new Date(np.as_of + "T00:00:00"), today = new Date(); today.setHours(0, 0, 0, 0);
     var days = (today - asOf) / 86400000;
     if (!(days >= -1 && days <= NEW_PRICE_MAX_DAYS)) return null;
-    var age = monthsSince(c.reg_month);
-    if (age == null || age > NEW_PRICE_MAX_MONTHS) return null;
-    var save = np.ex_showroom - c.price;
+    var diff = o.total - c.price, save = Math.floor(diff / 10000) * 10000;
     if (save < NEW_PRICE_MIN_GAP) return null;
-    return { price: np.ex_showroom, save: save, variant: np.variant || "", source: np.source_name, url: np.source_url, asOf: np.as_of, asOfText: fmtDate(np.as_of) };
+    return { exShowroom: np.ex_showroom, onRoad: o, total: o.total, diff: diff, save: save, compareName: np.compare_name, sameModel: !!np.same_model,
+      basis: np.basis || "", area: np.price_area || "India", source: np.source_name, url: np.source_url, asOf: np.as_of, asOfText: fmtDate(np.as_of),
+      sources: ON_ROAD_SOURCES };
   }
 
   /* 1% TCS on a car sold for more than Rs 10 lakh (Income-tax Act s.206C(1F)). Returns the rupee figure, or 0. */

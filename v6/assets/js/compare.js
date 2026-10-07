@@ -30,11 +30,11 @@
       ["Insurance", function (c) { return fmt.insurance(c).text; }],
       ["Status", function (c) { return c.status === "SOLD" ? "Sold" : "Available"; }]
     ];
-    // the new-car comparison only when one of these cars has the maker's own figure (see main.js newPrice and the car page)
+    // "You save" against today's new equivalent on the road in Mumbai (main.js newPrice; the working is on each car page)
     if (cars.some(function (c) { return fmt.newPrice(c); })) {
       rows.splice(2, 0,
-        ["New: approx. ex-showroom", function (c) { var n = fmt.newPrice(c); return n ? fmt.money(n.price) + '<br><small class="cmp-src">' + esc(n.source) + ", " + n.asOfText + "</small>" : "-"; }],
-        ["You save approx.", function (c) { var n = fmt.newPrice(c); return n ? '<span class="cmp-save">' + fmt.money(n.save) + "</span>" : "-"; }]);
+        ["New equivalent on the road in Mumbai (estimate)", function (c) { var n = fmt.newPrice(c); return n ? fmt.money(n.total) + '<br><small class="cmp-src">vs a new ' + esc(n.compareName) + ", price read " + n.asOfText + "</small>" : "-"; }],
+        ["You save approx.", function (c) { var n = fmt.newPrice(c); return n ? '<span class="cmp-save">' + fmt.rupees(n.save) + "</span>" : "-"; }]);
     }
 
     var head = '<div class="cmp-row cmp-head"><div class="cmp-label"></div>' + cars.map(function (c) {
