@@ -49,6 +49,32 @@
   var priceEl = f("price"); priceEl.textContent = onRequest ? "Ask for price" : fmt.rupees(car.price);
   if (!onRequest) set("priceAlt", fmt.money(car.price));
 
+  /* ---- "Know the model" facts (assets/js/car-info.js, generated from data/cars.json `car_info` by tools/import_stock.py, which drops
+     any block without a named https source and the date it was read). New-car offers are shown for 45 days after they were read and
+     the market check for 90; the market check is left off a car whose price is above the range it found (that goes to Dad instead). ---- */
+  var info = (window.CAR_INFO || {})[car.id] || {}, esc = cardsApi.esc;
+  function ageDays(iso) { var t = new Date(); t.setHours(0, 0, 0, 0); return (t - new Date(iso + "T00:00:00")) / 86400000; }
+  function fresh(b, max) { return !!(b && b.sources && b.sources.length) && b.sources.every(function (s) { var a = ageDays(s.as_of); return a >= -1 && a <= max; }); }
+  function srcLinks(list) {
+    return list.map(function (s) { return '<a href="' + esc(s.url) + '" target="_blank" rel="noopener">' + esc(s.name) + '</a> (read ' + fmt.fmtDate(s.as_of) + ')'; }).join("; ");
+  }
+  var offers = fresh(info.offers, 45) && !(info.offers.article_date && ageDays(info.offers.article_date) > 45) ? info.offers : null;
+  /* "this month" only when the offer was published this month; otherwise the month it was published */
+  var offerThis = false, offerMonth = "";
+  if (offers) {
+    var pub = new Date((offers.article_date || offers.sources[0].as_of) + "T00:00:00"), now = new Date();
+    offerThis = pub.getMonth() === now.getMonth() && pub.getFullYear() === now.getFullYear();
+    offerMonth = pub.toLocaleDateString("en-IN", { month: "short", year: "numeric" });
+  }
+  function pubLinks(list) {   // publisher names only ("Autocar India"), each linked, then the read date(s)
+    return list.map(function (s) { return '<a href="' + esc(s.url) + '" target="_blank" rel="noopener">' + esc(s.name.split(",")[0]) + "</a>"; }).join(", ") + ", " + readOn(list);
+  }
+  function readOn(list) {
+    var days = list.map(function (s) { return s.as_of; }).filter(function (d, i, a) { return a.indexOf(d) === i; });
+    return "read " + days.map(fmt.fmtDate).join(" and ");
+  }
+  var market = fresh(info.market, 90) && !onRequest && car.status !== "SOLD" && car.price <= info.market.high ? info.market : null;
+
   /* ---- "You save": our price against today's new equivalent on the road in Mumbai, with the working in a toggle
      (main.js newPrice; every figure sourced and dated, the on-road total labelled an estimate) ---- */
   var np = fmt.newPrice(car);
@@ -56,9 +82,14 @@
     var nc = f("newCompare"), e = cardsApi.esc, o = np.onRoad;
     var link = function (s) { return '<a href="' + e(s.url) + '" target="_blank" rel="noopener">' + e(s.name) + '</a> (read ' + fmt.fmtDate(s.asOf) + ')'; };
     var row = function (k, v, cls) { return '<div class="nc-line' + (cls ? " " + cls : "") + '"><dt>' + k + '</dt><dd>' + v + '</dd></div>'; };
+    /* a current new-car offer never changes the figure above: it is its own line, with what the saving would be after it */
+    var after = offers && offers.max_rupees > 0 ? Math.floor((np.diff - offers.max_rupees) / 10000) * 10000 : null;
     nc.innerHTML =
       '<div class="nc-row nc-save"><span class="nc-k">You save approx.</span><span class="nc-v">' + fmt.rupees(np.save) + '</span></div>' +
       '<p class="nc-vs">vs a new ' + e(np.compareName) + ' on the road in Mumbai</p>' +
+      (after == null ? "" : '<p class="nc-offer"><b>' + (offerThis ? "New-car offers this month" : "Latest published new-car offers (" + offerMonth + ")") + ':</b> up to ' +
+        fmt.rupees(offers.max_rupees) + ' on a new one (' + pubLinks(offers.sources) + '), ' +
+        (after > 0 ? 'which would make the saving about <b>' + fmt.rupees(after) + '</b>' : 'which would leave little or no saving against it') + '. Dealer offers change often; check with the dealer.</p>') +
       '<details class="nc-how"><summary>How we worked this out <span class="nc-tag">estimate</span></summary>' +
       '<dl class="nc-list">' +
         row("New " + e(np.compareName) + ", ex-showroom" + (np.area === "Mumbai" ? " Mumbai" : " (India price)"), fmt.rupees(np.exShowroom)) +
@@ -79,7 +110,15 @@
       '</details>';
     nc.hidden = false;
   }
-  var chips = [["Owner", car.owners], ["Driven", fmt.formatKm(car.kms)], ["Registered", car.reg_month]];
+  /* ---- market check under the price: what comparable used cars are listed at on two or more independent sites ---- */
+  if (market) {
+    var ml = f("marketLine");
+    ml.innerHTML = '<b>Market check:</b> similar ' + esc(market.similar) + ' are listed at ' + fmt.money(market.low) + ' to ' + fmt.money(market.high) + ' (' +
+      market.sources.map(function (s) { return '<a href="' + esc(s.url) + '" target="_blank" rel="noopener">' + esc(s.name) + '</a>'; }).join(", ") + ', ' + readOn(market.sources) +
+      '). Our price: ' + fmt.money(car.price) + '. <a href="#knowModel" data-ci-open="market">How we checked</a>';
+    ml.hidden = false;
+  }
+  var chips =[["Owner", car.owners], ["Driven", fmt.formatKm(car.kms)], ["Registered", car.reg_month]];
   f("chips").innerHTML = chips.map(function (c) { return '<div class="chip"><span>' + c[0] + '</span><b>' + cardsApi.esc(c[1]) + '</b></div>'; }).join("");
   var emiEl = f("emiLine");
   if (onRequest) emiEl.hidden = true;
@@ -187,6 +226,82 @@
       return '<a class="text-link" href="' + cardsApi.esc(s.url) + '" target="_blank" rel="noopener">' + cardsApi.esc(s.name) + '</a> (read ' + fmt.fmtDate(s.as_of) + ')';
     }).join("; ") + ". These are the maker's figures for the model, not measurements of this car.";
   }
+
+  /* ---- "Know the model": one collapsible row per block, its key fact readable while closed (phone first) ---- */
+  (function () {
+    var rows = [];
+    function ul(items, cls) { return '<ul class="ci-ul' + (cls ? " " + cls : "") + '">' + items.map(function (t) { return "<li>" + esc(t) + "</li>"; }).join("") + "</ul>"; }
+    function src(list) {   // one read date when every source was read the same day, else a date after each
+      var one = list.every(function (s) { return s.as_of === list[0].as_of; });
+      return '<p class="ci-src">Source' + (list.length > 1 ? "s" : "") + (one ? " (read " + fmt.fmtDate(list[0].as_of) + "): " +
+        list.map(function (s) { return '<a href="' + esc(s.url) + '" target="_blank" rel="noopener">' + esc(s.name) + "</a>"; }).join("; ") : ": " + srcLinks(list)) + ".</p>";
+    }
+    function add(key, title, peek, body) {
+      rows.push('<details class="ci" data-ci="' + key + '"><summary><span class="ci-t">' + title + '</span><span class="ci-peek">' + peek + "</span></summary>" +
+        '<div class="ci-body">' + body + "</div></details>");
+    }
+    var m = info.mileage;
+    if (m) {
+      var std = m.standard === "ARAI" ? "ARAI claimed" : "Maker claimed";
+      add("mileage", "Mileage", esc(m.figure) + ", " + std,
+        '<p class="ci-fig"><b>' + esc(m.figure) + '</b> <span class="nc-tag">' + std + "</span></p>" +
+        "<p>For the " + esc(m.applies_to) + ". A test-cycle figure for the model, not a measurement of this car: traffic, load and driving style change what you get.</p>" +
+        (m.note ? "<p>" + esc(m.note) + "</p>" : "") + src(m.sources) +
+        (m.real_world ? '<p class="ci-rw"><b>Road test (not ARAI):</b> ' + esc(m.real_world.figure) + ". " + esc(m.real_world.test) + "</p>" + src(m.real_world.sources) : ""));
+    }
+    var ft = info.features;
+    if (ft) {
+      var short = function (list, n) { return list.filter(function (t) { return t.length <= 34; }).slice(0, n); };
+      var peekF = short(ft.safety, 1).concat(short(ft.comfort, 3 - short(ft.safety, 1).length));
+      add("features", "Key features", esc(ft.peek || (peekF.length ? peekF : ft.comfort.slice(0, 2)).join(" · ")),
+        '<div class="ci-cols">' + (ft.safety.length ? '<div><h4 class="ci-h">Safety</h4>' + ul(ft.safety) + "</div>" : "") +
+        (ft.comfort.length ? '<div><h4 class="ci-h">Comfort and tech</h4>' + ul(ft.comfort) + "</div>" : "") + "</div>" +
+        (ft.ncap ? '<p class="ci-ncap"><b>Crash test:</b> ' + esc(ft.ncap.text) + "</p>" + src(ft.ncap.sources) : "") +
+        (ft.check ? '<h4 class="ci-h">Check at the showroom</h4><p class="ci-dim">We could not confirm these from a source for this exact version:</p>' + ul(ft.check, "is-check") : "") +
+        src(ft.sources) + '<p class="ci-dim">What this variant came with from the maker. Ask us to show you each one on this car.</p>');
+    }
+    var v = info.variants;
+    if (v) {
+      var pos = v.below && v.above ? "between the " + v.below + " and the " + v.above : v.below ? "above the " + v.below : v.above ? "below the " + v.above : "";
+      add("variants", "Where this variant sits", esc(v.this + (pos ? ": " + pos : "")),
+        (v.ladder && v.ladder.length > 1 ? '<ol class="ci-ladder">' + v.ladder.map(function (t) { return "<li" + (t === v.this ? ' class="is-this" aria-current="true"' : "") + ">" + esc(t) + "</li>"; }).join("") + "</ol>" : "") +
+        ul(v.lines) + src(v.sources));
+    }
+    var g = info.generation;
+    if (g) {
+      add("generation", "Generation and model changes", esc(g.peek || g.this_car),
+        (g.peek ? "<p>" + esc(g.this_car) + "</p>" : "") + '<ol class="ci-time">' + g.timeline.map(function (t) { return '<li><span class="ci-year">' + esc(t.year) + "</span><span>" + esc(t.text) + "</span></li>"; }).join("") + "</ol>" + src(g.sources));
+    }
+    if (offers) {
+      var savedAfter = np && offers.max_rupees > 0 ? Math.floor((np.diff - offers.max_rupees) / 10000) * 10000 : null;
+      add("offers", "New-car offers today", (offers.max_rupees > 0 ? "Up to " + fmt.rupees(offers.max_rupees) + " on a new one" : "No cash discount listed") + (offerThis ? ", this month" : " (" + offerMonth + " offer)"),
+        "<p><b>" + esc(offers.applies_to) + "</b> (" + esc(offers.area) + " figures)</p><p>" + esc(offers.text) + "</p>" +
+        (savedAfter == null ? "" : "<p>Against our price, that would make the saving about " + (savedAfter > 0 ? fmt.rupees(savedAfter) : "nil") +
+          " instead of the " + fmt.rupees(np.save) + " shown above.</p>") +
+        '<p class="ci-dim">Dealer offers change often and depend on stock, city and exchange; check with the dealer.</p>' + src(offers.sources));
+    }
+    if (market) {
+      add("market", "Market check", fmt.money(market.low) + " to " + fmt.money(market.high) + " for similar cars; ours " + fmt.money(car.price),
+        "<p>Similar " + esc(market.similar) + " are listed at <b>" + fmt.money(market.low) + " to " + fmt.money(market.high) + "</b>. Our price: <b>" + fmt.money(car.price) + "</b>.</p>" +
+        '<dl class="nc-list">' + market.sources.map(function (s) {
+          return '<div class="nc-line"><dt><a href="' + esc(s.url) + '" target="_blank" rel="noopener">' + esc(s.name) + "</a>, " + esc(s.area) + ", " + s.count + (s.count === 1 ? " listing" : " listings") +
+            ", read " + fmt.fmtDate(s.as_of) + "</dt><dd>" + (s.low === s.high ? fmt.money(s.low) : fmt.money(s.low) + " to " + fmt.money(s.high)) + "</dd></div>";
+        }).join("") + "</dl>" +
+        (market.basis ? "<p>" + esc(market.basis) + "</p>" : "") +
+        '<p class="ci-dim">These are asking prices on listing sites, not what the cars sold for, and condition, history and extras differ from car to car. This car is left out wherever it is listed, by us or by another dealer.</p>');
+    }
+    if (!rows.length) return;
+    f("infoList").innerHTML = rows.join("");
+    set("infoNote", "Facts for the model and variant from the maker and independent sources, not an inspection of this car. Each block shows where it came from and when we read it.");
+    f("infoWrap").hidden = false;
+    /* "How we checked" under the price opens the market row */
+    document.addEventListener("click", function (ev) {
+      var a = ev.target.closest && ev.target.closest("[data-ci-open]");
+      if (!a) return;
+      var d = document.querySelector('.ci[data-ci="' + a.getAttribute("data-ci-open") + '"]');
+      if (d) d.open = true;
+    });
+  })();
 
   /* ---- "What you'll pay to drive away" (gap plan P1-5): every item listed, no total that hides one ---- */
   (function () {

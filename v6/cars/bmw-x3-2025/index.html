@@ -161,6 +161,7 @@
             <p class="car-sub" data-f="variant"></p>
             <div class="price-block"><span class="price-xl" data-f="price" data-glint></span><span class="price-alt" data-f="priceAlt"></span></div>
             <div class="new-compare" data-f="newCompare" hidden></div>
+            <p class="mkt-line" data-f="marketLine" hidden></p>
             <div class="chip-row" data-f="chips"></div>
             <p class="emi-line" data-f="emiLine"></p>
 
@@ -240,6 +241,11 @@
               <h3 class="spec-head">This model <small data-f="modelLabel"></small></h3>
               <div class="spec-grid" data-f="modelSpecs"></div>
               <p class="spec-source" data-f="modelSource"></p>
+            </div>
+            <div class="spec-block" id="knowModel" data-f="infoWrap" hidden data-reveal>
+              <h3 class="spec-head">Know the model <small>Mileage, features, variant, history, offers and a price check</small></h3>
+              <div class="ci-list" data-f="infoList"></div>
+              <p class="spec-source" data-f="infoNote"></p>
             </div>
           </div>
           <aside class="panel drive-away" id="driveAway" aria-labelledby="driveTitle" data-reveal>
@@ -363,6 +369,7 @@
 
 <script src="../../assets/js/cars.js" defer></script>
 <script src="../../assets/js/model-specs.js" defer></script>
+<script src="../../assets/js/car-info.js" defer></script>
 <script src="../../assets/js/main.js" defer></script>
 <script src="../../assets/js/forms.js" defer></script>
 <script src="../../assets/js/cards.js" defer></script>
