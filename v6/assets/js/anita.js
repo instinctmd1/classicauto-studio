@@ -286,7 +286,8 @@
     var m = CA.messageCta();
     var href = CA_SITE.whatsapp ? CA.waLink(summary) : m.href;
     pushBotHtml("Hamari team se seedhe baat karne ke liye yahan message kijiye." +
-      '<a href="' + href + '" target="_blank" rel="noopener" class="btn btn-primary" data-ca-msg="' + esc(summary).replace(/"/g, "&quot;") + '" data-cta="message" data-at="anita" data-via="' + m.via + '" style="margin-top:10px; min-height:44px; display:flex;">' + esc(m.label) + '</a>');
+      '<a href="' + href + '" target="_blank" rel="noopener" class="btn btn-primary" data-ca-msg="' + esc(summary).replace(/"/g, "&quot;") + '" data-cta="message" data-at="anita" data-via="' + m.via + '" style="margin-top:10px; min-height:44px; display:flex;">' + esc(m.label) + '</a>' +
+      (CA.callCta() ? '<a href="' + CA.callCta().href + '" class="btn btn-outline" data-cta="call" data-at="anita" data-via="tel" style="margin-top:8px; min-height:44px; display:flex;">Call ' + esc(CA_SITE.phone) + '</a>' : ""));
   }
 
   function handleChipShortcut(label) {

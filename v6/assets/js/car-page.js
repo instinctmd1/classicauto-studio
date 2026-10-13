@@ -37,6 +37,18 @@
   if (window.CA.setStickyMessage) window.CA.setStickyMessage(stickyMsg);
   else document.addEventListener("DOMContentLoaded", function () { if (window.CA.setStickyMessage) window.CA.setStickyMessage(stickyMsg); });
 
+  /* ---- call / email about this car, from CA_SITE (only what is set there) ---- */
+  (function () {
+    var box = document.getElementById("carContact"), CA = window.CA;
+    if (!box || !CA || !S) return;
+    var html = "";
+    if (S.phone && CA.telLink()) html += '<a class="btn btn-outline" href="' + CA.telLink() + '" data-cta="call" data-at="car_page" data-via="tel"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3 19.5 19.5 0 0 1-6-6 19.8 19.8 0 0 1-3-8.7A2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 2 .8 3a2 2 0 0 1-.5 2L8 10.1a16 16 0 0 0 6 6l1.4-1.4a2 2 0 0 1 2-.5c1 .4 2 .7 3 .8a2 2 0 0 1 1.6 2z"/></svg>Call ' + cardsApi.esc(S.phone) + '</a>';
+    if (S.email && CA.mailLink()) html += '<a class="btn btn-outline" href="' + CA.mailLink("Enquiry: " + label) + '" data-cta="email" data-at="car_page" aria-label="Email Classic Auto about the ' + cardsApi.esc(label) + '"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg>Email us</a>';
+    if (!html) return;
+    box.innerHTML = '<p>Prefer to talk first?</p>' + html;
+    box.hidden = false;
+  })();
+
   /* ---- heading block ---- */
   var crumbMake = f("crumbMake");
   crumbMake.textContent = car.make; crumbMake.href = window.CA.root("stock.html?make=" + encodeURIComponent(car.make));
@@ -45,7 +57,7 @@
   if (car.status === "SOLD") shareBtn.hidden = true; else shareBtn.setAttribute("data-share", car.id);
   set("badge", (car.status === "SOLD" ? "Sold · " : "") + fmt.bodyLabel(car.body) + (S.park_and_sell_badge && car.segment === "park_sell" ? " · Park & Sell" : ""));
   set("title", car.make + " " + car.model);
-  set("variant", car.variant + " · " + car.reg_month);
+  set("variant", [car.variant, car.reg_month].filter(Boolean).join(" · "));   // the listing may give no registration month
   var priceEl = f("price"); priceEl.textContent = onRequest ? "Ask for price" : fmt.rupees(car.price);
   if (!onRequest) set("priceAlt", fmt.money(car.price));
 
@@ -118,7 +130,7 @@
       '). Our price: ' + fmt.money(car.price) + '. <a href="#knowModel" data-ci-open="market">How we checked</a>';
     ml.hidden = false;
   }
-  var chips =[["Owner", car.owners], ["Driven", fmt.formatKm(car.kms)], ["Registered", car.reg_month]];
+  var chips =[["Owner", car.owners], ["Driven", fmt.formatKm(car.kms)], car.reg_month ? ["Registered", car.reg_month] : ["Year", String(car.year)]];
   f("chips").innerHTML = chips.map(function (c) { return '<div class="chip"><span>' + c[0] + '</span><b>' + cardsApi.esc(c[1]) + '</b></div>'; }).join("");
   var emiEl = f("emiLine");
   if (onRequest) emiEl.hidden = true;
@@ -127,6 +139,8 @@
   /* ---- gallery ---- */
   var photos = car.photos && car.photos.length ? car.photos : null;
   var img = f("image"), hero = f("hero"), current = 0;
+  /* many listing photos are upright phone shots: show those whole (letterboxed) instead of cropping the car to 3:2 */
+  img.addEventListener("load", function () { hero.classList.toggle("is-portrait", img.naturalHeight > img.naturalWidth * 1.02); });
   function showPhoto(i) {
     current = (i + photos.length) % photos.length;
     if (current === 0) img.setAttribute("fetchpriority", "high");

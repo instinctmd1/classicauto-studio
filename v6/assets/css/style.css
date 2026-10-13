@@ -159,8 +159,9 @@ html.motion-off .car-card, html.reduce .car-card { opacity: 1; }
 .site-header.is-scrolled { background: rgba(10, 22, 51, 0.88); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); border-bottom-color: var(--line); }
 .site-header .container { display: flex; align-items: center; gap: var(--s-5); }
 .brand { display: flex; align-items: center; gap: 12px; min-height: 44px; flex-shrink: 0; }
-.brand-tile { display: inline-flex; align-items: center; justify-content: center; width: 56px; height: 40px; padding: 7px 8px; background: var(--ink); border-radius: var(--r-2); flex-shrink: 0; }
-.brand-mark { width: 100%; height: auto; }
+.brand-tile { display: inline-flex; align-items: center; justify-content: center; width: 76px; height: 40px; padding: 7px 8px; background: var(--ink); border-radius: var(--r-2); flex-shrink: 0; }   /* official CA monogram, 104x45 raster */
+.brand-tile picture { display: block; width: 100%; }
+.brand-mark { display: block; width: 100%; height: auto; }
 .brand-word { display: flex; flex-direction: column; font-family: var(--font-display); font-size: 1.5rem; line-height: 0.9; letter-spacing: 0.04em; text-transform: uppercase; color: var(--ink); }
 .brand-word b { font-weight: 400; }
 .brand-word i { font-style: normal; color: var(--red-ink); }
@@ -168,10 +169,10 @@ html.motion-off .car-card, html.reduce .car-card { opacity: 1; }
 .brand-word b, .brand-word i { display: inline; }
 .brand-word { display: block; }
 .brand-word small { display: block; }
-.brand--foot .brand-tile { width: 72px; height: 52px; }
+.brand--foot .brand-tile { width: 100px; height: 56px; padding: 10px 11px; }
 .brand--foot .brand-word { font-size: 2rem; }
-.nav-links { display: none; align-items: center; gap: var(--s-6); margin-left: auto; }
-.nav-links a { position: relative; display: inline-flex; align-items: center; min-height: 44px; font-size: var(--fs-small); font-weight: 600; letter-spacing: 0.02em; color: var(--ink-2); }
+.nav-links { display: none; align-items: center; gap: var(--s-5); margin-left: auto; }
+.nav-links a { position: relative; display: inline-flex; align-items: center; white-space: nowrap; min-height: 44px; font-size: var(--fs-small); font-weight: 600; letter-spacing: 0.02em; color: var(--ink-2); }
 .nav-links a::after { content: ""; position: absolute; left: 0; right: 0; bottom: 6px; height: 2px; background: var(--red); transform: scaleX(0); transform-origin: left; transition: transform var(--dur-ui) var(--ease-out); }
 .nav-links a[aria-current="page"] { color: var(--ink); }
 .nav-links a[aria-current="page"]::after { transform: scaleX(1); }
@@ -188,6 +189,8 @@ html.motion-off .car-card, html.reduce .car-card { opacity: 1; }
   .header-actions { display: flex; }
   .nav-toggle { display: none; }
 }
+/* with CALL NOW and the wider logo tile the 1080-1359 header is tight: tighter nav gaps, and the Instagram icon waits for room (the DM button and the footer carry Instagram) */
+@media (min-width: 1080px) and (max-width: 1359px) { .nav-links { gap: 20px; } .header-social { display: none; } .header-actions .btn { padding-inline: 14px; } }
 .mobile-nav {
   position: fixed; inset: 0; z-index: 55; background: var(--bg); display: flex; flex-direction: column; gap: 4px;
   padding: calc(var(--header-h) + 24px) 20px 32px; transform: translateY(-100%); visibility: hidden; overflow-y: auto;
@@ -290,8 +293,9 @@ body.nav-open .sticky-bar { transform: translateY(110%); }
 .intro-on .intro { display: flex; }
 .intro-on .intro:not(.is-armed) .intro-stage { opacity: 0; }   /* no flash of the finished logo before the timeline starts */
 .intro-stage { position: static; display: flex; flex-direction: column; align-items: center; gap: 18px; }
-.intro-mark { width: min(70vw, 460px); }
-.intro-mark svg { width: 100%; height: auto; overflow: visible; }
+.intro-mark { width: min(56vw, 240px); padding: 6% 7%; background: var(--ink); border-radius: var(--r-3, 14px); }   /* the official mark on its off-white tile, like the header */
+.intro-mark picture { display: block; }
+.intro-mark img { display: block; width: 100%; height: auto; }
 .intro-words { display: flex; flex-direction: column; align-items: center; gap: 4px; }
 .intro-line { display: flex; gap: 0.5em; font-family: var(--font-display); font-size: clamp(2.6rem, 9vw, 4.6rem); line-height: 1; text-transform: uppercase; }
 .intro-line .w1 { color: var(--ink); }
@@ -574,17 +578,20 @@ body.nav-open .sticky-bar { transform: translateY(110%); }
 .car-page-top { padding-top: calc(var(--header-h) + var(--s-6)); padding-bottom: var(--s-8); }
 .crumbs { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: var(--s-5); font-size: var(--fs-small); color: var(--ink-3); }
 .crumbs a { display: inline-flex; align-items: center; min-height: 44px; color: var(--ink-2); }
-.car-layout { display: grid; gap: var(--s-7); }
+.car-layout { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--s-7); }
 @media (min-width: 1000px) { .car-layout { grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); gap: var(--s-8); align-items: start; } }
-.car-gallery { display: grid; gap: var(--s-3); }
-@media (min-width: 640px) { .car-gallery { grid-template-columns: 76px 1fr; } .car-gallery .thumb-rail { order: -1; flex-direction: column; } }
+.car-gallery { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--s-3); }
+/* up to 15 photos a car: the rail scrolls inside itself (sideways on phones, down beside the photo on wider screens) and never widens the page */
+@media (min-width: 640px) { .car-gallery { grid-template-columns: 76px minmax(0, 1fr); } .car-gallery .thumb-rail { order: -1; flex-direction: column; height: 0; min-height: 100%; overflow-x: hidden; overflow-y: auto; } }
 @media (min-width: 1000px) { .car-gallery { position: sticky; top: calc(var(--header-h) + 24px); } }
-.thumb-rail { display: flex; gap: 8px; }
+.thumb-rail { display: flex; gap: 8px; overflow-x: auto; overscroll-behavior-x: contain; scrollbar-width: thin; }
+.thumb-rail button { flex: 0 0 auto; }
 .thumb-rail button { width: 76px; height: 52px; padding: 0; border: 1px solid var(--line); border-radius: var(--r-2); overflow: hidden; background: var(--bg-2); cursor: pointer; opacity: 0.7; transition: opacity var(--dur-ui) var(--ease-out), border-color var(--dur-ui) var(--ease-out); }
 .thumb-rail button.is-active { opacity: 1; border-color: var(--red); }
 .thumb-rail img { width: 100%; height: 100%; object-fit: cover; }
 .car-hero { position: relative; border: 1px solid var(--line); border-radius: var(--r-3); overflow: hidden; background: var(--bg-2); }
 .car-hero img { width: 100%; aspect-ratio: 3 / 2; object-fit: cover; }
+.car-hero.is-portrait img { object-fit: contain; }
 .car-hero.is-placeholder { aspect-ratio: 3 / 2; display: flex; align-items: center; justify-content: center; text-align: center; }
 .car-gallery.is-solo { grid-template-columns: minmax(0, 1fr); }
 .car-gallery.is-solo .photo-note { grid-column: 1; }
@@ -617,6 +624,10 @@ body.nav-open .sticky-bar { transform: translateY(110%); }
 .step-panel { margin-top: var(--s-4); padding: var(--s-4); background: var(--bg-2); border: 1px solid var(--line); border-radius: var(--r-2); }
 .car-buy .btn-main { margin-top: var(--s-5); }
 .car-secondary { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px 28px; margin-top: var(--s-3); }
+/* car page: call or email about this car, from CA_SITE (car-page.js) */
+.car-contact { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s-3); margin-top: var(--s-4); padding-top: var(--s-4); border-top: 1px solid var(--line); }
+.car-contact p { flex: 1 1 100%; margin: 0; font-size: var(--fs-small); color: var(--ink-2); }
+.car-contact .btn { flex: 1 1 11rem; min-height: 48px; padding-inline: 16px; }
 .car-note { margin-top: var(--s-4); font-size: var(--fs-label); color: var(--ink-3); line-height: 1.6; }
 .link-btn { background: none; border: 0; padding: 0; min-height: 44px; color: var(--red-ink); font-weight: 700; font-size: var(--fs-small); text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
 
@@ -800,8 +811,9 @@ input[type="range"]::-moz-range-thumb { width: 24px; height: 24px; border-radius
 @media (min-width: 900px) { .anita-panel { right: 24px; bottom: 160px; } }
 .anita-head { display: flex; align-items: center; gap: 12px; padding: 12px 16px; background: var(--bg-3); border-bottom: 1px solid var(--line); }
 /* the Classic Auto mark on the same off-white tile as the header logo (the brand blue needs the light ground) */
-.anita-avatar { width: 48px; height: 34px; padding: 6px 7px; border-radius: var(--r-2); background: var(--ink); color: var(--red); display: flex; align-items: center; justify-content: center; font-family: var(--font-display); font-size: 1.3rem; flex-shrink: 0; }
-.anita-avatar svg { display: block; width: 100%; height: auto; }
+.anita-avatar { width: 60px; height: 34px; padding: 6px 7px; border-radius: var(--r-2); background: var(--ink); color: var(--red); display: flex; align-items: center; justify-content: center; font-family: var(--font-display); font-size: 1.3rem; flex-shrink: 0; }
+.anita-avatar svg, .anita-avatar img { display: block; width: 100%; height: auto; }
+.anita-avatar picture { display: block; width: 100%; }
 .anita-head-text { flex: 1; min-width: 0; }
 .anita-head-text .name { font-weight: 700; font-size: var(--fs-small); color: var(--ink); }
 .anita-head-text .status { font-size: var(--fs-label); color: var(--ink-2); }
@@ -1200,6 +1212,14 @@ html.has-announce { --ann-h: 40px; --header-h: calc(72px + var(--ann-h)); }
 .visit-notes { display: grid; gap: 8px; margin: var(--s-4) 0 0; }
 .visit-notes li { position: relative; padding-left: 20px; color: var(--ink-2); font-size: var(--fs-small); }
 .visit-notes li::before { content: ""; position: absolute; left: 0; top: 0.75em; width: 10px; height: 2px; background: var(--red); }
+/* call + email, filled from CA_SITE by visit.js (never hard-coded in the markup) */
+.contact-list { display: grid; gap: var(--s-3); margin: var(--s-5) 0 0; }
+.contact-list a { display: flex; align-items: center; gap: 14px; min-height: 56px; padding: 8px 16px; border: 1px solid var(--line-2); border-radius: var(--r-2); color: var(--ink); transition: border-color var(--dur-ui) var(--ease-out); }
+.contact-list .icon { width: 22px; height: 22px; color: var(--red-ink); }
+.contact-list small { display: block; font-size: var(--fs-label); font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-3); line-height: 1.3; }
+.contact-list b { display: block; font-size: 1.0625rem; font-weight: 600; letter-spacing: 0.01em; line-height: 1.3; overflow-wrap: anywhere; }
+@media (hover: hover) and (pointer: fine) { .contact-list a:hover { border-color: var(--red-ink); } }
+
 .map-slot { margin-top: var(--s-6); }
 .map-facade { display: flex; align-items: center; justify-content: center; gap: var(--s-4); width: 100%; aspect-ratio: 16 / 10; padding: var(--s-5); border: 1px dashed var(--line-2); border-radius: var(--r-3); background: radial-gradient(80% 90% at 50% 40%, rgba(43, 57, 144, 0.45), transparent 70%), var(--bg-2); color: var(--ink); text-align: left; cursor: pointer; transition: border-color var(--dur-ui) var(--ease-out); }
 .map-facade .icon { width: 34px; height: 34px; color: var(--red-ink); }

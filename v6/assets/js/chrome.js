@@ -27,14 +27,22 @@
     close: '<svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>'
   };
 
-  /* The CA mark (red C, three blue bars) on an off-white tile so the brand blue keeps its contrast on navy. */
-  var MARK_SVG =
-    '<svg class="brand-mark" viewBox="0 0 780 380" aria-hidden="true" focusable="false">' +
-      '<path d="M 100 12 L 300 12 L 300 88 L 128 88 Q 96 88 96 120 L 96 238 Q 96 268 128 268 L 688 268 Q 722 268 722 302 L 722 310 Q 722 344 688 344 L 92 344 Q 14 344 14 266 L 14 98 Q 14 12 100 12 Z" fill="#E11B22"/>' +
-      '<g fill="#2B3990"><polygon points="468,6 552,6 372,360 288,360"/><polygon points="468,6 552,6 758,360 674,360"/><polygon points="404,212 620,212 650,282 370,282"/></g>' +
-    '</svg>';
-  var BRAND_HTML = '<span class="brand-tile">' + MARK_SVG + '</span><span class="brand-word"><b>Classic</b> <i>Auto</i><small>Since ' + S.since + '</small></span>';
-  CA.markSvg = MARK_SVG;   // Anita's chat avatar uses the same mark
+  /* The official Classic Auto "CA" mark (assets/brand/monogram*, cropped from the logo on classicauto.net.in), on an off-white tile so the
+     brand navy keeps its contrast on the dark header. WebP with a PNG fallback, 1x and 2x. The only source is a 105 px raster, so the 2x is
+     a careful upscale; never draw or trace a replacement. */
+  var MARK_HTML =
+    '<picture><source type="image/webp" srcset="assets/brand/monogram.webp 1x, assets/brand/monogram@2x.webp 2x">' +
+    '<img class="brand-mark" src="assets/brand/monogram.png" srcset="assets/brand/monogram.png 1x, assets/brand/monogram@2x.png 2x" width="104" height="45" alt="" decoding="async"></picture>';
+  var BRAND_HTML = '<span class="brand-tile">' + MARK_HTML + '</span><span class="brand-word"><b>Classic</b> <i>Auto</i><small>Since ' + S.since + '</small></span>';
+
+  /* CA.rootify only rewrites href/src; srcset needs the same ../../ prefix on the car pages. */
+  function rootifyAll(html) {
+    html = CA.rootify(html);
+    return window.CA_ROOT ? html.replace(/srcset="([^"]*)"/g, function (m, v) {
+      return 'srcset="' + v.replace(/(^|,\s*)([^\s,]+)/g, function (mm, pre, u) { return pre + CA.root(u); }) + '"';
+    }) : html;
+  }
+  CA.markSvg = rootifyAll(MARK_HTML);   // Anita's chat avatar uses the same mark (already rooted: it is not run through rootify again)
 
   var NAV = [
     ["index.html", "Home", "home"],
@@ -100,7 +108,7 @@
       navLinks() +
       '<div class="mobile-nav-cta">' + primaryButtons() + '</div>' +
     '</nav>';
-  headerHtml = CA.rootify(headerHtml);
+  headerHtml = rootifyAll(headerHtml);
   if (script) script.insertAdjacentHTML("beforebegin", headerHtml);
   else document.body.insertAdjacentHTML("afterbegin", headerHtml);
   var annBar = document.getElementById("announceBar");
@@ -112,7 +120,8 @@
   /* ---------------------------------------------------------------- footer */
   function footerHtml() {
     var contact = "";
-    if (S.phone) contact += '<li><a href="' + CA.telLink() + '" data-cta="call" data-at="footer">' + S.phone + '</a></li>';
+    if (S.phone) contact += '<li><a href="' + CA.telLink() + '" data-cta="call" data-at="footer">' + esc(S.phone) + '</a></li>';
+    if (CA.mailLink()) contact += '<li><a href="' + CA.mailLink() + '" data-cta="email" data-at="footer">' + esc(S.email) + '</a></li>';
     if (S.whatsapp) contact += '<li><a href="' + CA.waLink() + '"' + ext() + ' data-cta="message" data-at="footer" data-via="whatsapp">WhatsApp</a></li>';
     contact += '<li><a href="' + CA.igDm() + '"' + ext() + ' data-cta="message" data-at="footer" data-via="instagram_dm">DM @' + S.instagram + '</a></li>';
     var partners = "";
@@ -157,7 +166,7 @@
 
   function mountBelow() {
     var slot = document.getElementById("siteFooter");
-    var html = CA.rootify(footerHtml());
+    var html = rootifyAll(footerHtml());
     if (slot) slot.outerHTML = html; else document.body.insertAdjacentHTML("beforeend", html);
     document.body.insertAdjacentHTML("beforeend", CA.rootify(stickyHtml()));
     if (S.features && S.features.anita && !document.getElementById("anitaRoot")) {

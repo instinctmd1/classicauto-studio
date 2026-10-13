@@ -1,6 +1,18 @@
 /* Visit page (gap plan P2-1): the address, a map that loads only on tap, and a short "tell us you're coming" form whose
    "What's this about?" choice becomes the lead's Intent line, so the lead engine routes it (sell enquiries to the sell desk,
    buyers by price band). One future business number plus this routing replaces a phone line per department. */
+/* Call and email, drawn from CA_SITE (config.js) so the numbers live in one place. Runs on its own: it does not need the form scripts. */
+(function () {
+  "use strict";
+  var CA = window.CA, S = window.CA_SITE, list = document.getElementById("visitContact");
+  if (!CA || !S || !list) return;
+  function esc(s) { return String(s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
+  var html = "";
+  if (S.phone && CA.telLink()) html += '<li><a href="' + CA.telLink() + '" data-cta="call" data-at="visit_page" data-via="tel"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3 19.5 19.5 0 0 1-6-6 19.8 19.8 0 0 1-3-8.7A2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 2 .8 3a2 2 0 0 1-.5 2L8 10.1a16 16 0 0 0 6 6l1.4-1.4a2 2 0 0 1 2-.5c1 .4 2 .7 3 .8a2 2 0 0 1 1.6 2z"/></svg><span><small>Call</small><b>' + esc(S.phone) + '</b></span></a></li>';
+  if (S.email && CA.mailLink()) html += '<li><a href="' + CA.mailLink() + '" data-cta="email" data-at="visit_page"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg><span><small>Email</small><b>' + esc(S.email) + '</b></span></a></li>';
+  if (html) { list.innerHTML = html; list.hidden = false; }
+})();
+
 (function () {
   "use strict";
   var form = document.getElementById("visitForm");

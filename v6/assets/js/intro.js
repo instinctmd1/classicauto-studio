@@ -1,8 +1,8 @@
 /* =========================================================================
-   Chapter 00, Ignition: a 1.7 s intro built from the Classic Auto mark's own
-   shapes. The red C sweeps across at 8x with a 3px blur, pulls back as the
-   three blue A bars slide in along their diagonals, CLASSIC then AUTO track
-   in, SINCE 1974 rises, and the mark FLIPs into the header logo slot.
+   Chapter 00, Ignition: a 1.7 s intro built around the official Classic Auto
+   mark (assets/brand/monogram, on its off-white tile). The mark sweeps in from
+   the left at 2x with a 4px blur and settles, CLASSIC then AUTO track in,
+   SINCE 1974 rises, and the mark FLIPs into the header logo tile.
 
    Once per session (sessionStorage), skippable by button or Esc, never under
    prefers-reduced-motion. The hero poster paints underneath from the first
@@ -49,8 +49,6 @@
   function start() {
     if (started || done) return; started = true;
     var t0 = performance.now();
-    var C = el.querySelector("#introC");
-    var bars = el.querySelectorAll(".intro-bar");
     var markWrap = el.querySelector("#introMark");
 
     function split(node) {
@@ -62,11 +60,7 @@
     var since = el.querySelector("#introSince");
 
     gsap.set(el.querySelector("#introWords"), { autoAlpha: 1 });
-    gsap.set(C, { svgOrigin: "390 190", scale: 8, x: -2300, opacity: 1 });
-    gsap.set(el.querySelector("#introMarkSvg"), { filter: "blur(3px)" });
-    gsap.set(bars[0], { x: 260, y: -520, opacity: 0 });
-    gsap.set(bars[1], { x: -300, y: -520, opacity: 0 });
-    gsap.set(bars[2], { x: 700, opacity: 0 });
+    gsap.set(markWrap, { x: -900, scale: 2, opacity: 1, filter: "blur(4px)" });
     /* "Tracking in" is done with transforms, not letter-spacing, so nothing reflows and the intro adds no layout shift. */
     function spread(chars, em) {
       var n = chars.length, fs = parseFloat(getComputedStyle(chars[0]).fontSize) || 40;
@@ -81,12 +75,9 @@
       defaults: { ease: "expo.out" },
       onComplete: function () { window.__introMs = Math.round(performance.now() - t0); finish(false); }
     });
-    // 0 - 0.45  the C sweeps across the viewport
-    tl.to(C, { x: 520, duration: 0.45, ease: "power2.inOut" }, 0);
-    // 0.45 - 0.9  it pulls back to full size while the A bars slide in on their diagonals
-    tl.to(C, { x: 0, scale: 1, duration: 0.45, ease: "expo.out" }, 0.45);
-    tl.to(el.querySelector("#introMarkSvg"), { filter: "blur(0px)", duration: 0.35, ease: "power1.out" }, 0.5);
-    tl.to(bars, { x: 0, y: 0, opacity: 1, duration: 0.5, ease: "back.out(1.4)", stagger: 0.06 }, 0.5);
+    // 0 - 0.9  the mark sweeps in from the left and settles to full size while the blur clears
+    tl.to(markWrap, { x: 0, scale: 1, duration: 0.9, ease: "expo.out" }, 0);
+    tl.to(markWrap, { filter: "blur(0px)", duration: 0.5, ease: "power1.out" }, 0.3);
     // 0.9 - 1.25  CLASSIC then AUTO track in
     tl.to(cChars, { opacity: 1, x: 0, filter: "blur(0px)", duration: 0.35, stagger: 0.03, ease: "expo.out" }, 0.9);
     tl.to(aChars, { opacity: 1, x: 0, filter: "blur(0px)", duration: 0.35, stagger: 0.03, ease: "expo.out" }, 1.0);
@@ -95,7 +86,8 @@
     // 1.4 - 1.7  hand-off: the mark flies into the header logo slot, the stage lifts away
     tl.add(function () {
       if (!brand || !markWrap) return;
-      var a = markWrap.getBoundingClientRect(), b = brand.getBoundingClientRect();
+      var slot = brand.querySelector(".brand-tile") || brand;   // land on the header's logo tile, not the whole brand link
+      var a = markWrap.getBoundingClientRect(), b = slot.getBoundingClientRect();
       var s = Math.max(0.05, b.width / a.width);
       var dx = (b.left + b.width / 2) - (a.left + a.width / 2);
       var dy = (b.top + b.height / 2) - (a.top + a.height / 2);
