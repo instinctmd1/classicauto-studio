@@ -8,6 +8,7 @@ import { col, cellMain, columnsButton, exportButtons, makeGrid } from "../grid.j
 import { bankField, bankPick, card, kpiTile, roleNote } from "./_shared.js";
 import { PAY_MODES, PAY_PURPOSE_IN } from "../lists.js";
 import { docsHtml, bindDocs } from "./_docs.js";
+import { openReviewAsk, reviewStatusHtml } from "./_review.js";
 
 const DEAL_DOCS = ["booking_receipt", "invoice", "delivery_note", "sale_letter", "form29", "form30"];
 let view = { st: "open", q: "" };
@@ -42,7 +43,7 @@ export async function render(ctx) {
     columns: [
       col.html("car", "Car", { frozen: true, minWidth: 210, sorter: (a, b) => `${a.make}${a.model}`.localeCompare(`${b.make}${b.model}`), formatter: (c) => { const v = c.getValue(); return cellMain(`${v.make} ${v.model}`, `${v.stock_no} · ${v.variant || ""}`); } }),
       col.date("booked_on", "Booked", { width: 112 }),
-      col.html("car_seg", "Segment", { width: 118, formatter: (c) => { const o = c.getData().car.ownership; return badge(o === "invested" ? "Invested" : "Park-N-Sell", o === "invested" ? "ink" : "info"); }, sorter: (a, b, ra, rb) => ra.getData().car.ownership.localeCompare(rb.getData().car.ownership) }),
+      col.html("car_seg", "Segment", { width: 118, formatter: (c) => { const o = c.getData().car.ownership; return o ? badge(o === "invested" ? "Invested" : "Park-N-Sell", o === "invested" ? "ink" : "info") : badge("Not set", "warn"); }, sorter: (a, b, ra, rb) => (ra.getData().car.ownership || "").localeCompare(rb.getData().car.ownership || "") }),
       col.text("buyer", "Buyer", { minWidth: 150 }), col.text("salesman", "Salesman", { minWidth: 130 }),
       col.money("sale_price", "Sale price", { width: 124 }), col.money("paid", "Paid", { width: 112 }),
       col.money("balance_due", "Balance", { width: 112, formatter: (c) => `<span class="${c.getValue() > 0 ? "warn-text" : ""}">${inr(c.getValue())}</span>` }),
@@ -89,14 +90,17 @@ export async function openDeal(id, ctx) {
     ${x.status === "cancelled" ? `<div class="callout neg sec">${icon("alert", "")}<div><b>Cancelled</b><p>${esc(x.cancel_reason || "")}</p></div></div>` : ""}
     ${sec("Profit", profit)}${sec("Payments", pay, acts)}${fi.length ? sec("Finance, insurance and add-ons", `<ul class="list">${fi.join("")}</ul>`) : ""}
     ${(r.rto_cases || []).length ? sec("RTO", `<ul class="list">${r.rto_cases.map((c) => `<li><a class="grow" href="#/rto?case=${c.id}"><div class="t">${esc(sentence(c.kind))}</div><div class="s">Opened ${dateFmt(c.opened_on)}</div></a>${statusBadge(c.stage)}</li>`).join("")}</ul>`) : ""}
+    ${x.status === "delivered" ? sec("Google review", `<div id="rvw"><div class="skel"></div></div>`, `<button class="btn sm" type="button" data-a="review">${icon("star")}Ask for a Google review</button>`) : ""}
     ${can("documents.view") ? `<div class="sec"><div class="sec-h"><h3>Papers</h3></div><div id="docs"><div class="skel"></div></div></div>` : ""}`);
   if (can("deals.manage") && x.status === "booked") d.setFoot(`<button class="btn danger" type="button" data-a="cancel">Cancel this deal</button><button class="btn pos" type="button" data-a="deliver">${icon("check")}Mark delivered</button>`);
   d.el.addEventListener("click", (e) => {
     const a = e.target.closest("[data-a]"); if (!a) return;
     if (a.dataset.a === "pay") payForm(x, reload);
     if (a.dataset.a === "deliver") deliverForm(x, reload);
+    if (a.dataset.a === "review") openReviewAsk(x.id, { onClose: reload });
     if (a.dataset.a === "cancel") cancelForm(x, reload);
   });
+  if (x.status === "delivered") get(`deals/${id}/review-ask`).then((rv) => { const h = d.el.querySelector("#rvw"); if (h) h.innerHTML = reviewStatusHtml(rv); }, () => { const h = d.el.querySelector("#rvw"); if (h) h.innerHTML = ""; });
   if (can("documents.view")) {
     try {
       const dd = await get("documents", { entity_type: "deal", entity_id: id });
@@ -123,7 +127,7 @@ async function payForm(x, done) {
 function deliverForm(x, done) {
   formDrawer({ title: "Mark delivered", sub: "This opens the RTO transfer case and schedules a follow-up call.", submit: "Mark delivered", ok: "Delivered. RTO case opened",
     fields: [{ name: "invoice_no", label: "Invoice number", type: "text" }, { name: "invoice_date", label: "Invoice date", type: "date", value: state.today }, { name: "odometer", label: "Odometer at delivery (km)", type: "number", step: 1, min: 0 }],
-    onSubmit: async (v) => { await api.post(`deals/${x.id}/deliver`, v); done(); } });
+    onSubmit: async (v) => { await api.post(`deals/${x.id}/deliver`, v); openReviewAsk(x.id, { justDelivered: true, onClose: done }); } });   // every buyer: the Google review step
 }
 function cancelForm(x, done) {
   formDrawer({ title: "Cancel this deal", sub: "The car goes back to available. A refund can be recorded now.", submit: "Cancel the deal", ok: "Deal cancelled", danger: true, cancel: "Keep the deal",

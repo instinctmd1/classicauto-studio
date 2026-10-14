@@ -77,7 +77,7 @@ export function accData() {
         passes: [{ ts: at("10:00"), from: null, to: A, reason: "night", round: 0, pass_no: 0, by: null }], warnings: [] },
       1038: { state: state({ holder: R, claimed_at: at("10:05"), call_due_at: at("10:20"), first_call_at: at("10:12"), proof_due_at: at("10:35") }),
         attempts: [attempt({ id: 297, ts: at("10:12"), seat: R })],
-        briefs: [brief({ id: 84, attempt_id: 297, seat: R, submitted_at: at("10:24"), outcome: "spoke_negotiating", customer_said: "Liked the Q5, wants a better price with his old car in exchange", plan: "Get the exchange value from the workshop", next_step: "Call back with the exchange offer", next_step_at: at("17:00"), interest: "hot" })],
+        briefs: [brief({ id: 84, attempt_id: 297, seat: R, submitted_at: at("10:24"), outcome: "spoke_negotiating", customer_said: "Liked the RS5, wants a better price with his old car in exchange", plan: "Get the exchange value from the workshop", next_step: "Call back with the exchange offer", next_step_at: at("17:00"), interest: "hot" })],
         proof: proof({ id: 42, state: "missed", due_at: at("10:35") }), passes: [{ ts: at("10:00"), from: null, to: R, reason: "night", round: 0, pass_no: 0, by: null }],
         warnings: [{ id: 105, type: "missing_proof", seat: R, status: "active" }] },
       1040: { state: state({ holder: P, pass_no: 3, round: 2, escalated_at: at("10:41") }), attempts: [], briefs: [], proof: null,
@@ -91,7 +91,7 @@ export function accData() {
     },
     queue: [            // the engine's order: the one that looks wrong first (rank 0), then oldest
       { proof_id: 43, lead_id: 1033, seat: A, submitted_at: at("10:31"), due_at: at("10:33"), late: 0, file_id: "demo2", image_url: "img/demo-proof-2.svg", declared_call_at: at("10:18"), declared_duration_s: 8,
-        first_call_at: at("10:18"), brief_outcome: "spoke_interested", checks: { ...OK_CHECKS, duration_vs_brief: false }, customer: "Demo Customer 0133", car: "Tata Nexon EV 2023", tier: "Core under 20L", phone_last4: "•••• 0133", phone: null, tick: TICK_43 },
+        first_call_at: at("10:18"), brief_outcome: "spoke_interested", checks: { ...OK_CHECKS, duration_vs_brief: false }, customer: "Demo Customer 0133", car: "Tata Punch EV 2025", tier: "Core under 20L", phone_last4: "•••• 0133", phone: null, tick: TICK_43 },
       { proof_id: 41, lead_id: 1037, seat: K, submitted_at: at("10:30"), due_at: at("10:39"), late: 0, file_id: "demo1", image_url: "img/demo-proof-1.svg", declared_call_at: at("10:12"), declared_duration_s: 134,
         first_call_at: at("10:12"), brief_outcome: "spoke_visit", checks: OK_CHECKS, customer: "Demo Customer 0139", car: "Hyundai Creta 2022", tier: "Core under 20L", phone_last4: "•••• 0139", phone: null, tick: TICK_41 },
     ],

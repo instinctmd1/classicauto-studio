@@ -23,7 +23,7 @@ export async function yesterdayLine(aging) {
   const inq = k.inquiries?.value ?? 0, sold = k.cars_sold?.value ?? 0;
   const bits = [`<b>${num(inq)} ${inq === 1 ? "enquiry" : "enquiries"}</b>${ch ? ` (${esc(ch)})` : ""}`, `<b>${num(sold)} ${sold === 1 ? "car" : "cars"} sold</b>`];
   const aged = aging?.buckets ? aging.buckets.filter((b) => b.bucket === "61-90" || b.bucket === "90+").reduce((s, b) => s + b.count, 0) : null;
-  if (aged != null) bits.push(`<b>${num(aged)} cars</b> past ${aging.aged_threshold_days || 60} days`);
+  if (aged != null && !aging.arrival_note) bits.push(`<b>${num(aged)} cars</b> past ${aging.aged_threshold_days || 60} days`);
   return { text: `Yesterday, ${dateFmt(y, false)}: ${bits.join(", ")}.`, yesterday: y, inq, sold };
 }
 

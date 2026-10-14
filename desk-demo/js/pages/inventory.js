@@ -33,9 +33,9 @@ export async function render(ctx) {
   const inv = stock.filter((r) => r.ownership === "invested"), pns = stock.filter((r) => r.ownership === "park_n_sell");
   const avgAsk = stock.length ? stock.reduce((s, r) => s + (r.asking_price || 0), 0) / stock.length : null;
   const tiles = [
-    kpiTile({ label: "Cars on the lot", value: stock.length, sub: `${inv.length} invested · ${pns.length} Park-N-Sell · ${stock.filter((r) => r.status === "booked").length} booked` }),
-    owner ? kpiTile({ label: "Capital locked", value: aging.capital_locked, kind: "money", sub: "Purchase plus costs, invested cars" }) : kpiTile({ label: "Available to sell", value: stock.filter((r) => r.status === "available").length, sub: "Ready on the floor" }),
-    kpiTile({ label: `Older than ${aging.aged_threshold_days} days`, value: aging.aged_pct, kind: "pct", sub: "Target: under 15% of stock", neg: aging.aged_pct > 15 }),
+    kpiTile({ label: "Cars on the lot", value: stock.length, sub: `${inv.length + pns.length ? `${inv.length} invested · ${pns.length} Park-N-Sell` : "Bought or Park-N-Sell: Dad adds"} · ${stock.filter((r) => r.status === "booked").length} booked` }),
+    owner ? kpiTile({ label: "Capital locked", value: aging.capital_locked, kind: "money", sub: aging.capital_locked == null ? "Dad adds the buying prices and costs" : "Purchase plus costs, invested cars" }) : kpiTile({ label: "Available to sell", value: stock.filter((r) => r.status === "available").length, sub: "Ready on the floor" }),
+    kpiTile({ label: `Older than ${aging.aged_threshold_days} days`, value: aging.aged_pct, kind: "pct", sub: aging.aged_pct == null ? "arrival date: Dad adds" : "Target: under 15% of stock", neg: aging.aged_pct > 15 }),
     kpiTile({ label: "Average asking price", value: avgAsk, kind: "money", sub: "Across cars in stock" }),
   ].join("");
 
@@ -63,9 +63,9 @@ export async function render(ctx) {
   const aging30 = (d) => `<span class="aging"><i data-c="${agingColor(agingBucketOf(d))}"></i>${num(d)} d</span>`;
   const cols = [
     col.html("make", "Car", { frozen: true, minWidth: 210, formatter: (c) => { const r = c.getData(); return cellMain(`${r.make} ${r.model}`, `${r.stock_no} · ${r.variant || ""}`); }, sorter: "string" }),
-    col.html("ownership", "Segment", { width: 118, formatter: (c) => badge(c.getValue() === "invested" ? "Invested" : "Park-N-Sell", c.getValue() === "invested" ? "ink" : "info") }),
+    col.html("ownership", "Segment", { width: 118, formatter: (c) => (c.getValue() ? badge(c.getValue() === "invested" ? "Invested" : "Park-N-Sell", c.getValue() === "invested" ? "ink" : "info") : badge("Not set", "warn")) }),
     col.html("status", "Status", { width: 112, formatter: (c) => statusBadge(c.getValue()) }),
-    col.html("days_in_stock", "In stock", { width: 104, sorter: "number", formatter: (c) => { const h = document.createElement("span"); h.innerHTML = aging30(c.getValue() ?? 0); const el = h.firstElementChild; el.querySelector("i").style.setProperty("--c", agingColor(agingBucketOf(c.getValue() ?? 0))); return el; } }),
+    col.html("days_in_stock", "In stock", { width: 104, sorter: "number", formatter: (c) => { const h = document.createElement("span"); h.innerHTML = c.getValue() == null ? `<span class="aging" title="arrival date: Dad adds"><i></i>Dad adds</span>` : aging30(c.getValue()); const el = h.firstElementChild; el.querySelector("i").style.setProperty("--c", agingColor(agingBucketOf(c.getValue() ?? 0))); return el; } }),
     col.int("mfg_year", "Year", { width: 82, hozAlign: "left", headerHozAlign: "left", formatter: (c) => c.getValue() ?? "—" }),
     col.int("kms_at_intake", "KMs", { width: 96 }),
     col.html("fuel", "Fuel / gearbox", { width: 140, formatter: (c) => { const r = c.getData(); return `${esc(title(r.fuel || ""))} · ${esc(r.transmission === "automatic" ? "Auto" : r.transmission === "manual" ? "Manual" : "—")}`; } }),
@@ -133,8 +133,9 @@ export async function openCar(id, ctx, reload) {
   const c = data.car, owner = can("money.view"), edit = can("stock.manage");
   const pns = c.ownership === "park_n_sell";
   d.setTitle(`${c.make} ${c.model}`);
-  d.setSub(`${esc(c.stock_no)} · ${esc(c.variant || "")} · ${statusBadge(c.status)} ${badge(pns ? "Park-N-Sell" : "Invested", pns ? "info" : "ink")}`);
-  const kv = (l, v) => `<div><dt>${l}</dt><dd>${v == null || v === "" ? "—" : v}</dd></div>`;
+  d.setSub(`${esc(c.stock_no)} · ${esc(c.variant || "")} · ${statusBadge(c.status)} ${c.ownership ? badge(pns ? "Park-N-Sell" : "Invested", pns ? "info" : "ink") : badge("Line not set", "warn")}`);
+  const dadF = /^(Lowest price|Purchase|Firm costs|Expected margin|Holding cost)$/;
+  const kv = (l, v) => `<div><dt>${l}</dt><dd>${c.arrival_note && dadF.test(l) && (v == null || v === "" || /—(<\/span>)?$/.test(String(v))) ? "Dad adds" : v == null || v === "" ? "—" : v}</dd></div>`;
   const price = `<dl class="dl dl-3">${kv("Asking", `<span class="big">${inr(c.asking_price)}</span>`)}${owner ? kv("Lowest price", inr(c.floor_price)) : ""}${owner && !pns ? kv("Purchase", inr(c.purchase_price)) : ""}${owner && !pns ? kv("Firm costs", inr(c.firm_costs)) : ""}${owner && !pns ? kv("Expected margin", `<span class="${(c.expected_margin ?? 0) < 0 ? "neg" : ""}">${inr(c.expected_margin)}</span>`) : ""}${owner && !pns ? kv("Holding cost", inr(c.holding_cost)) : ""}${kv("Days in stock", `${aging(c)}`)}</dl>`;
   const spec = `<dl class="dl dl-3">${kv("Year", c.mfg_year)}${kv("Registered", c.reg_year)}${kv("Reg no", esc(c.reg_no))}${kv("Chassis", esc(c.chassis_no || (c.chassis_tail ? "ends " + c.chassis_tail : "")))}${kv("Engine", esc(c.engine_no || (c.engine_tail ? "ends " + c.engine_tail : "")))}${kv("Fuel", esc(title(c.fuel || "")))}${kv("Gearbox", esc(sentence(c.transmission || "")))}${kv("KMs", num(c.kms_at_intake))}${kv("Owner no.", c.owner_serial)}${kv("Colour", esc(c.colour))}${kv("Location", esc(sentence(c.location || "")))}${kv("Insurance till", dateFmt(c.insurance_expiry))}${kv("PUC till", dateFmt(c.puc_expiry))}${kv("Form 29C", c.form29c_filed_on ? dateFmt(c.form29c_filed_on) : '<span class="badge warn">Not filed</span>')}${kv("Hypothecated", c.hypothecated_to ? esc(c.hypothecated_to) + (c.hypothecation_cleared_on ? " (cleared)" : "") : "No")}${kv("Acquired", dateFmt(c.acquired_on))}${kv("Band", esc(bandLabel(c.band)))}</dl>`;
   const cons = data.consignment ? `<dl class="dl dl-3">${kv("Reserve", inr(data.consignment.reserve_price))}${kv("Agreement", dateFmt(data.consignment.agreement_date))}${kv("Expires", dateFmt(data.consignment.agreement_expiry))}${kv("Commission", commissionText(data.consignment))}${kv("RC held", data.consignment.original_rc_held ? "Yes" : "No")}${kv("Keys held", data.consignment.keys_held ? "Yes" : "No")}</dl>` : "";
@@ -153,9 +154,9 @@ export async function openCar(id, ctx, reload) {
   const siteBtns = edit ? (ss.state === "problem" ? `<button class="btn sm" type="button" data-act="site-retry">${icon("refresh")}Try again</button>` : ss.state === "not_listed" && ["incoming", "refurb", "available"].includes(c.status) ? `<button class="btn sm" type="button" data-act="site-list">${icon("globe")}List on website</button>` : "") + addPhotos : "";
   const siteHtml = `<p class="site-line">${badge(SITE[ss.state]?.[0] || ss.state, SITE[ss.state]?.[1] || "")} ${ss.note ? `<span class="muted">${esc(ss.note)}</span>` : ""}</p>`
     + ((c.papers_to_follow || []).length ? `<ul class="list">${c.papers_to_follow.map((p) => `<li><span class="grow"><div class="t">${esc(p.paper)}</div><div class="s">To follow by ${dateFmt(p.due, true)}</div></span>${p.due && p.due < state.today ? badge("Overdue", "neg") : badge("To follow", "warn")}</li>`).join("")}</ul>` : "");
-  const moneyBanner = owner && c.ownership === "invested" && c.purchase_price == null && !["delivered", "returned_to_owner", "written_off"].includes(c.status)
-    ? `<div class="note-card warn">${icon("alert", "")}<p><b>Add the buying price.</b> The website does not wait for it, but the car cannot be delivered without it.</p>${c.intake_id ? `<a class="btn sm primary" href="#/intake/${c.intake_id}?step=owner">Open the owner step</a>` : ""}</div>` : "";
-  d.setBody(`${moneyBanner}${sec("Website", siteHtml, siteBtns)}${sec("Price", price, edit ? `<button class="btn sm" type="button" data-act="price">${icon("tag")}Change price</button>` : "")}${sec("Details", spec)}${sec("Consignment terms", cons)}
+  const moneyBanner = owner && c.ownership !== "park_n_sell" && c.purchase_price == null && !["delivered", "returned_to_owner", "written_off"].includes(c.status)
+    ? `<div class="note-card warn">${icon("alert", "")}<p><b>${c.ownership ? "Add the buying price." : "Choose Bought or Park & Sell, then add the buying price."}</b> The website does not wait for it, but the car cannot be delivered without it.</p>${c.intake_id ? `<a class="btn sm primary" href="#/intake/${c.intake_id}?step=owner">Open the owner step</a>` : ""}</div>` : "";
+  d.setBody(`${(c.photos || []).length ? `<div class="sec demo-photos"><div class="sec-h"><h3>Photos</h3><span class="act muted">On the website</span></div><div class="rs-strip">${c.photos.map((p, i) => `<img src="${esc(p)}" alt="${esc(c.make + " " + c.model)} photo ${i + 1}" loading="lazy" decoding="async" width="200" height="150">`).join("")}</div></div>` : ""}${moneyBanner}${sec("Website", siteHtml, siteBtns)}${sec("Price", price, edit ? `<button class="btn sm" type="button" data-act="price">${icon("tag")}Change price</button>` : "")}${sec("Details", spec)}${sec("Consignment terms", cons)}
     <div class="sec"><div class="sec-h"><h3>Papers</h3><span class="badge ${c.papers_pct >= 90 ? "pos" : c.papers_pct >= 60 ? "warn" : "neg"}">${c.papers_pct}% complete</span></div><div id="docs">${data.documents ? docsHtml(data.documents, pns ? EXPECTED.park_n_sell : EXPECTED.invested) : '<p class="muted">Papers are managed by the office.</p>'}</div></div>
     ${owner ? sec("Cost ledger", costs || `<p class="muted">No costs recorded.</p>`, `<button class="btn sm" type="button" data-act="cost">${icon("plus")}Add cost</button>`) : ""}${sec("Workshop", edit ? refurb : "")}${sec("Deals", deals)}${sec("Where it has been", timeline, edit && !["delivered", "booked", "returned_to_owner", "written_off"].includes(c.status) ? `<button class="btn sm" type="button" data-act="status">Move to…</button>` : "")}${sec("Price history", prices)}`);
   const sold = can("stock.intake") && ["incoming", "refurb", "available", "booked"].includes(c.status) ? `<a class="btn" href="#/intake/new?kind=sold&car=${c.id}">${icon("tag")}Sold</a>` : "";
@@ -188,7 +189,7 @@ export async function openCar(id, ctx, reload) {
     if (a === "site-list" || a === "site-retry") api.post(`cars/${c.id}/website`, { action: a === "site-list" ? "list" : "retry" }).then(() => { toast("The website job is on its way", "ok"); reopen(); }).catch((er) => toast(er.message, "err"));
   });
 }
-const aging = (c) => `<span class="aging"><i data-c="${agingColor(agingBucketOf(c.days_in_stock ?? 0))}"></i>${num(c.days_in_stock)} days</span>`;
+const aging = (c) => c.days_in_stock == null ? `<span class="aging">arrival date: Dad adds</span>` : `<span class="aging"><i data-c="${agingColor(agingBucketOf(c.days_in_stock ?? 0))}"></i>${num(c.days_in_stock)} days</span>`;
 
 function mini(titleText, sub, fields, values, submit, label = "Save") {
   const d = openDrawer({ title: titleText, sub, body: `<form id="mf" novalidate>${formHtml(fields, values)}</form>`, foot: `<button class="btn" type="button" data-x>Cancel</button><button class="btn primary" type="submit" form="mf">${label}</button>` });

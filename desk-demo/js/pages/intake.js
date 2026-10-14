@@ -510,7 +510,9 @@ async function open(ctx, id) {
   function ownerStep() {
     if (!(it.can.money)) return h("Owner") + `<div class="note-card">${icon("lock", "")}<p>Dad adds the buying price and costs from his own login. The website does not wait for it.</p></div>`;
     const m = it.money || {};
-    return h("Owner only", "Typed here, seen only in money logins. Never kept on this phone.") + `<form id="money" class="form-stack" novalidate>
+    // a car imported from the website has no line yet: the owner chooses it here, once (scripts/import_stock.py)
+    const line = it.state === "saved" && !it.data.ownership ? `<div class="field full"><label for="m_line">Line</label><select class="select" id="m_line" name="ownership"><option value="">Choose… (needed first)</option>${CH.ownership.map(([v, l]) => `<option value="${v}">${esc(l)}</option>`).join("")}</select><div class="hint">Imported from the website, so nobody has chosen it yet. A Park &amp; Sell car has no buying price.</div></div>` : "";
+    return h("Owner only", "Typed here, seen only in money logins. Never kept on this phone.") + `<form id="money" class="form-stack" novalidate>${line}
       ${moneyIn("purchase_price", "Purchase price (includes any seller loan we paid off)", m.purchase_price)}${moneyIn("broker_fee", "Broker fee", m.broker_fee)}
       <div class="field full"><label for="m_mode">Paid by</label><select class="select" id="m_mode" name="purchase_mode"><option value="">Choose… (needed with the price)</option>${PAY.map(([v, l]) => `<option value="${v}"${m.purchase_mode === v ? " selected" : ""}>${l}</option>`).join("")}</select></div>
       <div class="field full"><label for="m_fund">Funding</label><select class="select" id="m_fund" name="funding"><option value="">Choose…</option><option value="own"${m.funding === "own" ? " selected" : ""}>Own money</option><option value="investor"${m.funding === "investor" ? " selected" : ""}>With an investor</option></select></div>
@@ -528,6 +530,7 @@ async function open(ctx, id) {
       const g = (n) => f.elements[n]?.value.trim() || "";
       const body = {};
       for (const k of ["purchase_price", "broker_fee", "floor_price"]) if (g(k)) { const n = rupees(g(k)); if (Number.isNaN(n)) { showMoneyErr(`${k.replace(/_/g, " ")}: write the full rupees`); return; } body[k] = n; }
+      if (g("ownership")) body.ownership = g("ownership");
       if (g("purchase_mode")) body.purchase_mode = g("purchase_mode"); if (g("funding")) body.funding = g("funding");
       if (g("inv_label") && g("inv_amount")) body.investors = [{ label: g("inv_label"), amount: rupees(g("inv_amount")), profit_share_pct: g("inv_share") ? Number(g("inv_share")) : null }];
       if (g("cost_cat") && g("cost_amount")) body.costs = [{ category: g("cost_cat"), vendor: g("cost_vendor"), amount: rupees(g("cost_amount")) }];

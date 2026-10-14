@@ -48,7 +48,8 @@ const ALERT_KINDS = {
   company_doc_expiry: ["Dealer papers expiring", "file"], unclaimed_lead: ["Unclaimed leads", "leads"], insurance_expiry: ["Insurance expiring", "shield"],
   puc_expiry: ["PUC expiring", "clock"], form29c_missing: ["Form 29C not filed", "file"], hypothecated: ["Still hypothecated", "lock"],
   consignment_expiry: ["Park-N-Sell agreements ending", "file"], aged_stock: ["Aged stock", "car"], rto_overdue: ["RTO transfers overdue", "docs"],
-  followup_overdue: ["Overdue follow-ups", "clock"],
+  followup_overdue: ["Overdue follow-ups", "clock"], buying_price_missing: ["Buying price missing", "wallet"],
+  not_on_website: ["Check: not on the website any more", "globe"],
 };
 export function alertLink(a) {
   const e = a.entity || {};

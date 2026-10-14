@@ -237,7 +237,7 @@ function demoBannerHtml() {
   const m = demoInfo;
   const roles = m.roles.slice().sort((a, b) => roleRank(a.id) - roleRank(b.id));
   return `<div class="demo-banner" role="region" aria-label="Demo snapshot">
-    <span class="demo-say"><b>Demo,</b> made-up data. Nothing here is real or saved.</span>
+    <span class="demo-say"><b>Demo:</b> real stock, made-up leads and money. Nothing here is saved.</span>
     <div class="demo-acts">
       <div class="demo-roles" role="group" aria-label="View the app as">${roles.map((r) => `<button type="button" data-demo-role="${esc(r.id)}" aria-pressed="${r.id === m.current}" title="${esc(r.hint || "")}">${esc(r.label)}</button>`).join("")}</div>
       <button type="button" class="demo-test" id="demo-test" title="Send me a test notification">${icon("bell", "")}<span class="long">Send me a test notification</span><span class="short">Test alert</span></button>

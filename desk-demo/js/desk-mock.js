@@ -31,36 +31,36 @@ const L = (o) => ({ phone_display: "•••• (demo)", after_hours: 0, claim:
 const clock = (deadline) => ({ deadline_at: at(deadline), sla_minutes: 10, paused: false, paused_until: null });
 
 const LEADS = [
-  L({ id: 1046, first_seen_ts: at("11:16:00"), channel: "facebook", name: "Demo Customer 0146", car: "Mercedes-Benz GLC 300 2022", budget: 6200000, tier_key: "luxury", salesman: "Zoya (demo)", status: "new", stage: "new", claim: clock("11:26:00"),
-    _thread: { channel: "facebook", updated_at: at("11:15:40"), messages: [{ who: "customer", name: null, text: "Is the GLC still available? Price kya hai?" }, { who: "anita", name: "Anita", text: "Yes, the 2022 GLC 300 is available. A salesman will call you in a few minutes with the price." }] } }),
-  L({ id: 1045, first_seen_ts: at("11:14:00"), channel: "website", name: "Demo Customer 0145", car: "Maruti Suzuki Baleno 2021", budget: 650000, tier_key: "core", salesman: "Aarav (demo)", status: "new", stage: "new", claim: clock("11:24:30"),
-    _thread: { channel: "website", updated_at: at("11:13:50"), messages: [{ who: "customer", name: null, text: "Baleno 2021 automatic chahiye, first owner." }, { who: "anita", name: "Anita", text: "We have a 2021 Baleno, first owner. Can we call you to fix a visit?" }] } }),
-  L({ id: 1044, first_seen_ts: at("11:19:00"), channel: "instagram", name: "Demo Customer 0144", car: "Hyundai Tucson 2021", budget: 2400000, tier_key: "premium", salesman: "Rohan (demo)", status: "new", stage: "new", claim: clock("11:29:00"),
-    _thread: { channel: "instagram", updated_at: at("11:18:40"), messages: [{ who: "customer", name: null, text: "Tucson ka exchange hoga? Mere paas 2017 City hai." }, { who: "anita", name: "Anita", text: "Yes, exchange is possible. A salesman will message you with the next step." }] } }),
-  L({ id: 1042, first_seen_ts: at("11:17:30"), channel: "whatsapp", name: "Demo Customer 0142", car: "Toyota Fortuner 2021", budget: 3000000, tier_key: "premium", salesman: ME.salesman, status: "new", stage: "new", claim: clock("11:27:30"),
-    _thread: { channel: "whatsapp", updated_at: at("11:17:20"), messages: [{ who: "customer", name: null, text: "Fortuner 2021 available hai?" }, { who: "anita", name: "Anita", text: "Ji haan, ek 2021 Fortuner hai. Diesel, 4x2, single owner." }, { who: "customer", name: null, text: "Kal test drive ho sakta hai? Budget around 30 lakh." }] } }),
-  L({ id: 1040, first_seen_ts: at("10:31:00"), channel: "call", name: "Demo Customer 0140", car: "BMW 5 Series 2020", budget: 4800000, tier_key: "luxury", salesman: "Partners (demo)", status: "escalated", stage: "new",
-    _call: { duration_min: 2, has_recording: false, shortened: false, lines: [{ who: "agent", text: "Namaste, Classic Auto. How can I help?" }, { who: "caller", text: "5 Series 2020 dekhna hai, aaj shaam aa sakta hoon." }, { who: "agent", text: "Noted. Our team will call you back shortly to confirm a time." }] },
+  L({ id: 1046, first_seen_ts: at("11:16:00"), channel: "facebook", name: "Demo Customer 0146", car: "Mercedes-Benz GLC 200 2022", budget: 4500000, tier_key: "luxury", salesman: "Zoya (demo)", status: "new", stage: "new", claim: clock("11:26:00"),
+    _thread: { channel: "facebook", updated_at: at("11:15:40"), messages: [{ who: "customer", name: null, text: "Is the GLC still available? Price kya hai?" }, { who: "anita", name: "Anita", text: "Yes, the 2022 GLC 200 Progressive is in stock. A salesman will call you in a few minutes with the price." }] } }),
+  L({ id: 1045, first_seen_ts: at("11:14:00"), channel: "website", name: "Demo Customer 0145", car: "Hyundai Grand i10 Nios 2022", budget: 650000, tier_key: "core", salesman: "Aarav (demo)", status: "new", stage: "new", claim: clock("11:24:30"),
+    _thread: { channel: "website", updated_at: at("11:13:50"), messages: [{ who: "customer", name: null, text: "Grand i10 Nios automatic chahiye, first owner." }, { who: "anita", name: "Anita", text: "We have a 2022 Grand i10 Nios automatic, first owner. Can we call you to fix a visit?" }] } }),
+  L({ id: 1044, first_seen_ts: at("11:19:00"), channel: "instagram", name: "Demo Customer 0144", car: "Hyundai Creta 2023", budget: 1800000, tier_key: "premium", salesman: "Rohan (demo)", status: "new", stage: "new", claim: clock("11:29:00"),
+    _thread: { channel: "instagram", updated_at: at("11:18:40"), messages: [{ who: "customer", name: null, text: "Creta diesel ka exchange hoga? Mere paas 2017 City hai." }, { who: "anita", name: "Anita", text: "Yes, exchange is possible. A salesman will message you with the next step." }] } }),
+  L({ id: 1042, first_seen_ts: at("11:17:30"), channel: "whatsapp", name: "Demo Customer 0142", car: "Toyota Fortuner 2023", budget: 3900000, tier_key: "premium", salesman: ME.salesman, status: "new", stage: "new", claim: clock("11:27:30"),
+    _thread: { channel: "whatsapp", updated_at: at("11:17:20"), messages: [{ who: "customer", name: null, text: "Fortuner 2023 available hai?" }, { who: "anita", name: "Anita", text: "Ji haan, ek 2023 Fortuner hai. Diesel, 4x4 automatic, first owner." }, { who: "customer", name: null, text: "Kal test drive ho sakta hai? Budget around 39 lakh." }] } }),
+  L({ id: 1040, first_seen_ts: at("10:31:00"), channel: "call", name: "Demo Customer 0140", car: "BMW X3 2025", budget: 7700000, tier_key: "luxury", salesman: "Partners (demo)", status: "escalated", stage: "new",
+    _call: { duration_min: 2, has_recording: false, shortened: false, lines: [{ who: "agent", text: "Namaste, Classic Auto. How can I help?" }, { who: "caller", text: "X3 2025 dekhna hai, aaj shaam aa sakta hoon." }, { who: "agent", text: "Noted. Our team will call you back shortly to confirm a time." }] },
     _timeline: [{ ts: at("10:46:00"), who: "Rohan (demo)", kind: "pass", note: "no_claim|Zoya (demo)|Rohan (demo)|1|2" }, { ts: at("11:01:00"), who: "Zoya (demo)", kind: "pass", note: "no_claim|Rohan (demo)|Zoya (demo)|2|2" }, { ts: at("11:16:00"), who: "Partners (demo)", kind: "escalated", note: "max_rounds|2" }] }),
-  L({ id: 1038, first_seen_ts: at("07:50:00"), after_hours: 1, channel: "website", name: "Demo Customer 0138", car: "Audi Q5 2021", budget: 4600000, tier_key: "luxury", salesman: "Rohan (demo)", status: "claimed", stage: "claimed",
-    _thread: { channel: "website", updated_at: at("10:21:30"), messages: [{ who: "customer", name: null, text: "Q5 service history available?" }, { who: "anita", name: "Anita", text: "Yes, full service history with the authorised dealer." }] },
+  L({ id: 1038, first_seen_ts: at("07:50:00"), after_hours: 1, channel: "website", name: "Demo Customer 0138", car: "Audi RS5 2021", budget: 7500000, tier_key: "luxury", salesman: "Rohan (demo)", status: "claimed", stage: "claimed",
+    _thread: { channel: "website", updated_at: at("10:21:30"), messages: [{ who: "customer", name: null, text: "RS5 ki service history milegi?" }, { who: "anita", name: "Anita", text: "A salesman will share the service record with you." }] },
     _timeline: [{ ts: at("10:05:00"), who: "Rohan (demo)", kind: "claimed", note: null }, { ts: at("10:12:00"), who: "Rohan (demo)", kind: "call_attempt", note: "297|app_tel" }, { ts: at("10:24:00"), who: "Rohan (demo)", kind: "brief_submitted", note: "84|spoke_negotiating" }, { ts: at("10:36:00"), who: "Rohan (demo)", kind: "proof_missed", note: "42" }] }),
   L({ id: 1037, first_seen_ts: at("10:05:00"), channel: "call", name: "Demo Customer 0139", car: "Hyundai Creta 2022", budget: 1400000, tier_key: "core", salesman: ME.salesman, status: "contacted", stage: "visit_booked",
-    _call: { duration_min: 3, has_recording: false, shortened: false, lines: [{ who: "agent", text: "Namaste, Classic Auto. How can I help?" }, { who: "caller", text: "Creta 2022 chahiye, budget around 14 lakh." }, { who: "agent", text: "We have a white 2022 Creta SX. Would you like to see it today?" }, { who: "caller", text: "Haan, shaam ko 5 baje." }] },
+    _call: { duration_min: 3, has_recording: false, shortened: false, lines: [{ who: "agent", text: "Namaste, Classic Auto. How can I help?" }, { who: "caller", text: "Creta 2022 chahiye, budget around 14 lakh." }, { who: "agent", text: "We have a white 2022 Creta SX (O) turbo automatic. Would you like to see it today?" }, { who: "caller", text: "Haan, shaam ko 5 baje." }] },
     _timeline: [{ ts: at("10:09:00"), who: ME.salesman, kind: "claimed", note: null }, { ts: at("10:12:00"), who: ME.salesman, kind: "call_attempt", note: "301|app_tel" }, { ts: at("10:21:00"), who: ME.salesman, kind: "brief_submitted", note: "88|spoke_visit" }, { ts: at("10:30:00"), who: ME.salesman, kind: "proof_submitted", note: "41" }, { ts: at("10:40:00"), who: ME.salesman, kind: "visit_booked", note: at("17:00") }] }),
-  L({ id: 1035, first_seen_ts: at("11:08:00"), channel: "cardekho", name: "Demo Customer 0135", car: "Mahindra XUV700 AX7 2023", budget: 2250000, tier_key: "premium", salesman: ME.salesman, status: "claimed", stage: "claimed",
+  L({ id: 1035, first_seen_ts: at("11:08:00"), channel: "cardekho", name: "Demo Customer 0135", car: "Mahindra XUV700 AX7 2024", budget: 1900000, tier_key: "premium", salesman: ME.salesman, status: "claimed", stage: "claimed",
     _thread: { channel: "email", updated_at: at("09:47:30"), messages: [{ who: "customer", name: null, text: "Interested in the XUV700 AX7. Please share the best price." }] },
     _timeline: [{ ts: at("11:12:00"), who: ME.salesman, kind: "claimed", note: null }] }),
-  L({ id: 1033, first_seen_ts: at("09:30:00"), after_hours: 1, channel: "whatsapp", name: "Demo Customer 0133", car: "Tata Nexon EV 2023", budget: 1250000, tier_key: "core", salesman: "Aarav (demo)", status: "contacted", stage: "contacted",
-    _thread: { channel: "whatsapp", updated_at: at("09:29:00"), messages: [{ who: "customer", name: null, text: "Nexon EV ki battery health kitni hai?" }, { who: "anita", name: "Anita", text: "Battery health report is available. A salesman will share it." }] },
+  L({ id: 1033, first_seen_ts: at("09:30:00"), after_hours: 1, channel: "whatsapp", name: "Demo Customer 0133", car: "Tata Punch EV 2025", budget: 1150000, tier_key: "core", salesman: "Aarav (demo)", status: "contacted", stage: "contacted",
+    _thread: { channel: "whatsapp", updated_at: at("09:29:00"), messages: [{ who: "customer", name: null, text: "Punch EV ki battery health kitni hai?" }, { who: "anita", name: "Anita", text: "A salesman will call you about the battery health report." }] },
     _timeline: [{ ts: at("10:03:00"), who: "Aarav (demo)", kind: "claimed", note: null }, { ts: at("10:18:00"), who: "Aarav (demo)", kind: "call_attempt", note: "299|app_tel" }, { ts: at("10:26:00"), who: "Aarav (demo)", kind: "brief_submitted", note: "86|spoke_interested" }, { ts: at("10:31:00"), who: "Aarav (demo)", kind: "proof_submitted", note: "43" }] }),
-  L({ id: 1031, first_seen_ts: at("16:10:00", "2026-10-04"), channel: "website", name: "Demo Customer 0131", car: "Toyota Innova Crysta 2021", budget: 2350000, tier_key: "premium", salesman: ME.salesman, status: "contacted", stage: "test_drive",
+  L({ id: 1031, first_seen_ts: at("16:10:00", "2026-10-04"), channel: "website", name: "Demo Customer 0131", car: "Toyota Innova Crysta 2016", budget: 1550000, tier_key: "premium", salesman: ME.salesman, status: "contacted", stage: "test_drive",
     _thread: { channel: "website", updated_at: at("16:09:00", "2026-10-04"), messages: [{ who: "customer", name: null, text: "Crysta 7 seater, family ke liye. Test drive possible?" }, { who: "anita", name: "Anita", text: "Yes. A salesman will call you to book a slot." }] },
-    _timeline: [{ ts: at("16:14:00", "2026-10-04"), who: ME.salesman, kind: "claimed", note: null }, { ts: at("16:20:00", "2026-10-04"), who: ME.salesman, kind: "call_attempt", note: "288|app_tel" }, { ts: at("16:29:00", "2026-10-04"), who: ME.salesman, kind: "brief_submitted", note: "71|spoke_callback" }, { ts: at("16:30:00", "2026-10-04"), who: ME.salesman, kind: "contacted", note: null }, { ts: at("18:05:00", "2026-10-04"), who: ME.salesman, kind: "test_drive", note: "Innova Crysta 2021" }, { ts: at("11:05:00"), who: ME.salesman, kind: "call_attempt", note: "305|app_tel" }, { ts: at("11:15:00"), who: null, kind: "brief_prompt", note: "90" }] }),
+    _timeline: [{ ts: at("16:14:00", "2026-10-04"), who: ME.salesman, kind: "claimed", note: null }, { ts: at("16:20:00", "2026-10-04"), who: ME.salesman, kind: "call_attempt", note: "288|app_tel" }, { ts: at("16:29:00", "2026-10-04"), who: ME.salesman, kind: "brief_submitted", note: "71|spoke_callback" }, { ts: at("16:30:00", "2026-10-04"), who: ME.salesman, kind: "contacted", note: null }, { ts: at("18:05:00", "2026-10-04"), who: ME.salesman, kind: "test_drive", note: "Innova Crysta 2016" }, { ts: at("11:05:00"), who: ME.salesman, kind: "call_attempt", note: "305|app_tel" }, { ts: at("11:15:00"), who: null, kind: "brief_prompt", note: "90" }] }),
   L({ id: 1019, first_seen_ts: at("11:40:00", "2026-10-02"), channel: "whatsapp", name: "Demo Customer 0119", car: "Maruti Suzuki Brezza 2022", budget: 1050000, tier_key: "core", salesman: ME.salesman, status: "sold", stage: "sold",
     _thread: { channel: "whatsapp", updated_at: at("11:39:00", "2026-10-02"), messages: [{ who: "customer", name: null, text: "Brezza 2022 ZXi, CNG hai kya?" }, { who: "anita", name: "Anita", text: "This one is petrol. A salesman will call you." }] },
     _timeline: [{ ts: at("11:43:00", "2026-10-02"), who: ME.salesman, kind: "claimed", note: null }, { ts: at("12:10:00", "2026-10-02"), who: ME.salesman, kind: "contacted", note: null }, { ts: at("17:20:00", "2026-10-03"), who: ME.salesman, kind: "sold", note: "Token taken" }] }),
-  L({ id: 1012, first_seen_ts: at("15:05:00", "2026-09-30"), channel: "olx", name: "Demo Customer 0112", car: "Jeep Compass 2021", budget: 2050000, tier_key: "premium", salesman: ME.salesman, status: "lost", stage: "lost",
+  L({ id: 1012, first_seen_ts: at("15:05:00", "2026-09-30"), channel: "olx", name: "Demo Customer 0112", car: "Jeep Compass 2018", budget: 800000, tier_key: "core", salesman: ME.salesman, status: "lost", stage: "lost",
     _thread: null, _annotation: { lost_reason: "bought_elsewhere" },
     _timeline: [{ ts: at("15:09:00", "2026-09-30"), who: ME.salesman, kind: "claimed", note: null }, { ts: at("11:00:00", "2026-10-01"), who: ME.salesman, kind: "lost", note: "bought_elsewhere" }] }),
 ];
@@ -134,12 +134,12 @@ const MESSAGES = {
     M(330, "10:41", "kabir", "Creta customer coming at 5"),
   ] },
   premium: { read: { salesman: 332, manager: 334, owner: 334 }, rows: [
-    M(332, "10:20", "rohan", "Tucson ka second key mil gaya, drawer 3 mein hai."),
+    M(332, "10:20", "rohan", "Creta diesel ka test drive 5 baje shift kiya."),
     M(334, "10:47", "manager", "Innova Crysta test drive feedback? @Kabir", { mentions: ["kabir"] }),
   ] },
   luxury: { read: { manager: 336, owner: 331 }, rows: [
-    M(331, "10:15", "zoya", "GLC 300 photos updated on the website."),
-    M(336, "10:45", "manager", "BMW 5 Series lead escalated. Partners are calling back."),
+    M(331, "10:15", "zoya", "GLC 200 photos are up on the website."),
+    M(336, "10:45", "manager", "BMW X3 lead escalated. Partners are calling back."),
   ] },
   managers: { read: { manager: 339, owner: 333 }, rows: [
     M(333, "10:30", "owner", "Please check the price board before the weekend."),
@@ -151,20 +151,21 @@ const PERSONA = { salesman: "kabir", manager: "manager", owner: "owner", staff: 
 
 // ------------------------------------------------------------------ Ask Claude
 const TASKS = [
-  { id: "t_demo_2", text: "Draft a WhatsApp reply for a customer asking about the Fortuner's service history", status: "done",
-    result_text: "Here is a short reply you can send:\n\nNamaste! The 2021 Fortuner has its full service history with the authorised dealer. I can share the service book photos on WhatsApp, and you are welcome to see the car at the showroom today.",
+  { id: "t_demo_2", text: "Draft a WhatsApp reply for a customer asking about the Fortuner's service record", status: "done",
+    result_text: "Here is a short reply you can send:\n\nNamaste! Thank you for asking about the 2023 Fortuner 4x4 automatic. I will share its service record on WhatsApp, and you are welcome to see the car at the showroom today.",
     result_url: null, created_at: at("10:50:00"), updated_at: at("10:51:10") },
   { id: "t_demo_1", text: "Make a list of cars older than 60 days in stock", status: "needs_medhansh", result_text: null, result_url: null,
     created_at: at("09:30:00"), updated_at: at("09:31:00") },
 ];
-// the Ask Claude chat (SPEC-ASK-CLAUDE-CHAT 9): a sample thread; every car and price here is made up
+// the Ask Claude chat (SPEC-ASK-CLAUDE-CHAT 9): a sample thread on the real stock (cars and asking prices from
+// classicauto.net.in, 13 Oct 2026; demo stock numbers); the price change itself is made up
 const CHAT = [
   { id: 1, role: "user", text: "Which white cars do we have under 15 lakh?", created_at: at("10:40:00") },
-  { id: 2, role: "assistant", text: "(demo answer) Two: the 2021 Hyundai Creta (CA101) at ₹12,45,000 and the 2020 Renault Kwid (CA104) at ₹4,10,000. Both are live on the website.", created_at: at("10:40:20") },
-  { id: 3, role: "user", text: "Creta price 12.2 lakh kar do", created_at: at("10:42:00") },
+  { id: 2, role: "assistant", text: "(demo answer) 15 of them. The cheapest: the 2015 Honda City SV diesel (CA257) at ₹3,96,000, the 2014 Volkswagen Vento 1.2 TSI (CA266) at ₹4,35,000 and the 2023 Tata Tiago XZA Plus (CA272) at ₹6,00,000. All are live on the website.", created_at: at("10:40:20") },
+  { id: 3, role: "user", text: "CA245 Creta price 12.25 lakh kar do", created_at: at("10:42:00") },
   { id: 4, role: "assistant", text: "(demo answer) Check the card and tap Yes.", created_at: at("10:42:15") },
   { id: 5, role: "card", text: null, created_at: at("10:42:15"), card: { type: "edit", action_id: 51, kind: "car_edit", state: "proposed", version: 1, mine: true, can_yes: true,
-    label: "2021 Hyundai Creta", stock_no: "CA101", rows: [{ field: "price", label: "Asking price", old: "₹12,45,000 (twelve lakh forty-five thousand)", new: "₹12,20,000 (twelve lakh twenty thousand)" }],
+    label: "2022 Hyundai Creta SX 1.5 Petrol CVT", stock_no: "CA245", rows: [{ field: "price", label: "Asking price", old: "₹12,49,000 (twelve lakh forty-nine thousand)", new: "₹12,25,000 (twelve lakh twenty-five thousand)" }],
     warnings: [], site: { state: "live", label: "Live" } } },
 ];
 const EDIT_FMT = "EDIT CAR\nStock no:\nAsking price:\nKm:\nColour:\nVariant:\nHeadline:\nSummary:\nFeatures add:\nFeatures remove:\nVideo link:\nWhere is it: Showroom / Yard / Workshop\nTake off: Withdrawn / Returned to owner / Written off\nPut back on website: Yes\n";
@@ -182,9 +183,9 @@ const MUST_ANGLES = ["E01", "E03", "E05", "E08", "I01", "I08", "O01", "K01"];
 /** The demo's canned replies to a typed question: picked by a word or two, always marked as a demo answer. */
 function cannedAnswer(q) {
   const t = String(q).toLowerCase();
-  if (/\b(car|cars|stock|gaadi|suv|sedan|white|price|lakh)\b/.test(t)) return "(demo answer) From the demo stock: 2021 Hyundai Creta SX (CA101) at ₹12,45,000, 2022 Kia Seltos HTX (waiting for approval) at ₹13,95,000 and 2020 Renault Kwid (CA104), booked. In the real app Claude reads the live Stock page, under your login.";
+  if (/\b(car|cars|stock|gaadi|suv|sedan|white|price|lakh)\b/.test(t)) return "(demo answer) From the stock (99 cars): 39 SUVs and 25 luxury SUVs, for example the 2022 Hyundai Creta SX 1.5 Petrol CVT (CA245) at ₹12,49,000 and the 2024 Mahindra XUV700 AX7 (CA273) at ₹18,75,000. In the real app Claude reads the live Stock page, under your login.";
   if (/\b(lead|leads|inquir|enquir|call|calls|follow)\b/.test(t)) return "(demo answer) Today: 4 new inquiries, 1 escalated to the partners and 1 screenshot waiting for a check. Kabir has a brief due on the Innova Crysta lead. In the real app Claude reads the Inbox and Calls pages, under your login.";
-  if (/\b(sold|sale|sales|booked|deal)\b/.test(t)) return "(demo answer) This week: 1 car booked (2020 Renault Kwid, token taken). In the real app Claude reads Deals, and money only on the owner's login.";
+  if (/\b(sold|sale|sales|booked|deal)\b/.test(t)) return "(demo answer) Made-up bookings this week: 3 cars, token taken. In the real app Claude reads Deals, and money only on the owner's login.";
   return DEMO_ANSWER;
 }
 

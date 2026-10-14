@@ -82,7 +82,7 @@ export async function render(ctx) {
     kpiTile({ label: "Revenue", value: K.turnover?.value, kind: "money", delta: K.turnover?.delta_pct, spark: series("turnover"), sub: K.turnover?.prev != null ? `${esc(cmp)}: ${esc(lakh(K.turnover.prev))}` : "" }),
     kpiTile({ label: "Gross profit", value: gpNow, kind: "money", delta: gpDelta, spark: gp, sub: K.gpu?.value != null ? `${esc(lakh(K.gpu.value))} per car` : "" }),
     kpiTile({ label: "Gross margin", value: K.gross_margin_pct?.value, kind: "pct", delta: pts(K.gross_margin_pct?.value, K.gross_margin_pct?.prev), deltaUnit: " pts", spark: series("gross_margin_pct"), sub: K.net_margin_pct?.value != null ? `Net margin ${pct(K.net_margin_pct.value)}` : "On invested cars" }),
-    kpiTile({ label: "Capital in stock", value: K.capital_locked?.value, kind: "money", sub: K.holding_cost?.value != null ? `Holding cost ${esc(lakh(K.holding_cost.value))} this period` : "Purchase plus costs" }),
+    kpiTile({ label: "Capital in stock", value: K.capital_locked?.value, kind: "money", sub: K.holding_cost?.value != null ? `Holding cost ${esc(lakh(K.holding_cost.value))} this period` : K.capital_locked?.value == null ? "Dad adds the buying prices and costs" : "Purchase plus costs" }),
   ] : [];
   const stat = (label, node, cls = "") => node.replace('class="kpi rise', `class="kpi rise${cls}`);
   const opsTiles = [
@@ -125,7 +125,7 @@ export async function render(ctx) {
       body: `<div class="scroll-x"><table class="tbl left"><thead><tr><th>Model</th><th>Sold</th><th>Profit</th><th>Per car</th><th>Days to sell</th></tr></thead><tbody>${list.map((r) => `<tr><td>${esc(r.key)}<span class="sub">${[...r.seg].join(" · ")}</span></td><td>${num(r.n)}</td><td><b>${inr(r.gp)}</b></td><td>${inr(Math.round(r.gp / r.n))}</td><td>${num(Math.round(r.days / r.n))}</td></tr>`).join("")}</tbody></table></div>` });
   }
 
-  const agingCard = card({ title: "Stock aging", sub: aging ? `${num(aging.aged_count)} of ${num(aging.invested_count)} invested cars are past ${aging.aged_threshold_days} days${money && aging.aged_capital != null ? ` (${lakh(aging.aged_capital)} tied up; ${lakh(aging.capital_locked)} in all stock)` : ""}. The bars also count ${num((aging.aged_all_count || 0) - (aging.aged_count || 0))} Park-N-Sell cars, which carry no capital.` : "", cls: "c5",
+  const agingCard = card({ title: "Stock aging", sub: aging?.arrival_note ? "Days in stock show once Dad adds when each car came in (arrival date: Dad adds)." : aging ? `${num(aging.aged_count)} of ${num(aging.invested_count)} invested cars are past ${aging.aged_threshold_days} days${money && aging.aged_capital != null ? ` (${lakh(aging.aged_capital)} tied up; ${lakh(aging.capital_locked)} in all stock)` : ""}. The bars also count ${num((aging.aged_all_count || 0) - (aging.aged_count || 0))} Park-N-Sell cars, which carry no capital.` : "", cls: "c5",
     body: aging ? `<div class="chart short" id="ch-aging"></div>${aging.oldest?.length ? `<ul class="list">${aging.oldest.slice(0, 3).map((o) => `<li><a class="grow" href="#/inventory?car=${o.id}"><div class="t">${esc(o.stock_no)} · ${esc(o.label)}</div></a><span class="badge neg">${num(o.days)} days</span></li>`).join("")}</ul>` : ""}` : `<div class="empty"><b>No stock figures</b></div>` });
   const funnelCard = card({ title: "Lead funnel", sub: `${esc(periodLabel(p))}. Each bar is a share of inquiries.`, cls: "c7", actions: can("leads.view") ? `<a class="btn sm" href="#/leads">Leads ${icon("right")}</a>` : "", body: funnelHtml(st) });
   const improve = money ? insightsHtml(ins || [], 6) : improveHtml(improvements({ K, aging, analytics, openFeedback: openFb }), 6);
@@ -176,10 +176,10 @@ function ctxEnd(p) { const m = /^\d{4}-\d{2}$/.test(p) ? p : state.today.slice(0
 
 function stockHero(K, aging) {
   const a = K.aged_stock_pct || {}, by = a.by || {};
-  const rows = [["Invested", by.ownership?.invested], ["Park-N-Sell", by.ownership?.park_n_sell], ["Available", by.status?.available], ["In workshop", by.status?.refurb], ["Incoming", by.status?.incoming]];
+  const rows = [["Invested", by.ownership?.invested], ["Park-N-Sell", by.ownership?.park_n_sell], ...(by.ownership?.not_set ? [["Line not set", by.ownership.not_set]] : []), ["Available", by.status?.available], ["In workshop", by.status?.refurb], ["Incoming", by.status?.incoming]];
   return `<article class="card hero kpi big rise c7"><div class="kpi-top"><span class="kpi-label">Cars on the lot</span><span class="badge ${a.value > 15 ? "warn" : "pos"}">${a.value != null ? pct(a.value, 0) : "—"} aged</span></div>
     <div class="kpi-val"><span class="num" data-count="${a.stock_count || 0}" data-dec="0">${num(a.stock_count)}</span><span class="unit">cars</span></div>
-    <div class="kpi-sub">${num(a.aged_count)} have been here over ${aging?.aged_threshold_days || 60} days.</div>
+    <div class="kpi-sub">${a.arrival_note ? "Days in stock: arrival date: Dad adds." : `${num(a.aged_count)} have been here over ${aging?.aged_threshold_days || 60} days.`}</div>
     ${ageBar(aging)}
     <div class="stat-row">${rows.map(([l, v]) => `<div><b>${num(v ?? 0)}</b><span>${l}</span></div>`).join("")}</div></article>`;
 }
