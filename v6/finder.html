@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="en-IN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Find my car in 2 minutes: Classic Auto car finder, Malad West</title>
+<meta name="description" content="Eighteen quick taps on budget, seats, fuel, driving and taste, and Classic Auto shortlists the real cars on its floor that fit you, with the reasons. No sign-up, nothing stored.">
+<meta name="theme-color" content="#0A1633">
+<link rel="icon" type="image/png" sizes="32x32" href="assets/brand/favicon-32.png">
+<link rel="icon" type="image/png" sizes="48x48" href="assets/brand/favicon-48.png">
+<link rel="apple-touch-icon" href="assets/brand/apple-touch-icon.png">
+<link rel="preload" href="assets/fonts/bebas-neue-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="assets/fonts/manrope-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="assets/vendor/lenis/lenis.css">
+<link rel="stylesheet" href="assets/css/style.css">
+<link rel="stylesheet" href="assets/css/finder.css">
+<script>(function(){var d=document.documentElement,r=false;try{r=matchMedia("(prefers-reduced-motion: reduce)").matches}catch(e){}d.classList.add(r?"reduce":"motion");setTimeout(function(){if(!(window.CA_MOTION&&window.CA_MOTION.ready))d.classList.remove("motion")},5000)})();</script>
+<script src="assets/js/config.js"></script>
+<script src="assets/js/track.js" defer></script>
+</head>
+<body data-page="quiz">
+<script src="assets/js/chrome.js"></script>
+<div class="progress-rail" aria-hidden="true"><i></i></div>
+
+<main id="main" class="fd">
+  <div class="container fd-wrap" id="finderApp">
+
+    <!-- start screen -->
+    <section class="fd-intro" id="fdIntro" aria-labelledby="fdIntroTitle">
+      <span class="eyebrow">Car finder</span>
+      <h1 id="fdIntroTitle">Find my car in 2&nbsp;minutes</h1>
+      <p class="lead"><span data-fd-n>18</span> quick taps, one question at a time. We shortlist the cars on our floor that fit you and tell you why.</p>
+      <ul class="fd-promise">
+        <li><b>Skip anything.</b> Every question has a Skip.</li>
+        <li><b>No sign-up.</b> Your shortlist comes first. Contact details only if you want us to call.</li>
+        <li><b>Nothing kept.</b> Your answers stay in this browser tab.</li>
+      </ul>
+      <div class="fd-intro-cta">
+        <button type="button" class="btn btn-primary btn-lg" id="fdStart">Start</button>
+        <a class="btn btn-outline btn-lg" href="stock.html" data-cta="see_stock" data-at="quiz">See all <span id="fdTotal"></span> cars</a>
+      </div>
+    </section>
+
+    <!-- one question per screen -->
+    <section class="fd-stage" id="fdStage" hidden aria-label="Car finder questions">
+      <div class="fd-meter" aria-hidden="true"><i id="fdBar"></i></div>
+      <div class="fd-top">
+        <p class="fd-count" id="fdCount" aria-live="polite"></p>
+        <p class="fd-must" id="fdMust" hidden>Must-have</p>
+      </div>
+      <div class="fd-q" id="fdQ">
+        <h2 class="fd-title" id="fdTitle" tabindex="-1"></h2>
+        <p class="fd-hint" id="fdHint"></p>
+        <div class="fd-opts" id="fdOpts" role="group"></div>
+      </div>
+      <div class="fd-nav">
+        <button type="button" class="btn btn-outline" id="fdBack">Back</button>
+        <button type="button" class="fd-skip" id="fdSkip">Skip</button>
+        <button type="button" class="btn btn-primary" id="fdNext">Next</button>
+      </div>
+      <p class="fd-live" id="fdLive" aria-live="polite"></p>
+      <p class="fd-early" id="fdEarly" hidden><button type="button" class="link-btn" id="fdEarlyBtn">Show my shortlist now</button></p>
+    </section>
+
+    <!-- shortlist -->
+    <section class="fd-results" id="fdResults" hidden aria-labelledby="fdResTitle">
+      <div class="fd-res-head">
+        <span class="eyebrow">Your shortlist</span>
+        <h2 id="fdResTitle" tabindex="-1">Your best fits</h2>
+        <p class="lead" id="fdResLead"></p>
+        <div class="fd-res-actions">
+          <button type="button" class="btn btn-outline" id="fdEdit">Change answers</button>
+          <a class="btn btn-outline" href="stock.html" data-cta="see_stock" data-at="quiz">See all cars</a>
+        </div>
+      </div>
+
+      <ol class="fd-list" id="fdList"></ol>
+      <div class="fd-more" id="fdMore" hidden><button type="button" class="btn btn-outline btn-lg" id="fdMoreBtn">See all matches</button></div>
+
+      <div class="fd-near" id="fdNearWrap" hidden>
+        <h2>Closest cars outside your must-haves</h2>
+        <ol class="fd-list" id="fdNear"></ol>
+        <p class="fd-near-cta"><a class="btn btn-outline" href="request.html" data-cta="request_car" data-at="quiz">Tell us what you want and we'll look for it</a></p>
+      </div>
+
+      <details class="fd-how">
+        <summary>How we picked these</summary>
+        <div class="fd-how-body">
+          <p><b>Must-haves first.</b> Budget, seats and fuel are hard filters. A car over your budget by more than 10%, with the wrong fuel, or without the seats you need is never in the shortlist. Most listings don't state seats yet, so for 6 or more seats we only count a car whose listing says so, or a model the maker sells only with three rows (sources below).</p>
+          <p><b>Then the rest.</b> Each other answer is worth the points below. A car's fit is the points it wins out of the points possible for the questions you answered; skipped questions don't count. We only score what is on the car's listing. Anything the listing doesn't say (seats, airbag count, some feature lists) is shown as "ask us", never guessed.</p>
+          <ul class="fd-weights" id="fdWeights"></ul>
+          <p class="fd-fine">Size words for parking ("a big car") are our own size class (full-size SUVs, MPVs and limousines), not a measurement. "Cheaper per km" for diesel, hybrid, CNG and electric is the usual pattern, not a figure for that car. EMI is indicative: 20% down, 60 months, 11.5% a year assumed; the final EMI depends on the lender.</p>
+          <p class="fd-fine">Three-row models we count without a seat figure on the listing:</p>
+          <ul class="fd-src" id="fdSeatSrc"></ul>
+          <p class="fd-fine">Your answers:</p>
+          <ul class="fd-answers" id="fdAnswers"></ul>
+        </div>
+      </details>
+
+      <div class="fd-talk panel" id="fdTalk">
+        <h2>Talk to us</h2>
+        <p>Pick a car and we'll message you to fix a test drive, or ask anything. Your finder answers go with it, so you won't have to repeat them.</p>
+        <div class="fd-talk-btns" id="fdTalkBtns"></div>
+        <form id="fdForm" novalidate>
+          <div class="fd-mode" role="group" aria-label="What would you like?">
+            <button type="button" class="chip-btn" data-mode="td" aria-pressed="true">Book a test drive</button>
+            <button type="button" class="chip-btn" data-mode="ask" aria-pressed="false">Ask a question</button>
+          </div>
+          <div class="form-grid cols-2">
+            <div class="field"><label for="fdName">Name <span class="req" aria-hidden="true">*</span></label><input type="text" id="fdName" autocomplete="name"><span class="field-error" role="alert">Enter your name.</span></div>
+            <div class="field"><label for="fdPhone">Mobile number <span class="req" aria-hidden="true">*</span></label><input type="tel" id="fdPhone" autocomplete="tel" inputmode="tel"><span class="field-error" role="alert">Enter a 10-digit mobile number.</span></div>
+            <div class="field"><label for="fdCar">Car</label><select id="fdCar"></select></div>
+            <div class="field" id="fdMsgField" hidden><label for="fdMsg">Your question</label><textarea id="fdMsg" rows="3" maxlength="500"></textarea></div>
+          </div>
+          <div data-extras></div>
+          <div class="form-actions"><button class="btn btn-primary btn-lg" type="submit" id="fdSend" data-cta="book_test_drive" data-at="quiz">Request a test drive</button></div>
+          <p class="form-status" id="fdStatus" role="status"></p>
+        </form>
+      </div>
+      <p class="fd-restart"><button type="button" class="link-btn" id="fdRestart">Start again</button></p>
+      <p class="emi-note">*EMI is indicative: 20% down, 60 months, 11.5% a year assumed. Final EMI depends on the lender's approval and rate.</p>
+    </section>
+  </div>
+</main>
+
+<div id="siteFooter"></div>
+<script src="assets/vendor/gsap/gsap.min.js" defer></script>
+<script src="assets/vendor/gsap/ScrollTrigger.min.js" defer></script>
+<script src="assets/vendor/lenis/lenis.min.js" defer></script>
+<script src="assets/js/cars.js" defer></script>
+<script src="assets/js/main.js" defer></script>
+<script src="assets/js/motion.js" defer></script>
+<script src="assets/js/forms.js" defer></script>
+<script src="assets/js/cards.js" defer></script>
+<script src="assets/js/compare-shortlist.js" defer></script>
+<script src="assets/js/finder.js" defer></script>
+<script src="assets/js/anita.js" defer></script>
+</body>
+</html>

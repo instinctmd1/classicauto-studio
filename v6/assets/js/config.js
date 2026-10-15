@@ -26,8 +26,17 @@ window.CA_SITE = {
                   "Malad West, Mumbai"],
   maps_url: null,       // null => https://www.google.com/maps/search/?api=1&query=<url-encoded address>
   hours: "Mon-Sun 10:00-21:00",  // the showroom hours (engine config dealer.hours, set 7 Oct 2026). JSON-LD writes it as "Mo-Su 10:00-21:00"
-  google_review_url: null, google_profile_url: null,
-  google_rating: null,  // { value: 4.6, count: 120, as_of: "YYYY-MM-DD" }, typed from the Business Profile, never guessed
+  /* Google: the listing "Classic Auto" (Used car dealer, Shop 135/136, Prabhu Plaza Mall, S.V. Road, Malad West, 095889 90000,
+     website classicauto.net.in), found on Google Maps 15 Oct 2026. The review link opens Google's own review box for that listing:
+     a website can never post a review into Google itself. If Dad's Business Profile shows a different "Get more reviews" link
+     (Business Profile > Read reviews > Get more reviews), paste it here and run python tools/make_review_qr.py. Ask EVERY buyer (no gating, no rewards). */
+  google_place_id: "ChIJEddSQ-i25zsR1SI43bv-114",
+  google_review_url: "https://search.google.com/local/writereview?placeid=ChIJEddSQ-i25zsR1SI43bv-114",
+  google_profile_url: "https://www.google.com/maps/search/?api=1&query=Classic%20Auto&query_place_id=ChIJEddSQ-i25zsR1SI43bv-114",
+  google_rating: { value: 4.2, count: 208, as_of: "2026-10-15" },  // read off the public Google Maps listing on that date; update it by hand (never guessed)
+  // live rating from the Places API (New): off. Needs a Google Cloud project with billing, the Places API (New) enabled and a browser
+  // key restricted to this site's address (HTTP referrer) and to that one API (a browser key is public by design: the restrictions are what protect it).
+  google_live: { enabled: false, api_key: null },
   facebook: null, youtube: null,           // only verified URLs
   inspection_points: null,                 // 150 once Dad confirms the checklist is in daily use
   finance_partners: [],                    // names only after Dad confirms

@@ -48,7 +48,7 @@
     ["index.html", "Home", "home"],
     ["stock.html", "Stock", "stock"],
     ["studio.html", "Studio", "studio"],
-    ["quiz.html", "Find your car", "quiz"],
+    ["finder.html", "Find your car", "quiz"],
     ["sell.html", "Sell your car", "sell"],
     ["reviews.html", "Reviews", "reviews"]
   ];
@@ -136,7 +136,7 @@
           '<div class="social-row">' + socialLinks() + '</div>' +
         '</div>' +
         '<div class="footer-col"><h2 class="footer-heading">Explore</h2><ul>' +
-          '<li><a href="stock.html">Stock</a></li><li><a href="studio.html">3D Studio</a></li><li><a href="request.html">Request a car</a></li><li><a href="quiz.html">Find your car</a></li><li><a href="compare.html">Compare</a></li>' +
+          '<li><a href="stock.html">Stock</a></li><li><a href="studio.html">Studio</a></li><li><a href="request.html">Request a car</a></li><li><a href="finder.html">Find your car</a></li><li><a href="compare.html">Compare</a></li>' +
           '<li><a href="sell.html">Sell your car</a></li><li><a href="reviews.html">Reviews</a></li><li><a href="faq.html">Questions and answers</a></li><li><a href="about.html">About us</a></li><li><a href="catalogue.html">Printable catalogue</a></li><li><a href="privacy.html">Privacy policy</a></li><li><a href="terms.html">Terms of service</a></li>' +
         '</ul></div>' +
         '<div class="footer-col"><h2 class="footer-heading">Contact</h2><ul>' + contact + '</ul></div>' +
@@ -172,6 +172,7 @@
     if (S.features && S.features.anita && !document.getElementById("anitaRoot")) {
       document.body.insertAdjacentHTML("beforeend", '<div id="anitaRoot"></div>');
     }
+    if (S.google_review_url) { var ra = document.createElement("script"); ra.src = CA.root("assets/js/review-ask.js"); document.body.appendChild(ra); }  // "Review us on Google" blocks + prompt
     initSticky();
   }
 
@@ -191,13 +192,14 @@
     window.addEventListener("resize", function () { homeGate = null; });
     if (page === "home") bar.classList.add("is-pre");
     window.addEventListener("load", function () { homeGate = null; });
-    // cache the page height so the scroll callback never forces a layout read
+    // cache the page height so the scroll callback rarely forces a layout read
     var docH = document.documentElement.scrollHeight;
     function measure() { docH = document.documentElement.scrollHeight; }
-    if (window.ResizeObserver) new ResizeObserver(measure).observe(document.body);
+    // no ResizeObserver on <body>: in WebKit it hit "ResizeObserver loop completed" once late CSS (review-ask) grew the page
     window.addEventListener("load", measure); window.addEventListener("resize", measure);
     function update() {
       var y = window.scrollY, dy = y - lastY;
+      if (window.innerHeight + y >= docH - 400) measure();   // the page may have grown since: re-read only near the cached end
       var nearEnd = (window.innerHeight + y) >= (docH - 80);
       // Home: the hero already carries the CTAs, so the bar waits until the visitor has scrolled past it.
       if (page === "home") {

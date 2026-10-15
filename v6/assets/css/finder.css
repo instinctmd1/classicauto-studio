@@ -1,0 +1,148 @@
+/* =========================================================================
+   Classic Auto v6: car finder (finder.html) + the "finder or all cars"
+   offer on the stock page. Uses the site tokens from style.css only.
+   Phone first: one question fills the screen, answers are big tap targets,
+   Back / Skip / Next sit in a bar that stays in reach of the thumb.
+   ========================================================================= */
+
+.fd-wrap { padding-top: calc(var(--header-h) + var(--s-6)); padding-bottom: var(--s-8); }
+@media (min-width: 900px) { .fd-wrap { padding-top: calc(var(--header-h) + var(--s-8)); } }
+
+/* ---- start screen ---- */
+.fd-intro { max-width: 760px; }
+.fd-intro h1 { font-size: clamp(3rem, 2rem + 5vw, 6rem); margin: var(--s-3) 0 var(--s-4); }
+.fd-intro .lead { color: var(--ink-2); max-width: 46ch; }
+.fd-promise { list-style: none; margin: var(--s-6) 0; padding: 0; display: grid; gap: 10px; }
+.fd-promise li { padding: 14px 16px; border: 1px solid var(--line); border-radius: var(--r-2); background: var(--bg-2); color: var(--ink-2); font-size: var(--fs-small); line-height: 1.5; }
+.fd-promise b { color: var(--ink); }
+@media (min-width: 760px) { .fd-promise { grid-template-columns: repeat(3, 1fr); } }
+.fd-intro-cta { display: flex; flex-wrap: wrap; gap: 12px; }
+@media (max-width: 520px) { .fd-intro-cta .btn { flex: 1 1 100%; } }
+
+/* ---- questions ---- */
+.fd-stage { scroll-margin-top: calc(var(--header-h) + 12px); max-width: 820px; min-height: calc(100svh - var(--header-h) - var(--s-6)); display: flex; flex-direction: column; }
+.fd-meter { height: 3px; background: var(--line); border-radius: 3px; overflow: hidden; margin-bottom: var(--s-4); }
+.fd-meter i { display: block; height: 100%; background: var(--red); transform-origin: left; transform: scaleX(0); transition: transform 320ms var(--ease-out); }
+.fd-top { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: var(--s-3); }
+.fd-count { font-size: var(--fs-label); font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase; color: var(--red-ink); font-variant-numeric: tabular-nums; }
+.fd-must { font-size: 0.6875rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-2); border: 1px solid var(--line-2); border-radius: var(--r-pill); padding: 4px 10px; }
+.fd-title { font-size: clamp(2.2rem, 1.5rem + 3vw, 3.8rem); line-height: 0.98; margin-bottom: var(--s-3); outline: none; }
+.fd-hint { font-size: var(--fs-small); color: var(--ink-2); line-height: 1.5; margin-bottom: var(--s-2); max-width: 60ch; }
+.fd-opts { display: grid; gap: 10px; grid-template-columns: minmax(0, 1fr); margin-top: var(--s-4); }
+.fd-opts.is-dense { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+@media (min-width: 640px) { .fd-opts { grid-template-columns: repeat(2, minmax(0, 1fr)); } .fd-opts.is-dense { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+.fd-opt {
+  position: relative; display: flex; flex-direction: column; align-items: flex-start; justify-content: center; gap: 2px;
+  min-height: 60px; padding: 12px 16px 12px 46px; text-align: left;
+  font: inherit; font-weight: 600; color: var(--ink); background: var(--bg-2);
+  border: 1px solid var(--line-2); border-radius: var(--r-2); cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: border-color var(--dur-ui) var(--ease-out), background-color var(--dur-ui) var(--ease-out), transform var(--dur-ui) var(--ease-out);
+}
+.fd-opts.is-dense .fd-opt { min-height: 56px; padding-left: 40px; font-size: 0.9375rem; }
+.fd-opt span { overflow-wrap: anywhere; }
+.fd-opt small { font-size: var(--fs-label); font-weight: 500; color: var(--ink-3); }
+.fd-opt::before { content: ""; position: absolute; left: 16px; top: 50%; width: 18px; height: 18px; margin-top: -9px; border: 1.5px solid var(--ink-3); border-radius: 50%; transition: border-color var(--dur-ui) var(--ease-out), background-color var(--dur-ui) var(--ease-out), box-shadow var(--dur-ui) var(--ease-out); }
+.fd-opts.is-dense .fd-opt::before { left: 13px; }
+.fd-opt[aria-pressed="true"] { border-color: var(--red); background: color-mix(in srgb, var(--red) 14%, var(--bg-2)); }
+.fd-opt[aria-pressed="true"]::before { border-color: var(--red); background: var(--red); box-shadow: inset 0 0 0 3px var(--bg-2); }
+.fd-opt:active { transform: scale(0.985); }
+.fd-opt:focus-visible { outline: 2px solid var(--red-ink); outline-offset: 2px; }
+@media (hover: hover) and (pointer: fine) { .fd-opt:hover { border-color: var(--red-ink); } }
+
+.fd-nav {
+  position: sticky; bottom: 0; z-index: 5; margin-top: auto;
+  display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 10px;
+  padding: 14px 0 calc(14px + env(safe-area-inset-bottom));
+  background: linear-gradient(to top, var(--bg) 70%, transparent);
+}
+.fd-q { padding-bottom: var(--s-5); }
+.fd-nav .btn { min-height: 48px; min-width: 96px; }
+.fd-nav .btn:disabled { opacity: 0.35; cursor: default; }
+.fd-nav #fdNext[hidden] { display: inline-flex; visibility: hidden; }
+.fd-skip { justify-self: center; min-height: 44px; padding: 0 12px; background: none; border: 0; color: var(--ink-2); font: inherit; font-size: var(--fs-small); font-weight: 700; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+.fd-live { font-size: var(--fs-small); color: var(--ink-3); font-variant-numeric: tabular-nums; margin-top: 2px; }
+.fd-early { margin-top: 2px; }
+@media (max-width: 899px) { body.fd-in-stage .sticky-bar { display: none; } body.fd-in-stage { padding-bottom: 0; } }
+@media (min-width: 900px) { .fd-nav { position: static; background: none; padding-top: var(--s-5); margin-top: 0; } .fd-stage { min-height: 0; } }
+
+/* ---- results ---- */
+.fd-res-head { max-width: 820px; margin-bottom: var(--s-6); }
+.fd-res-head h2 { font-size: clamp(2.6rem, 1.8rem + 3.6vw, 4.8rem); margin: var(--s-3) 0 var(--s-4); outline: none; }
+.fd-res-head .lead { color: var(--ink-2); }
+.fd-res-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: var(--s-5); }
+.fd-list { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--s-5); }
+/* phone: fit + name, the reasons, the card, the actions. Wide: the card on the left, the rest beside it */
+.fd-item { display: grid; gap: var(--s-3); grid-template-columns: minmax(0, 1fr); grid-template-areas: "head" "why" "card" "cta"; padding-bottom: var(--s-6); border-bottom: 1px solid var(--line); }
+.fd-item-head { grid-area: head; } .fd-why { grid-area: why; } .fd-item-card { grid-area: card; } .fd-item-cta { grid-area: cta; }
+@media (min-width: 860px) {
+  .fd-item { grid-template-columns: minmax(0, 380px) minmax(0, 1fr); grid-template-areas: "card head" "card why" "card cta" "card ."; grid-template-rows: auto auto auto 1fr; column-gap: var(--s-6); align-items: start; }
+}
+.fd-fit { display: flex; align-items: baseline; gap: 10px; font-size: var(--fs-small); color: var(--ink-2); }
+.fd-fit b { font-family: var(--font-display); font-weight: 400; font-size: 2.6rem; line-height: 1; color: var(--ink); }
+.fd-fit span { font-size: 0.6875rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--on-red); background: var(--red); border-radius: var(--r-pill); padding: 3px 9px; }
+.fd-item-head h3 { font-size: 1.6rem; margin-top: var(--s-2); }
+.fd-why { list-style: none; margin: 0 0 var(--s-2); padding: 0; display: grid; gap: 8px; }
+.fd-why li { display: flex; gap: 10px; align-items: flex-start; font-size: 0.9375rem; line-height: 1.45; color: var(--ink); }
+.fd-why .icon { flex: 0 0 18px; width: 18px; height: 18px; margin-top: 2px; stroke: var(--ok); }
+.fd-why .is-miss, .fd-why .is-ask { color: var(--ink-2); }
+.fd-why .is-miss .icon, .fd-why .is-ask .icon { stroke: var(--ink-3); }
+.fd-why .is-fail { color: var(--danger); }
+.fd-why .is-fail .icon { stroke: var(--danger); }
+.fd-item-cta { display: flex; flex-wrap: wrap; gap: 10px; }
+.fd-item-cta .btn { min-height: 48px; }
+@media (max-width: 520px) { .fd-item-cta .btn { flex: 1 1 100%; } }
+.fd-more { display: flex; justify-content: center; margin-top: var(--s-6); }
+.fd-near { margin-top: var(--s-8); }
+.fd-near h2 { font-size: clamp(1.8rem, 1.4rem + 1.6vw, 2.6rem); margin-bottom: var(--s-5); }
+.fd-near-cta { margin-top: var(--s-5); }
+.fd-near-cta .btn { white-space: normal; max-width: 100%; padding-top: 12px; padding-bottom: 12px; line-height: 1.35; }
+
+.fd-how { margin-top: var(--s-7); border: 1px solid var(--line); border-radius: var(--r-3); background: var(--bg-2); }
+.fd-how summary { min-height: 56px; display: flex; align-items: center; padding: 0 var(--s-5); font-weight: 700; cursor: pointer; }
+.fd-how-body { padding: 0 var(--s-5) var(--s-5); display: grid; gap: var(--s-3); font-size: var(--fs-small); line-height: 1.6; color: var(--ink-2); max-width: 80ch; }
+.fd-how-body b { color: var(--ink); }
+.fd-weights { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 6px 16px; }
+.fd-weights li { display: flex; justify-content: space-between; gap: 8px; padding: 6px 0; border-bottom: 1px dashed var(--line); }
+.fd-weights b { font-variant-numeric: tabular-nums; }
+.fd-src, .fd-answers { margin: 0; padding-left: 18px; display: grid; gap: 4px; }
+.fd-src a { color: var(--blue-ink); overflow-wrap: anywhere; }
+.fd-fine { font-size: var(--fs-label); color: var(--ink-3); }
+
+.fd-talk { margin-top: var(--s-7); }
+.fd-talk h2 { font-size: clamp(2rem, 1.5rem + 2vw, 3rem); margin-bottom: var(--s-3); }
+.fd-talk > p { color: var(--ink-2); margin-bottom: var(--s-4); max-width: 60ch; }
+.fd-talk-btns { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: var(--s-5); }
+@media (max-width: 520px) { .fd-talk-btns .btn { flex: 1 1 100%; } }
+.fd-mode { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: var(--s-4); }
+.fd-talk textarea { width: 100%; }
+.fd-restart { margin-top: var(--s-5); }
+
+/* ---- stock page: the strip under the heading and the first-visit offer ---- */
+.fd-strip { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; margin-top: var(--s-4); padding: 10px 14px; min-height: 48px; border: 1px solid var(--line-2); border-radius: var(--r-pill); color: var(--ink-2); font-size: var(--fs-small); text-decoration: none; transition: border-color var(--dur-ui) var(--ease-out); }
+.fd-strip b { color: var(--ink); }
+.fd-strip .icon { width: 18px; height: 18px; stroke: var(--red-ink); }
+@media (hover: hover) and (pointer: fine) { .fd-strip:hover { border-color: var(--red-ink); } }
+
+.fd-choice { padding: 0; border: 0; background: transparent; color: var(--ink); max-width: min(560px, calc(100vw - 32px)); width: 100%; margin: auto; }
+.fd-choice::backdrop { background: rgba(5, 11, 26, 0.72); -webkit-backdrop-filter: blur(4px); backdrop-filter: blur(4px); }
+.fd-choice-card { background: var(--bg-2); border: 1px solid var(--line-2); border-radius: var(--r-3); padding: var(--s-6) var(--s-5); box-shadow: 0 24px 80px rgba(0, 0, 0, 0.5); }
+.fd-choice-card h2 { font-size: clamp(2.2rem, 1.8rem + 2vw, 3.2rem); margin: var(--s-3) 0; }
+.fd-choice-card p { color: var(--ink-2); line-height: 1.55; }
+.fd-choice-actions { display: grid; gap: 10px; margin: var(--s-5) 0 var(--s-3); }
+.fd-choice-actions .btn { width: 100%; min-height: 52px; }
+.fd-choice-note { font-size: var(--fs-label); color: var(--ink-3) !important; }
+@media (max-width: 520px) {
+  .fd-choice { margin: auto 0 0; max-width: 100vw; }
+  .fd-choice-card { border-radius: var(--r-3) var(--r-3) 0 0; padding-bottom: calc(var(--s-5) + env(safe-area-inset-bottom)); }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .fd-choice[open] .fd-choice-card { animation: fd-rise 320ms var(--ease-out); }
+}
+@keyframes fd-rise { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: none; } }
+
+/* WebKit counts a <select>'s longest option (a full car name) as overflow even when the select itself fits, which made the
+   whole page scroll sideways on an iPhone. The panel has padding, so clipping it never cuts a focus ring. */
+.fd-talk { overflow: hidden; }
+.fd-talk .form-grid > * { min-width: 0; }
+.fd-talk select { width: 100%; max-width: 100%; min-width: 0; text-overflow: ellipsis; }

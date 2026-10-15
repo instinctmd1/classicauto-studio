@@ -2,27 +2,23 @@
 <html lang="en-IN">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>The Studio: a private 3D viewing bay | Classic Auto</title>
-<meta name="description" content="Classic Auto's Studio: look at an illustrative 3D car in a private viewing bay, with paint swatches, camera presets and the real price and EMI of the listed car alongside.">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>The Studio: look around the car | Classic Auto</title>
+<meta name="description" content="Classic Auto's Studio: turn through every photo of the listed car, outside and in, full screen on a phone or a laptop, with its real price and EMI alongside. A 3D model appears only where one exists for that make and model.">
 <meta name="theme-color" content="#0A1633">
 <link rel="icon" type="image/png" sizes="32x32" href="assets/brand/favicon-32.png">
 <link rel="icon" type="image/png" sizes="48x48" href="assets/brand/favicon-48.png">
 <link rel="apple-touch-icon" href="assets/brand/apple-touch-icon.png">
 <link rel="preload" href="assets/fonts/bebas-neue-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="assets/fonts/manrope-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
-<!-- phones: start the lighter 3D model (studio.js picks the same file on the same media query) with the page instead of
-     after studio.js and three.js have loaded. Not on Safari / iOS: WebKit fetches a preloaded file a second time. Placed
-     before the stylesheets so it runs at once. -->
-<script>(function(){try{if(matchMedia("(max-width: 767px), (pointer: coarse)").matches&&navigator.vendor!=="Apple Computer, Inc."){var l=document.createElement("link");l.rel="preload";l.as="fetch";l.crossOrigin="anonymous";l.href="models/car-lite.glb";document.head.appendChild(l)}}catch(e){}})();</script>
 <link rel="stylesheet" href="assets/vendor/lenis/lenis.css">
 <link rel="stylesheet" href="assets/css/style.css">
+<link rel="stylesheet" href="assets/css/studio.css">
 <script>(function(){var d=document.documentElement,r=false;try{r=matchMedia("(prefers-reduced-motion: reduce)").matches}catch(e){}d.classList.add(r?"reduce":"motion");setTimeout(function(){if(!(window.CA_MOTION&&window.CA_MOTION.ready))d.classList.remove("motion")},5000)})();</script>
+<!-- three.js loads only when a 3D model exists for the car (assets/models/cars3d.json); the photo view needs none of it -->
 <script type="importmap">
 { "imports": { "three": "./assets/vendor/three/build/three.module.min.js", "three/addons/": "./assets/vendor/three/examples/jsm/" } }
 </script>
-<!-- three.js with the page, not after studio.js has loaded (after the import map, which must come first) -->
-<link rel="modulepreload" href="assets/vendor/three/build/three.module.min.js">
 <script src="assets/js/config.js"></script>
 <script src="assets/js/track.js" defer></script>
 </head>
@@ -39,50 +35,83 @@
     </div>
   </div>
 
-  <section class="studio-shell" id="studioShell">
+  <section class="studio-shell sv" id="studioShell">
     <div class="container">
-      <a class="link-arrow" id="backToCarLink" href="stock.html" style="margin-bottom: 8px;"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> Back to car details</a>
-      <div class="section-head" style="margin-bottom: 24px;">
+      <a class="link-arrow sv-back" id="backToCarLink" href="stock.html"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> Back to car details</a>
+      <div class="sv-head">
         <span class="eyebrow">The Studio</span>
-        <h1 id="studioTitle" style="font-size: clamp(2.6rem, 2rem + 3vw, 4.4rem);">Studio preview (illustrative model)</h1>
+        <h1 id="studioTitle">The Studio</h1>
       </div>
 
       <div class="studio-layout">
-        <div>
-          <div class="studio-bay" id="studioBay" data-light="studio">
-            <canvas id="studioCanvas" tabindex="0" role="img" aria-label="Interactive 3D view of the car" aria-describedby="studioHelp"></canvas>
-            <div class="studio-fade" id="studioFade" aria-hidden="true"></div>
-            <span class="studio-badge" id="studioModelBadge">Illustrative 3D model</span>
-            <div class="control-group studio-lights" role="group" aria-label="Lighting">
-              <button type="button" class="chip-btn" data-light="studio" aria-pressed="true">Studio</button>
-              <button type="button" class="chip-btn" data-light="daylight" aria-pressed="false">Day</button>
-              <button type="button" class="chip-btn" data-light="evening" aria-pressed="false">Evening</button>
-              <button type="button" class="chip-btn" data-light="night" aria-pressed="false">Night</button>
-            </div>
-            <div class="studio-hotspots" id="studioHotspots"></div>
-            <div class="studio-reticle" id="studioReticle" hidden aria-hidden="true"><i></i><i></i><i></i><i></i></div>
-            <aside class="studio-card" id="studioCard" hidden aria-live="polite">
-              <button type="button" class="studio-card-close" id="studioCardClose" aria-label="Close details">&times;</button>
-              <p class="studio-kicker" id="cardKicker"></p>
-              <h2 id="cardTitle"></h2>
-              <p id="cardLine"></p>
-              <p class="studio-card-note" id="cardNote"></p>
-            </aside>
-            <div class="studio-chapter" id="tourChapter" hidden aria-live="polite"><span class="studio-kicker" id="tourKicker"></span><b id="tourTitle"></b></div>
-            <div class="studio-end" id="tourEnd" hidden>
-              <p class="studio-end-line">Book a visit to see the real one</p>
-              <div class="cta-row">
-                <a class="btn btn-primary" id="endVisitBtn" href="#" data-cta="book_test_drive" data-at="studio">Book a visit</a>
-                <a class="btn btn-outline" id="endMsgBtn" href="#" data-cta="message" data-at="studio"></a>
+        <div class="sv-main">
+          <div class="sv-frame" id="studioFrame">
+            <div class="studio-bay sv-stage" id="studioBay" data-view="photos" data-light="studio">
+              <!-- photos: this car's own -->
+              <div class="sv-photos" id="svPhotos" tabindex="0" role="group" aria-roledescription="photo viewer" aria-label="Photos of the listed car. Drag sideways or use the arrow keys to turn through them." aria-describedby="studioHelp">
+                <div class="sv-blur" aria-hidden="true"><canvas id="svBlur" width="24" height="30"></canvas></div>
+                <img class="sv-photo" id="svImg" alt="" decoding="async" draggable="false">
+              </div>
+              <button type="button" class="sv-nav sv-prev" id="svPrev" aria-label="Previous photo"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></button>
+              <button type="button" class="sv-nav sv-next" id="svNext" aria-label="Next photo"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg></button>
+              <div class="sv-drag-hint" id="svHint" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M8 9l-4 3 4 3M16 9l4 3-4 3M4 12h16"/></svg>Drag to turn</div>
+
+              <!-- 3D: only when a model of this make and model (or a scan of this car) exists -->
+              <canvas id="studioCanvas" class="sv-canvas" tabindex="0" role="img" aria-label="Interactive 3D model" hidden></canvas>
+              <canvas id="insideCanvas" class="sv-canvas" tabindex="0" role="img" aria-label="Look around the cabin" hidden></canvas>
+              <div class="studio-fade" id="studioFade" aria-hidden="true"></div>
+              <div class="studio-hotspots" id="studioHotspots" hidden></div>
+              <div class="studio-reticle" id="studioReticle" hidden aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+              <aside class="studio-card" id="studioCard" hidden aria-live="polite">
+                <button type="button" class="studio-card-close" id="studioCardClose" aria-label="Close details">&times;</button>
+                <p class="studio-kicker" id="cardKicker"></p>
+                <h2 id="cardTitle"></h2>
+                <p id="cardLine"></p>
+                <p class="studio-card-note" id="cardNote"></p>
+              </aside>
+              <div class="studio-chapter" id="tourChapter" hidden aria-live="polite"><span class="studio-kicker" id="tourKicker"></span><b id="tourTitle"></b></div>
+              <div class="studio-end" id="tourEnd" hidden>
+                <p class="studio-end-line">Book a visit to see the real one</p>
+                <div class="cta-row">
+                  <a class="btn btn-primary" id="endVisitBtn" href="#" data-cta="book_test_drive" data-at="studio">Book a visit</a>
+                  <a class="btn btn-outline" id="endMsgBtn" href="#" data-cta="message" data-at="studio"></a>
+                </div>
+              </div>
+              <div class="studio-hud" id="tourHud" hidden aria-hidden="true"><div class="studio-ruler"><i id="tourFill"></i></div><span id="tourClock">00 / 20 s</span></div>
+              <div class="studio-loading" id="studioLoading" hidden><div class="studio-spinner" aria-hidden="true"></div><span>Loading the 3D model…</span></div>
+
+              <div class="sv-top">
+                <span class="sv-badge" id="studioModelBadge">Photos of this car</span>
+                <span class="sv-count" id="svCount" aria-live="polite"></span>
+                <button type="button" class="sv-icon-btn" id="svFull" aria-pressed="false" aria-label="Full screen">
+                  <svg class="sv-ico-open" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg>
+                  <svg class="sv-ico-close" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5"/></svg>
+                </button>
               </div>
             </div>
-            <div class="studio-hud" id="tourHud" hidden aria-hidden="true"><div class="studio-ruler"><i id="tourFill"></i></div><span id="tourClock">00 / 20 s</span></div>
-            <div class="studio-loading" id="studioLoading"><div class="studio-spinner" aria-hidden="true"></div><span>Loading the 3D model…</span></div>
-            <div class="studio-controls" role="group" aria-label="Camera views" id="studioPresets"></div>
-          </div>
-          <p class="studio-help" id="studioHelp">Drag to turn the car. Arrow keys turn it too. Pick a view below, or tap a red dot for details on the listed car.</p>
 
-          <div class="studio-actions">
+            <div class="sv-dock" id="svDock">
+              <div class="sv-views" role="group" aria-label="What to look at" id="svViews">
+                <button type="button" class="sv-view" data-view="outside" aria-pressed="true">Outside <span id="svOutN"></span></button>
+                <button type="button" class="sv-view" data-view="inside" aria-pressed="false" hidden>Inside <span id="svInN"></span></button>
+                <button type="button" class="sv-view" data-view="3d" aria-pressed="false" hidden>3D model</button>
+                <button type="button" class="sv-view" data-view="cabin" aria-pressed="false" hidden>Step inside</button>
+              </div>
+              <div class="sv-strip" id="svStrip" aria-label="All photos"></div>
+              <div class="sv-3d" id="sv3d" hidden>
+                <div class="control-group studio-lights sv-moods" role="group" aria-label="Lighting">
+                  <button type="button" class="chip-btn" data-light="studio" aria-pressed="true">Studio</button>
+                  <button type="button" class="chip-btn" data-light="daylight" aria-pressed="false">Day</button>
+                  <button type="button" class="chip-btn" data-light="evening" aria-pressed="false">Evening</button>
+                  <button type="button" class="chip-btn" data-light="night" aria-pressed="false">Night</button>
+                </div>
+                <div class="sv-cams" role="group" aria-label="Camera views" id="studioPresets"></div>
+              </div>
+            </div>
+          </div>
+          <p class="studio-help" id="studioHelp">Drag sideways to turn through the photos, or use the arrows. Double-tap to zoom in. Every photo here is of this car.</p>
+
+          <div class="studio-actions" id="studioActions" hidden>
             <button type="button" class="btn btn-outline" id="tourBtn" aria-pressed="false">Take the 20 second tour</button>
             <button type="button" class="chip-btn" id="turntableBtn" aria-pressed="false">Turntable</button>
             <button type="button" class="chip-btn" id="tiltBtn" aria-pressed="false" hidden>Tilt to look</button>
@@ -92,7 +121,7 @@
             <a class="btn btn-primary" id="barVisitBtn" href="#" data-cta="book_test_drive" data-at="studio">Book a visit</a>
             <a class="btn btn-outline" id="barMsgBtn" href="#" data-cta="message" data-at="studio"></a>
           </div>
-          <p class="studio-disclaimer" id="studioCredit" style="margin-top: 16px;">This is an illustrative model, not the car for sale. Illustrative 3D model: Ferrari 458 Italia by vicent091036 (CC BY 4.0). Classic Auto is an independent pre-owned dealer, not affiliated with Ferrari. The photos on the car's page show the listed car. Details beside it are for the listed car.</p>
+          <p class="studio-disclaimer" id="studioCredit">Every photo in the Studio is of this car, from Classic Auto's own listing.</p>
         </div>
 
         <div class="studio-side">
@@ -108,25 +137,27 @@
               <a class="btn btn-outline" id="studioMsgBtn" href="#" data-cta="message" data-at="studio"></a>
             </div>
           </div>
-          <div class="panel" id="paintPanel">
+          <div class="panel" id="paintPanel" hidden>
             <h2 class="footer-heading">Paint</h2>
             <div class="paint-row" id="paintRow"></div>
             <label class="paint-custom">
               <input type="color" id="paintCustom" value="#e11b22" aria-label="Custom paint colour">
               Custom colour
             </label>
-            <p class="calc-note" style="margin-top:12px;">Paint is a preview. The car for sale keeps its listed colour.</p>
+            <p class="calc-note" style="margin-top:12px;">Paint is a preview on the 3D model. The car for sale keeps its listed colour.</p>
           </div>
-          <p class="calc-note" id="scanNote" hidden>This is a 3D scan of the listed car, so paint and wheel previews are switched off. What you see is the car.</p>
-          <div class="panel" id="finishPanel">
+          <div class="panel" id="finishPanel" hidden>
             <h2 class="footer-heading">Finish</h2>
             <div class="control-group">
               <button type="button" class="chip-btn" data-finish="gloss" aria-pressed="true">Gloss</button>
               <button type="button" class="chip-btn" data-finish="matte" aria-pressed="false">Matte</button>
             </div>
-            <h2 class="footer-heading" style="margin-top:20px;">Wheels</h2>
-            <div class="paint-row" id="wheelRow"></div>
+            <div id="wheelBlock">
+              <h2 class="footer-heading" style="margin-top:20px;">Wheels</h2>
+              <div class="paint-row" id="wheelRow"></div>
+            </div>
           </div>
+          <p class="calc-note" id="scanNote" hidden>This is a 3D scan of the listed car, so paint and wheel previews are switched off. What you see is the car.</p>
         </div>
       </div>
     </div>

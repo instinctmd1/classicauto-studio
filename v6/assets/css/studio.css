@@ -1,0 +1,159 @@
+/* =========================================================================
+   Classic Auto v6 - The Studio's own styles (loaded by studio.html after style.css).
+   One layout for every screen: the stage, then a dock (views, filmstrip or 3D controls) under it, the price panel
+   beside it on wide screens and below it on narrow ones. Full screen is the same frame filling the window.
+   ========================================================================= */
+
+.sv-back { margin-bottom: var(--s-2); }
+.sv-head { margin-bottom: var(--s-5); }
+.sv-head h1 { font-size: clamp(2.3rem, 1.7rem + 2.6vw, 3.8rem); line-height: 0.95; margin-top: var(--s-2); overflow-wrap: anywhere; }
+.sv .studio-layout { min-width: 0; }
+.sv-main { min-width: 0; }
+
+/* ---- the frame: stage + dock, one rounded showroom box ---- */
+.sv-frame {
+  position: relative; border: 1px solid var(--line); border-radius: var(--r-3); overflow: hidden;
+  background: #070a12; box-shadow: 0 30px 80px -30px rgba(0, 0, 0, 0.7);
+}
+.sv .sv-stage {
+  border: 0; border-radius: 0; min-height: 0; aspect-ratio: 4 / 5; max-height: calc(100svh - var(--header-h) - 150px);
+  /* the bay itself: a soft overhead light on a dark backdrop, a floor line where the light pools */
+  background:
+    radial-gradient(70% 45% at 50% 34%, rgba(150, 170, 215, 0.16), transparent 70%),
+    radial-gradient(90% 26% at 50% 86%, rgba(160, 180, 230, 0.10), transparent 70%),
+    linear-gradient(180deg, #0d1322 0%, #0a0f1b 58%, #05070d 100%);
+}
+@media (min-width: 640px) { .sv .sv-stage { aspect-ratio: 4 / 3; } }
+@media (min-width: 640px) and (max-height: 760px) { .sv .sv-stage { max-height: calc(100svh - var(--header-h) - 120px); } }
+.sv .sv-stage { min-height: 300px; }
+
+/* ---- photos ---- */
+.sv-photos { position: absolute; inset: 0; display: grid; place-items: center; overflow: hidden; touch-action: pan-y; cursor: grab; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
+.sv-photos:active { cursor: grabbing; }
+.sv-photos:focus-visible { outline: 2px solid var(--red-ink); outline-offset: -4px; }
+.sv-photos.is-zoomed { touch-action: none; cursor: move; }
+.sv-blur { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
+.sv-blur canvas { position: absolute; inset: -6%; width: 112%; height: 112%; max-width: none; opacity: 0; transition: opacity 300ms var(--ease-out); }
+.sv-blur canvas.is-on { opacity: 0.4; }
+/* the soft fill stays a quiet echo of the photo: darker toward the edges and the floor, so the photo itself carries the frame */
+.sv-blur::after { content: ""; position: absolute; inset: 0; background:
+  radial-gradient(80% 65% at 50% 45%, rgba(5, 7, 13, 0.1) 25%, rgba(5, 7, 13, 0.85) 100%),
+  linear-gradient(180deg, rgba(5, 7, 13, 0.35), transparent 30%, transparent 70%, rgba(5, 7, 13, 0.55)); }
+.sv-photo { position: absolute; inset: 0; width: 100%; height: 100%; max-width: none; object-fit: contain; transform-origin: 50% 50%; will-change: transform; pointer-events: none; }
+.sv-photo:not([src]) { visibility: hidden; }
+.sv-photo.is-in { animation: sv-in 240ms var(--ease-out) both; }
+@keyframes sv-in { from { opacity: 0.35; } to { opacity: 1; } }
+.sv-empty { position: relative; max-width: 30ch; text-align: center; color: var(--ink-2); padding: var(--s-5); }
+
+.sv-nav {
+  position: absolute; z-index: 3; top: 50%; width: 44px; height: 44px; margin-top: -22px; display: grid; place-items: center; padding: 0;
+  border: 1px solid var(--line-2); border-radius: 50%; background: rgba(7, 10, 18, 0.62); color: var(--ink); cursor: pointer;
+  -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); transition: background-color var(--dur-ui) var(--ease-out), transform var(--dur-ui) var(--ease-out);
+}
+.sv-nav svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.sv-prev { left: 10px; } .sv-next { right: 10px; }
+.sv-nav:active { transform: scale(0.94); }
+.sv-nav:focus-visible { outline: 2px solid var(--red-ink); outline-offset: 2px; }
+@media (hover: hover) and (pointer: fine) { .sv-nav:hover { background: rgba(225, 27, 34, 0.85); border-color: var(--red); } }
+
+.sv-drag-hint {
+  position: absolute; z-index: 3; left: 50%; bottom: 14px; display: inline-flex; align-items: center; gap: 8px; padding: 7px 14px 7px 10px;
+  transform: translateX(-50%); border-radius: var(--r-pill); background: rgba(7, 10, 18, 0.7); border: 1px solid var(--line);
+  font-size: var(--fs-label); font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-2); pointer-events: none;
+  transition: opacity 400ms var(--ease-out);
+}
+.sv-drag-hint svg { width: 18px; height: 18px; fill: none; stroke: var(--red-ink); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.sv-drag-hint.is-gone { opacity: 0; }
+/* no nudge animation on the arrow: in WebKit it repainted the whole stage every frame (16 fps instead of 60 at 3x on a
+   phone-sized page in the first five seconds, just when people start to drag) */
+.sv-stage:not([data-view="photos"]) .sv-drag-hint { display: none; }
+
+/* ---- top bar inside the stage ---- */
+.sv-top { position: absolute; z-index: 4; top: 0; left: 0; right: 0; display: flex; align-items: center; gap: 8px; padding: 10px; pointer-events: none; }
+.sv-top > * { pointer-events: auto; }
+.sv-badge {
+  min-width: 0; padding: 7px 12px; border-radius: var(--r-pill); background: rgba(7, 10, 18, 0.72); border: 1px solid var(--line-2);
+  font-size: 0.75rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px);
+}
+.sv-badge::before { content: ""; display: inline-block; width: 7px; height: 7px; margin-right: 8px; border-radius: 50%; background: var(--ok); vertical-align: 1px; }
+.sv-badge.is-model::before { background: var(--red); }
+/* the honesty label must never be cut off: on a phone it wraps to a second line instead of an ellipsis */
+@media (max-width: 640px) { .sv-badge { white-space: normal; overflow: visible; text-overflow: clip; line-height: 1.3; letter-spacing: 0.06em; border-radius: 14px; } }
+.sv-count { padding: 7px 10px; border-radius: var(--r-pill); background: rgba(7, 10, 18, 0.6); font-family: ui-monospace, "Cascadia Mono", "SF Mono", Consolas, monospace; font-size: 0.75rem; color: var(--ink-2); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.sv-count:empty { display: none; }
+.sv-icon-btn {
+  margin-left: auto; flex: 0 0 auto; width: 44px; height: 44px; display: grid; place-items: center; padding: 0; border-radius: 50%;
+  border: 1px solid var(--line-2); background: rgba(7, 10, 18, 0.62); color: var(--ink); cursor: pointer; -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px);
+}
+.sv-icon-btn svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.sv-icon-btn:focus-visible { outline: 2px solid var(--red-ink); outline-offset: 2px; }
+.sv-ico-close, .is-full .sv-ico-open { display: none; }
+.is-full .sv-ico-close { display: block; }
+@media (hover: hover) and (pointer: fine) { .sv-icon-btn:hover { border-color: var(--red-ink); } }
+
+/* ---- dock under the stage ---- */
+/* one column that may shrink below its content (minmax(0, 1fr)): without it a row of buttons wider than a phone pushed the
+   dock wider than the frame and the last buttons were cut off */
+.sv-dock { display: grid; grid-template-columns: minmax(0, 1fr); gap: 10px; padding: 10px; background: linear-gradient(180deg, #0a0e18, #070a12); border-top: 1px solid var(--line); min-width: 0; }
+.sv-views { display: flex; gap: 4px; padding: 4px; border-radius: var(--r-pill); background: rgba(245, 242, 236, 0.06); border: 1px solid var(--line); }
+.sv-view {
+  flex: 1 1 0; min-width: 0; min-height: 44px; padding: 0 8px; border: 0; border-radius: var(--r-pill); background: transparent; color: var(--ink-2); cursor: pointer;
+  font-size: 0.75rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  transition: background-color var(--dur-ui) var(--ease-out), color var(--dur-ui) var(--ease-out);
+}
+.sv-view span { opacity: 0.7; font-variant-numeric: tabular-nums; margin-left: 2px; }
+.sv-view[aria-pressed="true"] { background: var(--ink); color: #0a0f1b; }
+.sv-view:focus-visible { outline: 2px solid var(--red-ink); outline-offset: 1px; }
+.sv-view[data-view="3d"]:not([aria-pressed="true"]) { color: var(--ink); box-shadow: inset 0 0 0 1px rgba(225, 27, 34, 0.6); }
+@media (hover: hover) and (pointer: fine) { .sv-view:not([aria-pressed="true"]):hover { color: var(--ink); background: rgba(245, 242, 236, 0.08); } }
+
+.sv-strip { display: flex; gap: 8px; overflow-x: auto; overscroll-behavior-x: contain; scroll-snap-type: x proximity; scrollbar-width: none; padding: 2px; min-width: 0; }
+.sv-strip::-webkit-scrollbar { display: none; }
+.sv-thumb { flex: 0 0 auto; width: 64px; height: 48px; padding: 0; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; background: #0d1220; cursor: pointer; scroll-snap-align: center; opacity: 0.62; transition: opacity var(--dur-ui) var(--ease-out), border-color var(--dur-ui) var(--ease-out); }
+.sv-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; pointer-events: none; }
+.sv-thumb[aria-current="true"] { opacity: 1; border-color: var(--red); box-shadow: 0 0 0 1px var(--red); }
+.sv-thumb:focus-visible { outline: 2px solid var(--red-ink); outline-offset: 1px; }
+@media (min-width: 640px) { .sv-thumb { width: 76px; height: 56px; } }
+@media (hover: hover) and (pointer: fine) { .sv-thumb:hover { opacity: 1; } }
+
+.sv-3d { display: grid; grid-template-columns: minmax(0, 1fr); gap: 10px; min-width: 0; }
+.sv .studio-lights.sv-moods { position: static; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; }
+.sv-moods .chip-btn, .sv-cams .chip-btn { padding: 0 6px; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sv-cams { display: grid; grid-template-columns: repeat(auto-fill, minmax(88px, 1fr)); gap: 6px; }
+.sv-moods .chip-btn, .sv-cams .chip-btn { letter-spacing: 0.06em; }
+
+/* phones: four view tabs ("Outside", "Inside", "3D model", "Step inside") sit two by two rather than being cut short;
+   three or fewer stay in one row. studio.js sets data-n to the number of tabs shown. */
+@media (max-width: 559px) {
+  .sv-views[data-n="4"] { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); border-radius: 26px; }
+  .sv-view { letter-spacing: 0.05em; padding: 0 6px; }
+  .sv-cams { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .sv-moods .chip-btn, .sv-cams .chip-btn { font-size: 0.65rem; letter-spacing: 0.04em; padding: 0 4px; }
+}
+
+/* ---- 3D view overlays: controls now live in the dock, so cards sit low in the stage ---- */
+.sv .studio-card { bottom: 12px; }
+.sv .studio-hud { bottom: 14px; }
+.sv .studio-end { bottom: 16px; }
+.sv .studio-chapter { top: 64px; }
+.sv .studio-loading { background: rgba(5, 7, 13, 0.88); }
+.sv .studio-fade { background: #05070d; }
+.sv-canvas[hidden], .sv-photos[hidden], .sv-nav[hidden], .sv-strip[hidden] { display: none; }
+.sv .studio-actions[hidden] { display: none; }
+
+/* ---- full screen: the frame fills the window, same controls ---- */
+html.sv-lock, html.sv-lock body { overflow: hidden; }
+.sv-frame.is-full {
+  position: fixed; inset: 0; z-index: 2000; display: flex; flex-direction: column; border: 0; border-radius: 0; box-shadow: none;
+  width: 100%; height: 100%; height: 100dvh; padding: env(safe-area-inset-top) env(safe-area-inset-right) 0 env(safe-area-inset-left);
+}
+.sv-frame.is-full .sv-stage { flex: 1 1 auto; aspect-ratio: auto; max-height: none; min-height: 0; }
+.sv-frame.is-full .sv-dock { padding-bottom: calc(10px + env(safe-area-inset-bottom)); }
+.sv-frame.is-full .sv-photos, .sv-frame.is-full canvas { touch-action: none; }
+.sv-frame:fullscreen { width: 100%; height: 100%; }
+html.sv-lock .sticky-bar { visibility: hidden; }
+
+.sv .studio-disclaimer { margin-top: var(--s-4); }
+.sv .studio-disclaimer a { color: var(--ink-2); text-decoration: underline; text-underline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) { .sv-photo.is-in { animation: none; } .sv-drag-hint { transition: none; } }

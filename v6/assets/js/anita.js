@@ -182,11 +182,11 @@
       var sc = findCarInText(text) || state.car || (pageId ? CARS.filter(function (c) { return c.id === pageId; })[0] : null);
       if (sc) {
         state.car = sc;
-        pushBotHtml(esc(sc.make + " " + sc.model) + " ko 3D Studio mein dekhiye: " +
-          '<a href="studio.html?id=' + encodeURIComponent(sc.id) + '" data-cta="studio" data-at="anita">Open the ' + esc(sc.make + " " + sc.model) + ' in the 3D Studio</a>' +
-          (sc.scan ? "" : "\nStudio ka 3D model illustrative hai, yeh exact gaadi nahi. Asli gaadi ke photos car page par hain."), ["Book a visit", "Talk to the team"]);
+        pushBotHtml(esc(sc.make + " " + sc.model) + " ko Studio mein dekhiye: " +
+          '<a href="studio.html?id=' + encodeURIComponent(sc.id) + '" data-cta="studio" data-at="anita">Open the ' + esc(sc.make + " " + sc.model) + ' in the Studio</a>' +
+          "\nStudio mein isi gaadi ke apne photos hain, bahar aur andar.", ["Book a visit", "Talk to the team"]);
       } else {
-        pushBotHtml('Hamara 3D Studio yahan hai: <a href="studio.html" data-cta="studio" data-at="anita">Open the 3D Studio</a>\nKisi gaadi ka naam batayein toh seedha uska Studio link de doongi.', BODY_CHIPS);
+        pushBotHtml('Hamara Studio yahan hai: <a href="studio.html" data-cta="studio" data-at="anita">Open the Studio</a>\nKisi gaadi ka naam batayein toh seedha uska Studio link de doongi.', BODY_CHIPS);
       }
       return;
     }
@@ -269,11 +269,10 @@
       if (window.CA_TRACK) window.CA_TRACK("form_submit", { form: "enquiry", mode: r.mode, ok: true });
       if (r.mode !== "endpoint") scrollDown();
     });
-    // when the chat knows the car, end on its Studio page (360 view, paint, km and price side by side)
+    // when the chat knows the car, end on its Studio page (its own photos, km and price side by side)
     var c = state.car;
-    var studio = c ? "\nTab tak isse 3D Studio mein dekhiye: " +
-      '<a href="studio.html?id=' + encodeURIComponent(c.id) + '" data-cta="studio" data-at="anita">Open the ' + esc(c.make + " " + c.model) + ' in the 3D Studio</a>' +
-      (c.scan ? "" : "\nStudio ka 3D model illustrative hai, yeh exact gaadi nahi.") : "";
+    var studio = c ? "\nTab tak isse Studio mein dekhiye: " +
+      '<a href="studio.html?id=' + encodeURIComponent(c.id) + '" data-cta="studio" data-at="anita">Open the ' + esc(c.make + " " + c.model) + ' in the Studio</a>' : "";
     var sent = !!window.CA_ENDPOINT;   // without the lead endpoint the request only reaches the team once the visitor sends the message
     pushBot(slot ? (sent ? "Request bhej di: " : "Request taiyaar hai: ") + slot + (c ? " (" + c.make + " " + c.model + ")" : "") + (sent ? ". Hamari team message karke confirm karegi." : ". Message bhejte hi hamari team confirm karegi.") + (CA_SITE.hours ? "\nShowroom ka time: " + CA_SITE.hours + "." : "") : (sent ? "Note kar liya. Hamari team message karegi." : "Note kar liya. Message bhejte hi hamari team aapko batayegi."), null, studio);
   }

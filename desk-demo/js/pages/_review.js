@@ -7,6 +7,19 @@ import { dateTimeFmt, esc, icon } from "../util.js";
 import { openDrawer, toast } from "../ui.js";
 
 const VIA = { whatsapp: "on WhatsApp", qr: "with the QR", copy: "by sending the link", in_person: "in person" };
+const FU_STATE = { queued: "booked", sent: "sent", print: "handed to staff to send", tapped: "not needed (link opened)", opted_out: "stopped (STOP)", expired: "dropped (too late)", failed: "failed" };
+
+/* The engine's WhatsApp follow-up (business-lab/engine/review_ask.py): only for a buyer who agreed to it. */
+function followupHtml(r) {
+  if (r.followup === "queued") {
+    const e = r.followup_engine;
+    const more = e ? ` First message ${esc(FU_STATE[e.first_state] || e.first_state)}${e.reminder_state ? `, reminder ${esc(FU_STATE[e.reminder_state] || e.reminder_state)}` : ""}.` : "";
+    return `<p class="note">${icon("check", "")}WhatsApp follow-up booked: one message the day after delivery, one reminder 3 days later only if the link was not opened.${more}</p>`;
+  }
+  if (r.followup) return `<p class="note">${icon("info", "")}${esc(r.followup_note || "")}</p>`;
+  if (!r.followup_possible) return "";
+  return `<label class="check"><input type="checkbox" id="rvFu"> <span>Buyer agreed to a WhatsApp follow-up about the review: one message tomorrow, one reminder 3 days later only if the link was not opened. Ask first; never assume.</span></label>`;
+}
 
 export function reviewStatusHtml(r) {
   if (!r) return "";
@@ -33,13 +46,15 @@ export async function openReviewAsk(dealId, { justDelivered = false, onClose } =
           ${r.wa_url ? `<a class="btn primary" href="${esc(r.wa_url)}" target="_blank" rel="noopener" data-via="whatsapp">${icon("wa")}Send on WhatsApp</a>` : ""}
           ${r.do_not_message ? "" : `<button class="btn" type="button" data-via="copy">${icon("copy")}Copy message</button>`}
         </div>
+        <div class="sec">${followupHtml(r)}</div>
         ${r.tracked ? "" : `<p class="note sec">${icon("info", "")}Taps on the link are counted once the engine's public address is set (CA_REVIEW_LINK_BASE).</p>`}
       </div>`);
     d.setFoot(`<button class="btn" type="button" data-close>${r.asked_at ? "Close" : "Later"}</button><button class="btn pos" type="button" data-via="${r.do_not_message ? "in_person" : "qr"}">${icon("check")}I asked ${r.do_not_message ? "in person" : "with the QR"}</button>`);
   };
   draw();
   const mark = async (via) => {
-    try { r = await api.post(`deals/${dealId}/review-ask`, { via }); draw(); toast("Noted: review asked.", "ok"); } catch (e) { toast(e.message, "err"); }
+    const fu = d.el.querySelector("#rvFu");
+    try { r = await api.post(`deals/${dealId}/review-ask`, { via, wa_followup: !!(fu && fu.checked) }); draw(); toast("Noted: review asked.", "ok"); } catch (e) { toast(e.message, "err"); }
   };
   d.el.addEventListener("click", async (e) => {
     if (e.target.closest("[data-close]")) { d.close(); return; }

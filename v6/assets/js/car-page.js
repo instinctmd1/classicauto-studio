@@ -105,7 +105,7 @@
       '<details class="nc-how"><summary>How we worked this out <span class="nc-tag">estimate</span></summary>' +
       '<dl class="nc-list">' +
         row("New " + e(np.compareName) + ", ex-showroom" + (np.area === "Mumbai" ? " Mumbai" : " (India price)"), fmt.rupees(np.exShowroom)) +
-        row("Road tax, Maharashtra (" + e(o.road_tax_basis) + ": " + o.road_tax_pct + "%)", fmt.rupees(o.road_tax)) +
+        row("Road tax, Maharashtra (" + e(o.road_tax_basis) + ": " + (+o.road_tax_pct).toFixed(2).replace(/\.?0+$/, "") + "%)", fmt.rupees(o.road_tax)) +
         row("Registration and smart-card RC fees", fmt.rupees(o.registration)) +
         row("First-year insurance, estimated at " + o.insurance_pct + "% of ex-showroom", fmt.rupees(o.insurance)) +
         row("New car on the road in Mumbai (estimate)", fmt.rupees(np.total), "nc-sum") +
@@ -234,11 +234,11 @@
   })[0];
   if (spec) {
     f("modelWrap").hidden = false;
-    set("modelLabel", spec.label + ", as published by the maker");
+    set("modelLabel", spec.label + (spec.maker === false ? ", from the published sources below" : ", as published by the maker"));
     f("modelSpecs").innerHTML = specHTML(spec.rows);
     f("modelSource").innerHTML = "Source" + (spec.sources.length > 1 ? "s" : "") + ": " + spec.sources.map(function (s) {
       return '<a class="text-link" href="' + cardsApi.esc(s.url) + '" target="_blank" rel="noopener">' + cardsApi.esc(s.name) + '</a> (read ' + fmt.fmtDate(s.as_of) + ')';
-    }).join("; ") + ". These are the maker's figures for the model, not measurements of this car.";
+    }).join("; ") + (spec.maker === false ? ". These are published figures for the model from the sources named, not measurements of this car." : ". These are the maker's figures for the model, not measurements of this car.");
   }
 
   /* ---- "Know the model": one collapsible row per block, its key fact readable while closed (phone first) ---- */

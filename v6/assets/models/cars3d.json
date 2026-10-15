@@ -1,0 +1,5 @@
+{
+  "_about": "3D models the Studio may show, by car id (\"id:<car id>\") or by make and model (\"kia/seltos\"). Shape and rules: assets/js/studio-viewer/models.js. Only models we may publish: CC0, CC BY 4.0 with credit, our own scans, or written permission. Never a different car's model.",
+  "version": 1,
+  "models": {}
+}
