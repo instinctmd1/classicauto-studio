@@ -160,7 +160,7 @@
     var m = CA.messageCta(), v = CA.visitCta(), c = CA.callCta();
     var btns = '<a class="sticky-btn sticky-btn--primary" id="stickyMsg" href="' + m.href + '"' + ext() + ' data-cta="message" data-at="sticky_bar" data-via="' + m.via + '">' + ICON.chat + '<span>Message</span></a>';
     if (c) btns += '<a class="sticky-btn" href="' + c.href + '" data-cta="call" data-at="sticky_bar" data-via="tel">' + ICON.phone + '<span>Call</span></a>';
-    btns += '<a class="sticky-btn" href="' + v.href + '"' + ext() + ' data-cta="visit" data-at="sticky_bar" data-via="maps">' + ICON.pin + '<span>Visit</span></a>';
+    btns += '<a class="sticky-btn sticky-visit" href="' + v.href + '"' + ext() + ' data-cta="visit" data-at="sticky_bar" data-via="maps">' + ICON.pin + '<span>Visit</span></a>';
     return '<div class="sticky-bar" id="stickyBar" role="region" aria-label="Contact Classic Auto">' + btns + '</div>';
   }
 
@@ -173,6 +173,8 @@
       document.body.insertAdjacentHTML("beforeend", '<div id="anitaRoot"></div>');
     }
     if (S.google_review_url) { var ra = document.createElement("script"); ra.src = CA.root("assets/js/review-ask.js"); document.body.appendChild(ra); }  // "Review us on Google" blocks + prompt
+    if (page === "home" || page === "stock") { var ep = document.createElement("script"); ep.src = CA.root("assets/js/enquiry-popup.js"); document.body.appendChild(ep); }   // first-visit enquiry pop-up (not on car pages: the photos are the point there)
+    if (CA._pendingPrice) CA.setStickyPrice(CA._pendingPrice);
     initSticky();
   }
 
@@ -182,6 +184,15 @@
     if (!a) return;
     a.setAttribute("data-ca-msg", text);
     if (S.whatsapp) a.href = CA.waLink(text);
+  };
+
+  /* Car pages: the asking price sits at the left of the sticky bar on phones (price + Message + Call), so it is in reach while scrolling. */
+  CA.setStickyPrice = function (text) {
+    var bar = document.getElementById("stickyBar");
+    if (!bar) { CA._pendingPrice = text; return; }          // the bar is built at DOMContentLoaded, after deferred page scripts have run
+    if (!text || bar.querySelector(".sticky-price")) return;
+    bar.classList.add("has-price");
+    bar.insertAdjacentHTML("afterbegin", '<div class="sticky-price"><small>Asking price</small><b>' + String(text).replace(/[&<>]/g, "") + '</b></div>');
   };
 
   /* Hide on scroll down, show on scroll up. Transform-only. */

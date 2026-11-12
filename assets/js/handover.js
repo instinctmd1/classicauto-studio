@@ -29,6 +29,9 @@ function hasWebGL() {
   var sec = document.getElementById("handoverChapter");
   var stage = document.getElementById("handoverStage");
   if (!sec || !stage) return;
+  /* Static drawing instead of the 3D key (and no three.js download) for: reduced motion, Save-Data, and low-end phones (2 GB or less, or 2 cores or fewer). */
+  var nav = navigator, lowEnd = !!((nav.deviceMemory && nav.deviceMemory <= 2) || (nav.hardwareConcurrency && nav.hardwareConcurrency <= 2) || (nav.connection && nav.connection.saveData));
+  if (reduced || lowEnd) { stage.classList.add("no-webgl"); sec.classList.add("is-settled"); return; }
   if (!hasWebGL() || !("IntersectionObserver" in window)) { stage.classList.add("no-webgl"); return; }
 
   var scene = null, wantScene = false, onScreen = false, loading = false;

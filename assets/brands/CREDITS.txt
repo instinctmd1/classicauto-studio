@@ -1,0 +1,40 @@
+Brand logos used on the home page (Shop by brand) and the stock page brand strip
+=========================================================================
+
+Each file is a single-colour (navy-black) vector copy of the maker's mark, cropped to its own outline by tools/make_brand_logos.py.
+No file is hotlinked: every logo is served from this folder.
+
+Why they are here: to say which makes Classic Auto sells (nominative use). Every name and logo is a trademark of its owner. Classic Auto is an
+independent pre-owned dealer and is not affiliated with, sponsored or endorsed by any of them. The licence below covers the artwork file only: it gives
+no right to the trademark.
+
+A. From the Simple Icons package (npm: simple-icons@16.37.0, licence CC0 1.0 Universal, https://github.com/simple-icons/simple-icons)
+   audi.svg  <-  icons/audi.svg  https://github.com/simple-icons/simple-icons/blob/16.37.0/icons/audi.svg
+   bmw.svg  <-  icons/bmw.svg  https://github.com/simple-icons/simple-icons/blob/16.37.0/icons/bmw.svg
+   ford.svg  <-  icons/ford.svg  https://github.com/simple-icons/simple-icons/blob/16.37.0/icons/ford.svg
+   honda.svg  <-  icons/honda.svg  https://github.com/simple-icons/simple-icons/blob/16.37.0/icons/honda.svg
+   hyundai.svg  <-  icons/hyundai.svg  https://github.com/simple-icons/simple-icons/blob/16.37.0/icons/hyundai.svg
+   jeep.svg  <-  icons/jeep.svg  https://github.com/simple-icons/simple-icons/blob/16.37.0/icons/jeep.svg
+   kia.svg  <-  icons/kia.svg  https://github.com/simple-icons/simple-icons/blob/16.37.0/icons/kia.svg
+   mahindra.svg  <-  icons/mahindra.svg  https://github.com/simple-icons/simple-icons/blob/16.37.0/icons/mahindra.svg
+   maruti-suzuki.svg  <-  icons/suzuki.svg  https://github.com/simple-icons/simple-icons/blob/16.37.0/icons/suzuki.svg
+   maserati.svg  <-  icons/maserati.svg  https://github.com/simple-icons/simple-icons/blob/16.37.0/icons/maserati.svg
+   mg.svg  <-  icons/mg.svg  https://github.com/simple-icons/simple-icons/blob/16.37.0/icons/mg.svg
+   mini.svg  <-  icons/mini.svg  https://github.com/simple-icons/simple-icons/blob/16.37.0/icons/mini.svg
+   skoda.svg  <-  icons/skoda.svg  https://github.com/simple-icons/simple-icons/blob/16.37.0/icons/skoda.svg
+   tata.svg  <-  icons/tata.svg  https://github.com/simple-icons/simple-icons/blob/16.37.0/icons/tata.svg
+   tesla.svg  <-  icons/tesla.svg  https://github.com/simple-icons/simple-icons/blob/16.37.0/icons/tesla.svg
+   toyota.svg  <-  icons/toyota.svg  https://github.com/simple-icons/simple-icons/blob/16.37.0/icons/toyota.svg
+   volkswagen.svg  <-  icons/volkswagen.svg  https://github.com/simple-icons/simple-icons/blob/16.37.0/icons/volkswagen.svg
+   volvo.svg  <-  icons/volvo.svg  https://github.com/simple-icons/simple-icons/blob/16.37.0/icons/volvo.svg
+   (maruti-suzuki.svg is the Suzuki 'S' mark, which Maruti Suzuki India uses.)
+
+B. From Wikimedia Commons (public domain: simple logo, not copyrightable; the trademark remains the maker's). Fetched 12 Nov 2026.
+   jaguar.svg  <-  https://commons.wikimedia.org/wiki/File:Jaguar_2024.svg  (licence on the file page: Public domain)
+       file: https://upload.wikimedia.org/wikipedia/commons/5/50/Jaguar_2024.svg
+   land-rover.svg  <-  https://commons.wikimedia.org/wiki/File:Land_Rover_2023.svg  (licence on the file page: Public domain)
+       file: https://upload.wikimedia.org/wikipedia/commons/c/c2/Land_Rover_2023.svg
+   mercedes-benz.svg  <-  https://commons.wikimedia.org/wiki/File:Mercedes-Benz_1933.svg  (licence on the file page: Public domain)
+       file: https://upload.wikimedia.org/wikipedia/commons/b/bc/Mercedes-Benz_1933.svg
+
+Not used: the Mercedes-Benz 2010 and 2025 files on Commons (300 KB and 7 KB with the wordmark); the 1933-style ring and star is the lighter file and is the same star-in-ring emblem.

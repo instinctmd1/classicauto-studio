@@ -122,12 +122,12 @@
   F.todayISO = function () { var d = new Date(); d.setMinutes(d.getMinutes() - d.getTimezoneOffset()); return d.toISOString().slice(0, 10); };
 
   /* Submit wrapper: honeypot, result line, per-mode confirmation text. */
-  F.send = function (form, statusEl, lead, okMsg) {
+  F.send = function (form, statusEl, lead, okMsg, opts) {   // opts.boxHost: where the copy-and-DM box goes when there is no endpoint (the pop-up passes its own panel)
     var hp = form.querySelector('input[name="company"]');
     if (hp && hp.value) { F.status(statusEl, "", ""); return Promise.resolve({ ok: false, blocked: true }); }
     F.status(statusEl, "Sending your request…", "");
     var btn = form.querySelector('button[type="submit"]'); if (btn) btn.disabled = true;
-    return window.ClassicAutoLeads.submitLead(lead).then(function (r) {
+    return window.ClassicAutoLeads.submitLead(lead, opts).then(function (r) {
       if (btn) btn.disabled = false;
       var msg = okMsg;
       if (r.mode === "instagram") msg = r.opened ? "Your message is copied. Paste it in the Instagram DM that just opened." : "Your message is copied. Use Open Instagram DM in the box and paste it.";

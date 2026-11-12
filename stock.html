@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Stock: pre-owned cars at Classic Auto, Malad West</title>
 <meta name="description" content="Browse Classic Auto's pre-owned cars with real prices, kilometres, owners and EMI estimates. Filter by price band, body type, fuel and gearbox.">
-<meta name="theme-color" content="#0A1633">
+<meta name="theme-color" content="#ffffff">
 <link rel="icon" type="image/png" sizes="32x32" href="assets/brand/favicon-32.png">
 <link rel="icon" type="image/png" sizes="48x48" href="assets/brand/favicon-48.png">
 <link rel="apple-touch-icon" href="assets/brand/apple-touch-icon.png">
@@ -23,21 +23,27 @@
 <div class="progress-rail" aria-hidden="true"><i></i></div>
 
 <main id="main">
-  <section class="page-head">
+  <section class="page-head page-head--stock">
     <div class="container">
       <span class="eyebrow" data-hero-in>Full stock</span>
       <h1 data-hero-in>Every car on the floor</h1>
-      <p class="lead" data-hero-in>Filter by price band, body type, fuel or gearbox. Each option shows how many cars it gives, before you pick it.<span data-bind="stock-count" hidden></span></p>
+      <span data-bind="stock-count" hidden></span>
+    </div>
+  </section>
+
+  <section class="brand-strip-wrap" aria-label="Shop by brand">
+    <div class="container">
+      <nav class="brand-strip" id="brandStrip" aria-label="Brands in stock"></nav>
     </div>
   </section>
 
   <div class="filter-bar">
-    <div class="container filter-row">
+    <div class="container"><details class="filter-disc" id="filterDisc" open><summary><span>Filters</span><span class="filter-sum" id="filterSum"></span></summary><div class="filter-row">
       <div class="filter-group"><label for="filterBand">Price</label>
         <select id="filterBand"><option value="all">Any price</option><option value="u20">Under ₹20 L</option><option value="20to50">₹20-50 L</option><option value="50plus">₹50 L and above</option></select></div>
       <div class="filter-group"><label for="filterBody">Body type</label>
         <select id="filterBody"><option value="all">Any body type</option><option value="hatchback">Hatchback</option><option value="sedan">Sedan</option><option value="suv">SUV</option><option value="mpv">MPV</option><option value="luxury-sedan">Luxury sedan</option><option value="luxury-suv">Luxury SUV</option></select></div>
-      <div class="filter-group"><label for="filterMake">Make</label>
+      <div class="filter-group" hidden><label for="filterMake">Make</label>
         <select id="filterMake"><option value="all">Any make</option></select></div>
       <div class="filter-group"><label for="filterFuel">Fuel</label>
         <select id="filterFuel"><option value="all">Any fuel</option><option value="Petrol">Petrol</option><option value="Diesel">Diesel</option><option value="Electric">Electric</option><option value="Hybrid">Hybrid</option><option value="CNG">CNG</option></select></div>
@@ -52,7 +58,7 @@
       </div>
       <span class="filter-count" id="filterCount" role="status"></span>
       <button class="filter-reset" id="filterReset" type="button">Reset filters</button>
-    </div>
+    </div></details></div>
   </div>
 
   <section class="section section--tight">
@@ -70,7 +76,7 @@
       </div>
       <div class="request-band" id="requestBand">
         <div><h2>Not on the floor?</h2><span class="serif">Tell us what you want and we'll look for it.</span></div>
-        <div class="cta-row"><a class="btn btn-primary btn-lg" href="request.html" data-cta="request_car" data-at="stock">Request a car</a><a class="btn btn-outline btn-lg" href="finder.html" data-cta="see_stock" data-at="stock">Find my car in 2 minutes</a></div>
+        <div class="cta-row"><a class="btn btn-primary btn-lg" href="request.html" data-cta="request_car" data-at="stock">Request a car</a></div>
       </div>
       <p class="emi-note">*EMI is indicative: 20% down, 60 months, 11.5% a year assumed. Final EMI depends on the lender's approval and rate.</p>
     </div>
@@ -82,11 +88,13 @@
 <script src="assets/vendor/gsap/ScrollTrigger.min.js" defer></script>
 <script src="assets/vendor/lenis/lenis.min.js" defer></script>
 <script src="assets/js/cars.js" defer></script>
+<script src="assets/js/cutouts.js" defer></script>
 <script src="assets/js/main.js" defer></script>
 <script src="assets/js/motion.js" defer></script>
 <script src="assets/js/forms.js" defer></script>
 <script src="assets/js/cards.js" defer></script>
 <script src="assets/js/compare-shortlist.js" defer></script>
+<script src="assets/js/brands.js" defer></script>
 <script src="assets/js/stock.js" defer></script>
 <script src="assets/js/finder.js" defer></script>
 <script src="assets/js/anita.js" defer></script>

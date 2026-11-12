@@ -37,6 +37,11 @@
   if (window.CA.setStickyMessage) window.CA.setStickyMessage(stickyMsg);
   else document.addEventListener("DOMContentLoaded", function () { if (window.CA.setStickyMessage) window.CA.setStickyMessage(stickyMsg); });
 
+  if (car.status !== "SOLD" && !car.price_on_request && car.price != null) {
+    var stickyPrice = function () { if (window.CA.setStickyPrice) window.CA.setStickyPrice(fmt.money(car.price)); };
+    if (window.CA.setStickyPrice) stickyPrice(); else document.addEventListener("DOMContentLoaded", stickyPrice);
+  }
+
   /* ---- call / email about this car, from CA_SITE (only what is set there) ---- */
   (function () {
     var box = document.getElementById("carContact"), CA = window.CA;

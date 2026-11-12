@@ -258,32 +258,8 @@
       strip.innerHTML = '<span>Not sure what fits?</span><b>Find my car in 2 minutes</b>' + ARROW;
       head.appendChild(strip);
     }
-    var deep = root.location.search.length > 1 || root.location.hash.length > 1;
-    if (!deep && !lsGet(CHOICE_KEY) && typeof doc.createElement("dialog").showModal === "function") {
-      var dlg = doc.createElement("dialog");
-      dlg.className = "fd-choice"; dlg.id = "finderChoice";
-      dlg.setAttribute("aria-labelledby", "fdChoiceTitle"); dlg.setAttribute("data-lenis-prevent", "");
-      dlg.innerHTML =
-        '<div class="fd-choice-card">' +
-          '<span class="eyebrow">' + available.length + ' cars on the floor</span>' +
-          '<h2 id="fdChoiceTitle">Where would you like to start?</h2>' +
-          '<p>Answer 18 quick taps and we shortlist the cars that fit you, with the reasons. Or browse everything.</p>' +
-          '<div class="fd-choice-actions">' +
-            '<a class="btn btn-primary btn-lg" href="finder.html" data-pick="finder" data-cta="see_stock" data-at="stock">Find my car in 2 minutes</a>' +
-            '<button type="button" class="btn btn-outline btn-lg" data-pick="stock">See all cars</button>' +
-          '</div>' +
-          '<p class="fd-choice-note">We remember this choice on this device only. You can switch any time.</p>' +
-        '</div>';
-      doc.body.appendChild(dlg);
-      dlg.addEventListener("click", function (e) {
-        var p = e.target.closest && e.target.closest("[data-pick]");
-        if (p) { lsSet(CHOICE_KEY, p.getAttribute("data-pick")); dlg.close(); return; }   // the finder link still navigates by itself
-        if (e.target === dlg) { lsSet(CHOICE_KEY, "stock"); dlg.close(); }     // a tap on the backdrop = see all cars
-      });
-      dlg.addEventListener("cancel", function () { lsSet(CHOICE_KEY, "stock"); });  // Esc
-      dlg.showModal();
-      var first = dlg.querySelector(".btn-primary"); if (first) first.focus({ preventScroll: true });
-    }
+    /* The "Where would you like to start?" dialog that used to open here on a first visit is gone (Nov 2026): the first-visit enquiry pop-up
+       (enquiry-popup.js) is the one modal a new visitor sees, and the strip above already offers the finder. */
     return;
   }
 

@@ -1,5 +1,5 @@
 /* Stock page: client-side filter + sort over window.CARS. Deep links:
-   stock.html?band=u20|20to50|50plus &body= &fuel= &make= &trans= &sort= &maxkm=10000 &demo=1
+   stock.html?band=u20|20to50|50plus &body= &fuel= &brand=bmw (or &make=BMW) &trans= &sort= &maxkm=10000 &demo=1
    Every option shows how many cars it would give with the other filters as they are (live counts, gap plan P0-2), so nobody
    walks into an empty list blind. Zero options stay selectable: the empty state is a "request this car" form. */
 (function () {
@@ -17,6 +17,27 @@
     fuel: document.getElementById("filterFuel"), trans: document.getElementById("filterTrans"), sort: document.getElementById("filterSort")
   };
   var FILTERS = ["band", "body", "make", "fuel", "trans"];
+  /* Brand deep link: ?brand=land-rover is the Make filter. The address bar always shows brand=<slug> (never make=) so a shared link reads the same everywhere. */
+  function slug(make) { return String(make).toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, ""); }
+  var strip = document.getElementById("brandStrip");
+  function markBrand() {
+    if (!strip) return;
+    var cur = sel.make.value === "all" ? "" : slug(sel.make.value), on = null;
+    [].forEach.call(strip.querySelectorAll(".brand-chip"), function (a) {
+      var is = a.getAttribute("data-brand") === cur;
+      if (is) { a.setAttribute("aria-current", "true"); on = a; } else a.removeAttribute("aria-current");
+    });
+    if (on && on.scrollIntoView && strip.scrollWidth > strip.clientWidth) { try { strip.scrollTo({ left: on.offsetLeft - 16, behavior: "auto" }); } catch (e) { /* old browser */ } }
+  }
+  if (strip) strip.addEventListener("click", function (e) {
+    var a = e.target.closest && e.target.closest(".brand-chip");
+    if (!a || e.metaKey || e.ctrlKey || e.shiftKey || e.button) return;
+    e.preventDefault();
+    var b = a.getAttribute("data-brand"), make = "all";
+    if (b) { [].forEach.call(sel.make.options, function (o) { if (o.value !== "all" && slug(o.value) === b) make = o.value; }); }
+    sel.make.value = make;
+    apply({ f: "make", v: make });
+  });
   var resetBtn = document.getElementById("filterReset");
   var tgElectric = document.getElementById("toggleElectric"), tgDemo = document.getElementById("toggleDemo"), tgLowKm = document.getElementById("toggleLowKm");
   var demoOnly = false, lowKm = false, shown = PAGE;
@@ -84,17 +105,19 @@
     if (left > 0) moreBtn.textContent = "Show " + Math.min(MORE, left) + " more (" + left + " left)";
     // the URL mirrors the filters, so a filtered view can be shared or reloaded
     var u = new URLSearchParams();
-    FILTERS.forEach(function (k) { if (v[k] !== "all") u.set(k, v[k]); });
+    FILTERS.forEach(function (k) { if (v[k] !== "all") u.set(k === "make" ? "brand" : k, k === "make" ? slug(v[k]) : v[k]); });
     if (v.sort !== "featured") u.set("sort", v.sort);
     if (demoOnly) u.set("demo", "1");
     if (lowKm) u.set("maxkm", String(LOW_KM));
     try { history.replaceState(null, "", window.location.pathname + (u.toString() ? "?" + u.toString() : "")); } catch (e) { /* file:// or sandbox */ }
     countEl.textContent = list.length + " of " + CARS.length + " cars";
+    var sum = document.getElementById("filterSum"); if (sum) sum.textContent = countEl.textContent;
     empty.style.display = list.length ? "none" : "block";
     tgElectric.setAttribute("aria-pressed", String(sel.fuel.value === "Electric"));
     tgDemo.setAttribute("aria-pressed", String(demoOnly));
     tgLowKm.setAttribute("aria-pressed", String(lowKm));
     updateCounts(v);
+    markBrand();
     if (!list.length) emptyState(v);
     if (MOTION() && MOTION().revealGrid) MOTION().revealGrid(grid); else if (MOTION() && MOTION().glints) MOTION().glints(grid);
     if (track && window.CA_TRACK) window.CA_TRACK("filter_used", track);
@@ -155,7 +178,11 @@
   }
   setIfOption(sel.band, band);
   ["body", "make", "fuel", "trans", "sort"].forEach(function (k) { setIfOption(sel[k], q.get(k)); });
+  if (q.get("brand") && sel.make.value === "all") [].forEach.call(sel.make.options, function (o) { if (o.value !== "all" && slug(o.value) === q.get("brand").toLowerCase()) sel.make.value = o.value; });
   if (q.get("demo") === "1") demoOnly = true;
   if (+q.get("maxkm") === LOW_KM) lowKm = true;
+  /* phones: the filters start folded, so the cars are on the first screen; wider screens always show them */
+  var disc = document.getElementById("filterDisc");
+  if (disc) { var mq = window.matchMedia("(max-width: 768px)"); var fold = function () { disc.open = !mq.matches; }; fold(); if (mq.addEventListener) mq.addEventListener("change", fold); }
   apply();
 })();

@@ -18,11 +18,17 @@
   /* the static cars/<id>/ page is the canonical URL (SEO tags, share image): cards and every in-site link go there, so link equity and shared URLs stay on one address */
   function href(c) { return "cars/" + encodeURIComponent(c.id) + "/"; }
 
+  /* A car whose cut-out passed QA (assets/js/cutouts.js sets window.CA_CUTOUTS = [ids]) shows the car alone on the card's light stage;
+     every other car, and a cut-out file that fails to load, shows its normal cover photo in the same card. Car pages keep the full photos. */
+  function hasCutout(c) { return !!(window.CA_CUTOUTS && window.CA_CUTOUTS.indexOf(c.id) > -1); }
   function mediaHTML(c) {
     var badge = '<span class="car-badge' + (c.status === "SOLD" ? " is-sold" : "") + '">' + (c.status === "SOLD" ? "Sold" : fmt.bodyLabel(c.body)) + '</span>';
     if (c.photos && c.photos.length) {
-      return '<div class="car-media">' + badge +
-        '<img src="' + esc(c.photos[0]) + '" alt="' + esc(altFor(c)) + '" width="1110" height="700" loading="lazy" decoding="async" style="view-transition-name: car-' + esc(c.id) + '"></div>';
+      var cut = hasCutout(c);
+      var src = cut ? "assets/photos/cars/" + encodeURIComponent(c.id) + "/cutout.webp" : c.photos[0];
+      var fb = cut ? " data-fb=\"" + esc(c.photos[0]) + "\" onerror=\"this.onerror=null;this.src=window.CA.root(this.dataset.fb);this.parentNode.classList.remove('has-cutout')\"" : "";
+      return '<div class="car-media' + (cut ? " has-cutout" : "") + '">' + badge +
+        '<img src="' + esc(src) + '" alt="' + esc(altFor(c)) + '" width="1110" height="700" loading="lazy" decoding="async"' + fb + ' style="view-transition-name: car-' + esc(c.id) + '"></div>';
     }
     return '<div class="car-media is-placeholder">' + badge +
       '<div><span class="ph-label">' + esc(c.make) + '<br>' + esc(c.model) + '</span><span class="ph-note">Photos on request</span></div></div>';
@@ -31,7 +37,7 @@
   function specRow(c) {
     var cells = [
       ["Year", c.year],
-      ["Driven", Number(c.kms).toLocaleString("en-IN") + " km"],
+      ["Driven", c.kms == null ? "km: ask us" : Number(c.kms).toLocaleString("en-IN") + " km"],
       ["Fuel", c.fuel],
       ["Gearbox", fmt.transShort(c)],
       ["Owner", c.owners]
@@ -52,9 +58,6 @@
   function cardHTML(c, opts) { return window.CA.rootify(cardMarkup(c, opts)); }
   function cardMarkup(c, opts) {
     opts = opts || {};
-    var call = window.CA && window.CA.callCta();
-    var callBtn = call ? '<a class="car-call-btn" href="' + call.href + '" data-cta="call" data-at="car_page" aria-label="Call Classic Auto about the ' + esc(fmt.carLabel(c)) + '">' +
-      '<svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3 19.5 19.5 0 0 1-6-6 19.8 19.8 0 0 1-3-8.7A2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 2 .8 3a2 2 0 0 1-.5 2L8 10.1a16 16 0 0 0 6 6l1.4-1.4a2 2 0 0 1 2-.5c1 .4 2 .7 3 .8a2 2 0 0 1 1.6 2z"/></svg></a>' : "";
     var label = fmt.carLabel(c);
     return (
       '<article class="car-card" data-car-id="' + esc(c.id) + '">' +
@@ -77,9 +80,6 @@
             priceBlock(c, opts) +
           '</div>' +
         '</a>' +
-        '<div class="car-card-cta">' +
-          '<a class="btn btn-primary car-view-btn" href="' + href(c) + '">View details</a>' + callBtn +
-        '</div>' +
       '</article>'
     );
   }
@@ -174,5 +174,5 @@
     share(c, at, b);
   });
 
-  window.ClassicAutoCards = { cardHTML: cardHTML, bodyLabel: fmt.bodyLabel, mediaHTML: mediaHTML, esc: esc, href: href, share: share, shareText: shareText, absUrl: absUrl };
+  window.ClassicAutoCards = { cardHTML: cardHTML, hasCutout: hasCutout, bodyLabel: fmt.bodyLabel, mediaHTML: mediaHTML, esc: esc, href: href, share: share, shareText: shareText, absUrl: absUrl };
 })();
