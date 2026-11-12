@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://instinctmd1.github.io/classicauto-studio/v6/sitemap.xml
+Sitemap: https://classicauto1974.com/v6/sitemap.xml

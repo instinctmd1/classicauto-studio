@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://classicauto1974.com/sitemap.xml

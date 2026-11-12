@@ -13,7 +13,7 @@ window.CA_SITE = {
   /* The site's public address on the web. Every absolute URL (canonical, og:image, sitemap, robots, JSON-LD, the 404 page's links)
      is built from this one value by tools/import_stock.py and tools/rebuild_from_json.py. To move to the new domain, see
      "Switching the domain" in tools/README.md. */
-  site_url: "https://instinctmd1.github.io/classicauto-studio/v6/",
+  site_url: "https://classicauto1974.com/v6/",
   /* Contact details exactly as Classic Auto's own site (classicauto.net.in) shows them, used on Medhansh's instruction of 13 Oct 2026.
      This is the only place they live: swap phone for the Exotel number later and every CALL NOW, tel: link, footer and JSON-LD follows. */
   phone: "+91 9588990000",  // shown as written; tel: links use the digits. null => no phone, no tel:, no CALL NOW
