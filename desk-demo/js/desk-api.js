@@ -18,7 +18,7 @@ async function getStore() {
   const key = `${role}:${state.user?.id ?? ""}`;
   if (!store || storeKey !== key) {
     const load = async (path, params) => { try { return await api.get(path, params); } catch (e) { if (notBundled(e)) return null; throw e; } };
-    store = createStore({ role: ["owner", "manager", "salesman"].includes(role) ? role : "staff", me: state.user, load });
+    store = createStore({ role: ["owner", "manager", "salesman"].includes(role) ? role : "staff", roleId: role, me: state.user, load });
     storeKey = key;
   }
   return store;
@@ -41,6 +41,7 @@ export async function send(method, path, body, opts = {}) {
 /** opts.background: a write the person did not make (a read receipt): it does not keep the session awake. */
 export const post = (path, body, opts) => send("POST", path, body ?? {}, opts);
 export const del = (path) => send("DELETE", path);
+export const patch = (path, body) => send("PATCH", path, body ?? {});
 
 export async function upload(path, formData) {
   if (DEMO) return (await getStore()).upload(path, formData);

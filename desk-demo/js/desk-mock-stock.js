@@ -3,7 +3,7 @@
 // here is a sum of real asking prices; what is not known yet (arrival dates, buying prices, costs, the line) says
 // "Dad adds" instead of a number. scripts/build_desk_demo.py adds the <script> tag and the photo paths.
 import { DEMO, demoMeta, demoRole, get } from "./api.js";
-import { can } from "./state.js";
+import { can, homeKind } from "./state.js";
 import { esc, lakh, num, title } from "./util.js";
 
 const PAGES = new Set(["home", "today", "inventory"]);
@@ -89,6 +89,7 @@ const page = () => (location.hash.replace(/^#\/?/, "").split(/[/?]/)[0] || "home
 let busy = false;
 async function place() {
   if (busy || !PAGES.has(page())) return;
+  if (["maintenance", "rto"].includes(homeKind())) return;        // their home is the yard / papers: no prices (the role promises none)
   const main = document.getElementById("main");
   if (!main || main.querySelector("#real-stock") || !main.children.length) return;
   busy = true;

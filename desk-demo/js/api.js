@@ -24,6 +24,18 @@ export function keyFor(path, params) {
 
 let manifest = null;
 export const demoMisses = [];
+
+// Demo only: roles the recordings do not have. The maintenance person is added in the browser: /api/me is made up here, and every
+// other recorded answer is the manager's (the sample store in desk-mock-maint.js answers the maintenance pages itself).
+const SYNTH = {
+  maintenance: {
+    label: "Maintenance", hint: "the yard and workshop: where each car is, checklists with photos, inspections. No prices or money",
+    me: { capabilities: ["chat.use", "maint.inspect", "maint.view", "maint.work"], capabilities_locked: [], csrf: "demo", idle_timeout_minutes: 120,
+      mfa: { enrolled: false, required: false, setup_required: false, verified: false }, permissions: ["stock", "car_file"],
+      settings_public: { band_labels: { low: "Budget (under 20 L)", luxury: "Luxury (50 L+)", middle: "Mid (20-50 L)", unknown: "Unknown" }, ig_follower_goal: 50000, segment_bands: { low_max: 2000000, middle_max: 5000000 } },
+      user: { display_name: "Vikram (demo)", engine_name: null, id: 9, is_super_admin: false, must_change_password: false, role: "maintenance", role_label: "Maintenance", staff_id: null, username: "demo-maintenance" } },
+  },
+};
 if (DEMO) window.__demoMisses = demoMisses;
 
 // The demo replays what the real server answered, role by role (scripts/build_demo.py records it from the fictional
@@ -37,6 +49,12 @@ async function loadManifest() {
     const r = await fetch("data/manifest.json");
     if (!r.ok) throw new ApiError(500, "demo_data", "Demo data is missing.");
     manifest = await r.json();
+    for (const [id, s] of Object.entries(SYNTH)) {
+      if (manifest.roles[id]) continue;
+      manifest.roles[id] = { ...(manifest.roles.manager || {}) };
+      delete manifest.roles[id].me;
+      manifest.meta.roles.push({ id, label: s.label, hint: s.hint });
+    }
   }
   return manifest;
 }
@@ -58,7 +76,9 @@ export function setDemoRole(r) {
 async function demoGet(path, params) {
   const m = await loadManifest();
   const key = keyFor(path, params);
-  const hit = (m.roles[await demoRole()] || {})[key];
+  const who = await demoRole();
+  if (key === "me" && SYNTH[who]) return structuredClone(SYNTH[who].me);
+  const hit = (m.roles[who] || {})[key];
   if (!hit) {
     demoMisses.push(key);
     console.warn("demo: no bundled data for", key);

@@ -49,7 +49,12 @@ export const CAP_TEXT = {
   "bank.reveal": ["Unmask an account number or contact", "Asks for password and code again, and is logged."],
   "bank.manage": ["Add and edit bank accounts, loans and bankers", ""],
   "exports.money": ["Export money data", "Deals, payments, costs, expenses, ledger and P&L."],
+  "bank.tag": ["Tag bank statement lines with keywords", "Import statements, approve keyword groups, rules and the Tally file."],
   "grants.financial": ["Give other people money access", "Only the super-admin can give this."],
+  "maint.view": ["See the maintenance list", "Where each car is, its checklist and issues. No prices or costs."],
+  "maint.work": ["Update car locations and tick off work", "Every tick needs a photo; money spent needs a bill."],
+  "maint.inspect": ["Run car inspections", "Fill in the inspection and take its photos."],
+  "maint.verify": ["Check finished work", "Approve ticked-off jobs or send them back with a reason."],
 };
 
 /** What opening a guarded capability means in practice, in the words the owner reads when he is asked to confirm. */
@@ -65,6 +70,7 @@ export const CAP_OPENS = {
   "bank.reveal": { opens: [], sees: [], does: ["unmask a full account number or banker contact, after password and code"] },
   "bank.manage": { opens: [], sees: [], does: ["add and edit bank accounts, loans and bankers"] },
   "exports.money": { opens: [], sees: [], does: ["download deals, payments, expenses, ledger and P&L as files"] },
+  "bank.tag": { opens: ["Bank keywords"], sees: ["every line of the bank statements: who was paid, who paid, and how much"], does: ["import statements, tag lines, keep keywords and rules, export for Tally"] },
   "grants.financial": { opens: [], sees: [], does: ["give other people money and personal-data access"] },
   "documents.sensitive": { opens: [], sees: ["PAN, Aadhaar and other KYC papers"] },
   "customers.pii": { opens: [], sees: ["full PAN numbers (after password and code) and privacy requests"] },
@@ -79,12 +85,13 @@ export const GROUPS = [
   { id: "people", label: "Customers", short: "People", opens: ["customers.view"], tone: "ops", about: "Can see and edit the people register", caps: ["customers.view", "customers.manage"], tag: "People register" },
   { id: "papers", label: "RTO and papers", short: "RTO", opens: ["rto.view", "documents.view"], tone: "ops", about: "Can run RTO cases and open car papers", caps: ["rto.view", "rto.manage", "documents.view", "documents.delete"], tag: "Transfers, papers" },
   { id: "work", label: "Marketing and sheets", short: "Tools", opens: ["marketing.view", "sheets.view", "today.view", "activity.use"], tone: "ops", about: "Can see marketing figures and use sheets", caps: ["marketing.view", "marketing.manage", "sheets.view", "sheets.manage", "today.view", "activity.use", "feedback.manage", "exports.ops"], tag: "Day-to-day tools" },
+  { id: "maint", label: "Maintenance", short: "Maint.", opens: ["maint.view"], tone: "ops", about: "Can update where cars are, tick off work with photos and run inspections", caps: ["maint.view", "maint.work", "maint.inspect", "maint.verify"], tag: "Locations, checklists" },
   { id: "calls", label: "Calls and warnings", short: "Calls", opens: ["acc.own", "acc.team"], tone: "ops", about: "Call to-dos, briefs, screenshots, warnings and the call rules", caps: ["acc.own", "acc.team", "acc.review", "acc.reassign", "acc.warnings.manage", "acc.settings"], tag: "Briefs, proof, warnings" },
   { id: "pii", label: "Personal data", short: "Personal", opens: ["documents.sensitive", "customers.pii", "exports.pii"], tone: "sensitive", about: "Can see PAN, Aadhaar and phone exports", caps: ["documents.sensitive", "customers.pii", "exports.pii"], tag: "PAN, KYC, phones" },
   { id: "profit", label: "Profit", short: "Profit", opens: ["money.view", "deals.profit.view"], tone: "money", about: "Can see profit, margins and purchase prices", caps: ["money.view", "deals.profit.view", "exports.money"], tag: "Margins, P&L" },
   { id: "accounts", label: "Accounts", short: "Accounts", opens: ["accounts.view"], tone: "money", about: "Can see the cashbook, ledger, GST and TCS", caps: ["accounts.view", "accounts.manage"], tag: "Cashbook, GST" },
   { id: "expenses", label: "Expenses", short: "Expenses", opens: ["expenses.view"], tone: "money", about: "Can see, enter and approve expenses", caps: ["expenses.view", "expenses.manage", "expenses.approve"], tag: "Bills, approvals" },
-  { id: "bank", label: "Bank", short: "Bank", opens: ["bank.view"], tone: "money", about: "Can see bank details and loans", caps: ["bank.view", "bank.reveal", "bank.manage"], tag: "Accounts, loans" },
+  { id: "bank", label: "Bank", short: "Bank", opens: ["bank.view", "bank.tag"], tone: "money", about: "Can see bank details and loans", caps: ["bank.view", "bank.reveal", "bank.manage", "bank.tag"], tag: "Accounts, loans" },
   { id: "pass", label: "Can give money access", short: "Hands on", opens: ["grants.financial"], tone: "money", about: "Can hand money access to others", caps: ["grants.financial"], tag: "Hand on money access" },
   { id: "admin", label: "Admin", short: "Admin", opens: ["users.manage", "settings.manage", "audit.view"], tone: "admin", about: "Can manage users, settings and read the audit log", caps: ["users.manage", "settings.manage", "audit.view"], tag: "Users, settings, log" },
 ];
@@ -103,6 +110,8 @@ export const ROLE_PLAIN = {
   salesman: "Sees only his own leads, deals and customers.",
   accountant: "Books and expenses once enrolled in two-factor. No customer register.",
   admin: "Keeps the system running. No money and no customer register.",
+  maintenance: "Looks after the cars on the lot: says where each one is, ticks off work with photos, runs inspections. No prices, money or customers.",
+  rto: "Runs RTO transfers and car papers. No money and no leads.",
 };
 
 /** What the audit log's action codes mean to a person. */

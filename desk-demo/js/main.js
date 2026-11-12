@@ -40,7 +40,8 @@ const NAV = [
     { id: "money", label: "Profit and loss", icon: "sales", any: ["money.view"], period: true },
     { id: "accounts", label: "Accounts", icon: "book", any: ["accounts.view"], period: true },
     { id: "expenses", label: "Expenses", icon: "wallet", any: ["expenses.view"], period: true },
-    { id: "bank", label: "Bank and finance", icon: "bank", any: ["bank.view"] } ] },
+    { id: "bank", label: "Bank and finance", icon: "bank", any: ["bank.view"] },
+    { id: "banktag", label: "Bank keywords", icon: "tag", any: ["bank.tag"] } ] },
   { group: "The lot", items: [
     { id: "inventory", label: "Stock", icon: "car", any: ["stock.view"] },
     { id: "intakes", label: "Cars in and out", icon: "repeat", any: ["stock.intake", "stock.manage"] },
@@ -48,6 +49,9 @@ const NAV = [
     { id: "deals", label: "Deals", icon: "tag", any: ["deals.view"] },
     { id: "approvals", label: "Approvals", icon: "flag", any: ["approvals.manage", "approvals.request"] },
     { id: "rto", label: "RTO and papers", icon: "docs", any: ["rto.view", "documents.view"] },
+    // maintenance (MAINT-SPEC): where each car is, checklists and issues with photo proof, inspections; the check queue is a tab of the same page
+    { id: "maint", label: "Maintenance", icon: "wrench", any: ["maint.view"], onlyIf: () => homeKind() !== "maintenance" },
+    { id: "maint?tab=queue", label: "Waiting for check", icon: "shieldcheck", any: ["maint.verify"] },
     { id: "fi", label: "Finance and insurance", icon: "shield", any: ["deals.manage"] } ] },
   { group: "People", items: [
     { id: "leads", label: "Inquiries", icon: "leads", any: ["leads.view"], period: true },
@@ -62,7 +66,7 @@ const NAV = [
     { id: "admin", label: "Settings", icon: "settings", any: ["settings.manage"] },
     { id: "audit", label: "Audit log", icon: "history", any: ["audit.view"] } ] },
 ];
-const EXTRA = { intake: { label: "Car intake", any: ["stock.intake", "stock.manage"] }, lead: { label: "Lead", any: ["desk.inbox"] }, overview: { label: "Profit overview", any: ["money.view"], all: ["records.all"], period: true }, security: { label: "Security", any: [] }, mine: { label: "Home", any: [] }, manager: { label: "Home", any: [] } };
+const EXTRA = { intake: { label: "Car intake", any: ["stock.intake", "stock.manage"] }, lead: { label: "Lead", any: ["desk.inbox"] }, overview: { label: "Profit overview", any: ["money.view"], all: ["records.all"], period: true }, security: { label: "Security", any: [] }, "maint-inspect": { label: "Inspection", any: ["maint.view"] }, "maint-report": { label: "Inspection report", any: ["maint.view"] }, mine: { label: "Home", any: [] }, manager: { label: "Home", any: [] } };
 const ALL = Object.fromEntries([...NAV.flatMap((g) => g.items).map((p) => [p.id, p]), ...Object.entries(EXTRA).map(([k, v]) => [k, { id: k, ...v }])]);
 const app = document.getElementById("app");
 
@@ -231,7 +235,7 @@ function buildShell() {
 
 // ------------------------------------------------------------------ static demo: banner and role switch
 let demoInfo = null;
-const ROLE_ORDER = ["salesman", "manager", "owner"];
+const ROLE_ORDER = ["maintenance", "salesman", "manager", "owner"];
 const roleRank = (id) => { const i = ROLE_ORDER.indexOf(id); return i < 0 ? 9 : i; };
 function demoBannerHtml() {
   const m = demoInfo;
@@ -377,7 +381,7 @@ function parseHash() {
 }
 export function go(hash) { location.hash = hash; }
 
-const HOME_MODULE = { owner: "overview", manager: "manager", salesman: "mine", accountant: "accountant" };
+const HOME_MODULE = { owner: "overview", manager: "manager", salesman: "mine", accountant: "accountant", maintenance: "maint", rto: "rto" };
 
 async function render(keepScroll = false, restoreY = 0) {
   const meta = ALL[route.page] || ALL.home;
@@ -390,7 +394,7 @@ async function render(keepScroll = false, restoreY = 0) {
   $$("[data-page]").forEach((a) => { if (a.dataset.page === tabPage) a.setAttribute("aria-current", "page"); else a.removeAttribute("aria-current"); });
   document.title = `${meta.label} · Classic Auto`;
   $("#crumb").textContent = meta.label;
-  $("#period").hidden = !meta.period;
+  $("#period").hidden = !meta.period || (route.page === "home" && ["maintenance", "rto"].includes(homeKind()));
   updatePeriodUi();
   if (!keepScroll) window.scrollTo(0, 0);
   main.innerHTML = `<div class="g"><div class="skel card c12"></div></div><div class="kpis"><div class="skel kpi"></div><div class="skel kpi"></div><div class="skel kpi"></div></div>`;
@@ -435,7 +439,8 @@ function onRoute(restoreY = 0) {
 // ------------------------------------------------------------------ boot
 // The demo recordings predate the Desk capabilities: the demo adds the role defaults (APP-SPEC 8.2) when they are missing.
 const ACC_TEAM = ["acc.own", "acc.team", "acc.review", "acc.reassign", "acc.warnings.manage"];
-const DESK_DEMO_CAPS = { owner: ["desk.inbox", "desk.leads.act", "desk.ai_call", "chat.use", "desk.ask", ...ACC_TEAM, "acc.settings", "stock.intake"], manager: ["desk.inbox", "desk.leads.act", "desk.ai_call", "chat.use", "desk.ask", ...ACC_TEAM, "stock.intake"], salesman: ["desk.inbox", "desk.leads.act", "desk.ai_call", "chat.use", "acc.own", "stock.intake"] };
+const MAINT_CAPS = ["maint.view", "maint.work", "maint.inspect"];
+const DESK_DEMO_CAPS = { owner: ["desk.inbox", "desk.leads.act", "desk.ai_call", "chat.use", "desk.ask", ...ACC_TEAM, "acc.settings", "stock.intake", "bank.tag", ...MAINT_CAPS, "maint.verify"], manager: ["desk.inbox", "desk.leads.act", "desk.ai_call", "chat.use", "desk.ask", ...ACC_TEAM, "stock.intake", ...MAINT_CAPS, "maint.verify"], salesman: ["desk.inbox", "desk.leads.act", "desk.ai_call", "chat.use", "acc.own", "stock.intake"], maintenance: ["chat.use", ...MAINT_CAPS] };
 function applyMe(me) {
   if (DEMO) me.capabilities = [...new Set([...(me.capabilities || []), ...(DESK_DEMO_CAPS[me.user.role] || [])])];
   state.user = me.user;

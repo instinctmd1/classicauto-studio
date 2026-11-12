@@ -4,6 +4,8 @@
 import { ApiError } from "./api.js";
 import { accAllowedFor, accData, createAccStore } from "./desk-mock-acc.js";
 import { createIntakeStore, intakeFormat } from "./desk-mock-intake.js";
+import { createBankStore } from "./desk-mock-bank.js";
+import { createMaintStore } from "./desk-mock-maint.js";
 
 const BASE = "2026-10-05 11:20:00";              // the moment these answers describe; times are moved to "now" on load
 const ME = { salesman: "Kabir (demo)", manager: "Demo Manager", owner: "Partners (demo)", staff: "Demo Staff" };
@@ -268,7 +270,7 @@ const fire = (detail) => window.dispatchEvent(new CustomEvent("desk:feed", { det
  * role: salesman | manager | owner | staff. me: the signed-in user ({id, display_name, engine_name}).
  * load(path, params): optional source of recorded answers (the demo bundle); null or undefined means "use the built-in one".
  */
-export function createStore({ role, me, load }) {
+export function createStore({ role, roleId, me, load }) {
   const personaId = me?.id;
   const persona = { ...U[PERSONA[role]], id: personaId ?? U[PERSONA[role]].id };
   const myName = role === "salesman" ? (me?.engine_name || ME.salesman) : persona.name;
@@ -342,6 +344,8 @@ export function createStore({ role, me, load }) {
   }
   const acc = createAccStore({ role, myName, src: (p) => source(p), leads, fire, stamp });
   const intakes = createIntakeStore({ role, me, myName, now: (min = 0) => istStr(Date.now() + min * 60000) });   // car intake (desk-mock-intake.js)
+  const bank = createBankStore({ role, myName, now: () => istStr(Date.now()) });   // bank keywords (desk-mock-bank.js): made-up lines only
+  const maint = createMaintStore({ role: roleId || role, myName: roleId === "maintenance" ? (me?.display_name || "Vikram (demo)") : myName, load });   // maintenance (desk-mock-maint.js): made-up work on the stock list
   const askUploads = new Map();
   let nextUpload = 1;
   /** The sample chat, plus a filled NEW CAR format pasted with its 8 photos and the read-back card it gets (owner and manager). */
@@ -368,6 +372,8 @@ export function createStore({ role, me, load }) {
         return out;
       }
       if (/^intakes(\/|$)/.test(path)) { const a = intakes.get(path, params); if (a !== undefined) return clone(a); }
+      if (/^banktag(\/|$)/.test(path)) return clone(bank.get(path, params));
+      if (/^maint(\/|$)/.test(path)) return clone(await maint.get(path, params));
       if (/^acc\/|^desk\/leads\/\d+\/acc$/.test(path)) { await loadViews(); const a = await acc.get(path, params); if (a !== undefined) return a; }
       let m = path.match(/^desk\/leads\/(\d+)$/);
       if (m) { await loadViews(); rollClocks(); return detail(+m[1]); }
@@ -425,6 +431,8 @@ export function createStore({ role, me, load }) {
         throw new ApiError(404, "not_found", "Not part of the sample data.");
       }
       if (/^intakes(\/|$)/.test(path)) { const a = intakes.send(method, path, body); if (a !== undefined) return clone(a); }
+      if (/^banktag(\/|$)/.test(path)) return clone(bank.send(method, path, body));
+      if (/^maint(\/|$)/.test(path)) return clone(await maint.send(method, path, body));
       if (/^acc\/|^desk\/leads\/\d+\/(call-attempt|brief|reassign)$/.test(path)) {
         await loadViews();
         const lid = +((path.match(/^desk\/leads\/(\d+)\//) || [])[1] || 0);
@@ -514,6 +522,8 @@ export function createStore({ role, me, load }) {
         return u;
       }
       { const a = intakes.upload(path, fd); if (a !== undefined) return a; }
+      if (/^banktag(\/|$)/.test(path)) return clone(bank.upload(path, fd));
+      if (/^maint(\/|$)/.test(path)) return await maint.upload(path, fd);
       if (path === "ask/tasks") {
         const list = await taskList();
         const t = { id: `t_demo_${nextTask++}`, text: String(fd.get("text") || "").slice(0, 4000), status: "queued", result_text: null, result_url: null, created_at: now(), updated_at: now() };

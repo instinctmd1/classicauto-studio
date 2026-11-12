@@ -1,11 +1,11 @@
 // Classic Auto Desk service worker. Scope "./" so the same file works at / (live) and inside the demo folder.
 // Caches only the app shell (styles, scripts, fonts, icons). Never caches /api, the demo's data/ answers, non-GET or
 // cross-origin requests, and never serves a cached index.html: a sign-in redirect (Cloudflare Access) must reach the browser.
-const VERSION = "desk-2026-10-07.4";   // .4: the follow-up list page and its styles
+const VERSION = "desk-2026-11-12.2";   // .1: the maintenance pages and their styles; .2: inspection footer wraps at 375 px
 const CACHE = `ca-desk-${VERSION}`;
 const SHELL = [
   "offline.html", "js/theme-init.js", "js/offline.js", "icons/icon-192.png", "icons/badge-96.png",
-  "css/tokens.css", "css/app.css", "css/pages.css", "css/desk.css",
+  "css/tokens.css", "css/app.css", "css/pages.css", "css/desk.css", "css/maint.css",
   "fonts/bebas-neue-latin-400.woff2", "fonts/manrope-latin.woff2", "fonts/manrope-latin-ext.woff2",
   "img/logo.svg",
 ];
