@@ -14,7 +14,7 @@
   var LINK_ICON = '<svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></svg>';
 
   function esc(s) { return String(s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
-  function altFor(c) { return fmt.carLabel(c) + ", " + c.colour.toLowerCase() + ", front three-quarter"; }
+  function altFor(c) { return fmt.carLabel(c) + ", " + c.colour.toLowerCase() + ", front view"; }
   /* the static cars/<id>/ page is the canonical URL (SEO tags, share image): cards and every in-site link go there, so link equity and shared URLs stay on one address */
   function href(c) { return "cars/" + encodeURIComponent(c.id) + "/"; }
 
