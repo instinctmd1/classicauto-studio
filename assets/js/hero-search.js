@@ -1,19 +1,16 @@
-/* Homepage search bar -> deep-links into stock.html's existing filter
-   query params (?budget=&body=&fuel=), read by stock.js. */
+/* Home search bar -> deep-links into stock.html's filter query params (?band=&body=&fuel=), read by stock.js. */
 (function () {
   "use strict";
   var form = document.getElementById("heroSearchForm");
   if (!form) return;
   form.addEventListener("submit", function (e) {
     e.preventDefault();
-    var budget = document.getElementById("searchBudget").value;
-    var body = document.getElementById("searchBody").value;
-    var fuel = document.getElementById("searchFuel").value;
-    var params = new URLSearchParams();
-    if (budget && budget !== "all") params.set("budget", budget);
-    if (body && body !== "all") params.set("body", body);
-    if (fuel && fuel !== "all") params.set("fuel", fuel);
-    var qs = params.toString();
+    var p = new URLSearchParams();
+    [["searchBudget", "band"], ["searchBody", "body"], ["searchFuel", "fuel"]].forEach(function (x) {
+      var v = document.getElementById(x[0]).value;
+      if (v && v !== "all") p.set(x[1], v);
+    });
+    var qs = p.toString();
     window.location.href = "stock.html" + (qs ? "?" + qs : "");
   });
 })();

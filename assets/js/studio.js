@@ -1,458 +1,289 @@
 /* =========================================================================
-   Classic Auto — website-v5 — The Studio: a REAL road floor under a real
-   sky. Image-based lighting from a captured HDRI (RGBELoader +
-   PMREMGenerator), ACES tone mapping + sRGB output, a physically-based
-   car paint (MeshPhysicalMaterial with clearcoat), and an asphalt PBR
-   road with painted lane lines. See models/LICENSE.txt for every asset's
-   source and licence (all Poly Haven, CC0).
+   Classic Auto v6 - The Studio (SPEC 5.1): the closest honest thing to seeing the car in person.
 
-   One shared model (models/car.glb — Ferrari 458 Italia, CC BY 4.0, see
-   models/LICENSE.txt) is reused for every car; per-car distinction comes
-   from the paint swatch (driven by each car's `paint` hex) applied to
-   the "body" mesh's material only.
+   What it shows, in this order of preference, never a different car next to the listing's price:
+     Outside / Inside   the listed car's own photos, turned through like a 360 strip (studio-viewer/photos.js).
+                        Inside is the car's cabin photos (studio-viewer/photo-tags.js); untagged cars show one set.
+     3D model           only when a model of this make and model, or a scan of this very car, is listed in
+                        assets/models/cars3d.json or on the car (studio-viewer/models.js), with its credit.
+                        three.js and the model download only then (studio-viewer/studio3d.js).
+     Step inside        only when that model comes with a cabin model or a 360 cabin photo (studio-viewer/inside.js).
+   Full screen works the same on a phone and a laptop: the browser's own full screen where it exists, otherwise
+   (iPhone) the stage fills the window. Esc or the button closes it.
    ========================================================================= */
-import * as THREE from "three";
-import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
-import { DRACOLoader } from "three/addons/loaders/DRACOLoader.js";
-import { RGBELoader } from "three/addons/loaders/RGBELoader.js";
-import { OrbitControls } from "three/addons/controls/OrbitControls.js";
+import { createPhotoViewer } from "./studio-viewer/photos.js";
+import { PHOTO_TAGS } from "./studio-viewer/photo-tags.js";
+import { resolveModel, loadManifest } from "./studio-viewer/models.js";
 
-var MODEL_URL = "models/car.glb";
-var HDRI = { daylight: "assets/hdri/daylight.hdr", evening: "assets/hdri/evening.hdr" };
-var ROAD_TEX = {
-  diff: "assets/textures/asphalt/asphalt_diff.jpg",
-  nor: "assets/textures/asphalt/asphalt_nor.jpg",
-  rough: "assets/textures/asphalt/asphalt_rough.jpg"
-};
+var $ = function (id) { return document.getElementById(id); };
+var track = function (n, p) { if (window.CA_TRACK) window.CA_TRACK(n, p); };
 
 var params = new URLSearchParams(window.location.search);
 var id = params.get("id");
 var CARS_LIST = window.CARS || [];
-var car = CARS_LIST.filter(function (c) { return c.id === id; })[0];
+var car = CARS_LIST.filter(function (c) { return c.id === id; })[0] || (!id ? CARS_LIST[0] : null);
+var fmt = window.ClassicAuto;
+var SITE = window.CA_SITE || {};
+var reduced = !!(window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches);
+var mobile = !!(window.matchMedia && matchMedia("(max-width: 767px), (pointer: coarse)").matches);
 
-var shellEl = document.getElementById("studioShell");
-var notFoundEl = document.getElementById("studioNotFound");
+/* ------------------------------------------------------------------ side panel + CTAs */
+var PAINTS = [
+  { name: "Signal red", hex: "#e11b22", metal: false },
+  { name: "Obsidian black", hex: "#101010", metal: true },
+  { name: "Silver", hex: "#c9ccd0", metal: true },
+  { name: "Navy blue", hex: "#2b3990", metal: true },
+  { name: "Ivory", hex: "#f5f1e8", metal: false }
+];
+var WHEELS = [
+  { name: "Silver", hex: "#b9bcc3" },
+  { name: "Graphite", hex: "#3d4048" },
+  { name: "Black", hex: "#101113" }
+];
 
+function initSidePanel(car) {
+  var name = car.make + " " + car.model;
+  document.title = name + " in the Studio | Classic Auto";
+  $("studioTitle").textContent = car.year + " " + name;
+  $("studioBadge").textContent = fmt.bodyLabel(car.body) + (car.status === "SOLD" ? " · Sold" : "");
+  $("studioCarName").textContent = name;
+  var onReq = car.price_on_request || car.price == null;
+  $("studioPrice").textContent = onReq ? "Ask for price" : fmt.rupees(car.price);
+  $("studioMeta").innerHTML = [["Owner", car.owners], ["Driven", fmt.formatKm(car.kms)], ["Gearbox", fmt.transShort(car)], ["Insurance", fmt.insurance(car).short]]
+    .map(function (c) { return '<div class="chip"><span>' + c[0] + '</span><b>' + c[1] + '</b></div>'; }).join("");
+  $("studioEmi").textContent = onReq ? "-" : fmt.rupees(fmt.emi(car.price)) + "/mo*";
+  $("backToCarLink").href = "cars/" + encodeURIComponent(car.id) + "/";
+
+  var m = window.CA.messageCta();
+  var msgText = "Hi Classic Auto, I just looked at the " + fmt.carFullLabel(car) + " in the Studio. Is it available for a visit?";
+  var visitHref = "cars/" + encodeURIComponent(car.id) + "/#buy";
+  [["studioVisitBtn", "studioMsgBtn"], ["barVisitBtn", "barMsgBtn"], ["endVisitBtn", "endMsgBtn"]].forEach(function (pair) {
+    $(pair[0]).href = visitHref;
+    var b = $(pair[1]);
+    b.textContent = m.label; b.href = SITE.whatsapp ? window.CA.waLink(msgText) : m.href;
+    b.target = "_blank"; b.rel = "noopener"; b.setAttribute("data-ca-msg", msgText); b.setAttribute("data-via", m.via);
+  });
+  if (window.CA.setStickyMessage) window.CA.setStickyMessage(msgText);
+
+  /* paint previews (3D only): this car's own colour first, then brand colours */
+  var own = { name: "This car: " + car.colour, hex: car.paint, metal: /silver|grey|gray|graphite|metallic/i.test(car.colour) };
+  var list = [own].concat(PAINTS.filter(function (p) { return p.hex.toLowerCase() !== String(car.paint).toLowerCase(); }));
+  list.forEach(function (p, i) {
+    var b = document.createElement("button");
+    b.type = "button"; b.className = "paint-swatch"; b.style.background = p.hex;
+    b.setAttribute("aria-pressed", i === 0 ? "true" : "false");
+    b.setAttribute("aria-label", i === 0 ? p.name : "Preview paint: " + p.name);
+    b.title = p.name; b.setAttribute("data-hex", p.hex); b.setAttribute("data-metal", p.metal ? "1" : "0");
+    $("paintRow").appendChild(b);
+  });
+  WHEELS.forEach(function (w, i) {
+    var b = document.createElement("button");
+    b.type = "button"; b.className = "paint-swatch"; b.style.background = w.hex;
+    b.setAttribute("aria-pressed", i === 0 ? "true" : "false");
+    b.setAttribute("aria-label", "Wheel finish: " + w.name); b.title = w.name; b.setAttribute("data-hex", w.hex);
+    $("wheelRow").appendChild(b);
+  });
+}
+
+/* ------------------------------------------------------------------ photos */
+function photoSets(car) {
+  var all = (car.photos || []).slice();
+  var tag = PHOTO_TAGS[car.id];
+  if (!tag || tag.n !== all.length) return { outside: all };
+  var inside = all.filter(function (p) { return tag.inside.indexOf(p.split("/").pop()) >= 0; });
+  var outside = all.filter(function (p) { return inside.indexOf(p) < 0; });
+  return inside.length && outside.length ? { outside: outside, inside: inside } : { outside: all };
+}
+
+/* ------------------------------------------------------------------ the Studio */
+function initStudio(car) {
+  var bay = $("studioBay"), frame = $("studioFrame");
+  var sets = photoSets(car), hasInside = !!sets.inside;
+  var view = "outside", three = null, cabin = null, model = null;
+  var label = function (i, n, set) { return car.make + " " + car.model + ", " + (set === "inside" ? "inside" : hasInside ? "outside" : "photo") + ", " + (i + 1) + " of " + n + " (this car)"; };
+
+  window.__studio = { ready: false, get state() { return studioState(); } };
+
+  if (!sets.outside.length) {                                               // no photos yet: say so, keep the price panel
+    $("svPhotos").innerHTML = '<p class="sv-empty">Photos of this car are on their way. Message us and we will send a walk-around video.</p>';
+    ["svPrev", "svNext", "svHint", "svStrip"].forEach(function (k) { $(k).hidden = true; });
+    $("svViews").hidden = true; window.__studio.ready = true;
+    return;
+  }
+
+  $("svOutN").textContent = sets.outside.length;
+  if (hasInside) { $("svInN").textContent = sets.inside.length; document.querySelector('.sv-view[data-view="inside"]').hidden = false; }
+  else document.querySelector('.sv-view[data-view="outside"]').firstChild.textContent = "Photos ";
+
+  var photos = createPhotoViewer({
+    sets: sets, initial: "outside", stage: $("svPhotos"), img: $("svImg"), blur: $("svBlur"), count: $("svCount"), strip: $("svStrip"),
+    prev: $("svPrev"), next: $("svNext"), reduced: reduced, label: label,
+    onChange: function () { hideHint(); }
+  });
+  photos.ready.then(function () {
+    bay.classList.add("is-ready");
+    window.__studio.ready = true;
+    track("studio_open", { mode: "photos", model: "photos" });
+  });
+  var hintShown = false;
+  function hideHint() { if (hintShown) $("svHint").classList.add("is-gone"); }
+  setTimeout(function () { hintShown = true; }, 400);
+
+  /* ---- views ---- */
+  var viewBtns = document.querySelectorAll(".sv-view");
+  /* how many view tabs show (the CSS sets four of them two by two on a phone) */
+  function countTabs() { $("svViews").setAttribute("data-n", String([].filter.call(viewBtns, function (b) { return !b.hidden; }).length)); }
+  countTabs();
+  function setView(v) {
+    if (v === view) return;
+    view = v;
+    viewBtns.forEach(function (b) { b.setAttribute("aria-pressed", String(b.getAttribute("data-view") === v)); });
+    var isPhotos = v === "outside" || v === "inside", is3d = v === "3d", isCabin = v === "cabin";
+    bay.setAttribute("data-view", isPhotos ? "photos" : v);
+    $("svPhotos").hidden = !isPhotos; $("svPrev").hidden = !isPhotos; $("svNext").hidden = !isPhotos; $("svStrip").hidden = !isPhotos;
+    $("svCount").hidden = !isPhotos;
+    $("studioCanvas").hidden = !is3d; $("studioHotspots").hidden = !is3d; $("sv3d").hidden = !is3d; $("studioActions").hidden = !is3d;
+    $("insideCanvas").hidden = !isCabin;
+    if (!is3d) { $("studioCard").hidden = true; $("studioReticle").hidden = true; $("tourEnd").hidden = true; }
+    if (isPhotos) photos.setSet(v);
+    if (three) three.setActive(is3d);
+    if (cabin) cabin.setActive(isCabin);
+    if (isCabin && !cabin) openCabin();
+    paintUi(is3d);
+    badge();
+    $("studioHelp").textContent = isPhotos
+      ? "Drag sideways to turn through the photos, or use the arrows. Double-tap to zoom in. Every photo here is of this car."
+      : is3d ? "Drag to turn the model. Pinch to zoom. Pick a view below, or tap a red dot for details of the listed car."
+      : "Drag to look around the cabin. Pinch to zoom.";
+    track("studio_view", { view: v });
+  }
+  viewBtns.forEach(function (b) { b.addEventListener("click", function () { setView(b.getAttribute("data-view")); }); });
+
+  function badge() {
+    var b = $("studioModelBadge");
+    if (view === "3d" || view === "cabin") b.textContent = model.kind === "scan" ? "3D scan of this car" : "3D model: same model, not this car";
+    else b.textContent = view === "inside" ? "Inside this car" : "Photos of this car";
+    b.classList.toggle("is-model", view === "3d" || view === "cabin");
+  }
+  var paintOk = false, wheelsOk = false;
+  function paintUi(is3d) {
+    $("paintPanel").hidden = !(is3d && paintOk); $("finishPanel").hidden = !(is3d && paintOk);
+    $("wheelBlock").hidden = !wheelsOk;
+    $("scanNote").hidden = !(is3d && model && model.kind === "scan");
+  }
+
+  /* ---- 3D model, when one exists for this car ---- */
+  function credit() {
+    var el = $("studioCredit");
+    if (!model) { el.textContent = "Every photo in the Studio is of this car, from Classic Auto's own listing."; return; }
+    var lines = model.kind === "scan"
+      ? "The 3D view is a scan of this very car. The photos are of this car too."
+      : "The photos are of this car. The 3D model shows the same make and model (" + model.name + "), not this car: colour, trim and condition can differ. Details beside it are for the listed car. Classic Auto is an independent pre-owned dealer, not affiliated with " + car.make + ".";
+    el.textContent = lines + " ";
+    if (model.credit) {
+      var a = document.createElement(model.creditUrl ? "a" : "span");
+      a.textContent = "3D model: " + model.credit;
+      if (model.creditUrl) { a.href = model.creditUrl; a.target = "_blank"; a.rel = "noopener"; }
+      el.appendChild(a); el.appendChild(document.createTextNode(" ("));
+      /* CC BY asks for a link to the licence and a note of any changes: resized, relit, optional paint previews */
+      var lic = document.createElement(model.licence === "CC-BY-4.0" ? "a" : "span");
+      lic.textContent = model.licenceLabel;
+      if (model.licence === "CC-BY-4.0") { lic.href = "https://creativecommons.org/licenses/by/4.0/"; lic.target = "_blank"; lic.rel = "noopener license"; }
+      el.appendChild(lic);
+      el.appendChild(document.createTextNode(model.licence === "CC-BY-4.0" ? "; resized and relit here, paint previews are ours)." : ")."));
+    }
+  }
+  function open3d() {
+    if (three) return;
+    $("studioLoading").hidden = false;
+    import("./studio-viewer/studio3d.js").then(function (mod) {
+      three = mod.initStudio3D(car, model, {
+        $: $, bay: bay, canvas: $("studioCanvas"), loadingEl: $("studioLoading"), reduced: reduced, mobile: mobile, fmt: fmt, track: track, SITE: SITE,
+        setPaintUi: function (p, w) { paintOk = p; wheelsOk = w; paintUi(view === "3d"); },
+        onReady: function () { window.__studio.ready3d = true; },
+        onFail: function () { drop3d(); }
+      });
+      if (!three) return;
+      three.setActive(view === "3d");
+      Object.assign(window.__studio, { preset: three.preset, select: three.select, setMode: three.setMode, startTour: three.startTour, render: three.render, cameraPosition: three.cameraPosition, skip: three.skip });
+    }, function () { drop3d(); });
+  }
+  /* the model could not load: go back to the photos and take the 3D tabs away (never an empty box) */
+  function drop3d() {
+    model = null; three = null;
+    $("studioLoading").hidden = true;
+    document.querySelectorAll('.sv-view[data-view="3d"], .sv-view[data-view="cabin"]').forEach(function (b) { b.hidden = true; });
+    credit();
+    countTabs();
+    if (view === "3d" || view === "cabin") setView("outside");
+    window.__studio.ready3d = false;
+  }
+  function openCabin() {
+    import("./studio-viewer/inside.js").then(function (mod) {
+      cabin = mod.initInside($("insideCanvas"), bay, model, mobile);
+      cabin.setActive(view === "cabin");
+      cabin.ready.catch(function () { document.querySelector('.sv-view[data-view="cabin"]').hidden = true; countTabs(); if (view === "cabin") setView("inside" in sets ? "inside" : "outside"); });
+    }, function () {});
+  }
+  var glOk = false;
+  try { var probe = document.createElement("canvas"); glOk = !!(window.WebGLRenderingContext && (probe.getContext("webgl2") || probe.getContext("webgl"))); } catch (e) { glOk = false; }
+  loadManifest().then(function (manifest) {
+    model = resolveModel(car, manifest);
+    if (!model || !glOk) { model = null; credit(); return; }
+    document.querySelector('.sv-view[data-view="3d"]').hidden = false;
+    if (model.interior) document.querySelector('.sv-view[data-view="cabin"]').hidden = false;
+    countTabs();
+    credit();
+    /* start the model download now, so it is ready (or known to fail) by the time someone taps "3D model" */
+    open3d();
+    if (params.get("view") === "3d") setView("3d");
+  });
+
+  /* ---- full screen: the browser's own where it has one, otherwise the frame fills the window (iPhone) ---- */
+  var fullBtn = $("svFull"), cssFull = false;
+  function isFull() { return frame.classList.contains("is-full"); }
+  function enterFull() {
+    frame.classList.add("is-full"); document.documentElement.classList.add("sv-lock");
+    fullBtn.setAttribute("aria-pressed", "true"); fullBtn.setAttribute("aria-label", "Exit full screen");
+    var req = frame.requestFullscreen || frame.webkitRequestFullscreen;
+    cssFull = true;
+    if (req) { try { var p = req.call(frame); if (p && p.catch) p.catch(function () {}); } catch (e) { /* stays CSS full */ } }
+    track("studio_fullscreen", { view: view });
+    refresh();
+  }
+  function exitFull(fromEvent) {
+    if (!isFull()) return;
+    frame.classList.remove("is-full"); document.documentElement.classList.remove("sv-lock");
+    fullBtn.setAttribute("aria-pressed", "false"); fullBtn.setAttribute("aria-label", "Full screen");
+    cssFull = false;
+    var fe = document.fullscreenElement || document.webkitFullscreenElement;
+    if (!fromEvent && fe) { var ex = document.exitFullscreen || document.webkitExitFullscreen; try { var p = ex.call(document); if (p && p.catch) p.catch(function () {}); } catch (e) { /* ignore */ } }
+    refresh();
+  }
+  function refresh() { requestAnimationFrame(function () { if (three) three.resize(); window.dispatchEvent(new Event("resize")); }); }
+  fullBtn.addEventListener("click", function () { if (isFull()) exitFull(false); else enterFull(); });
+  ["fullscreenchange", "webkitfullscreenchange"].forEach(function (n) {
+    document.addEventListener(n, function () { if (!(document.fullscreenElement || document.webkitFullscreenElement) && isFull()) exitFull(true); });
+  });
+  document.addEventListener("keydown", function (e) { if (e.key === "Escape" && cssFull) exitFull(false); });
+
+  function studioState() {
+    var s = three ? three.state : {};
+    return Object.assign({}, s, { view: view, photos: photos ? photos.state : null, model: model ? model.kind : "photos", hasInside: hasInside, full: isFull() });
+  }
+  Object.assign(window.__studio, {
+    setView: setView,
+    spin: function (on) { if (view === "3d" && three) three.spin(on); else if (view === "cabin" && cabin) cabin.spin(on); else photos.spin(on); },
+    go: function (n) { photos.go(n); }
+  });
+  if (params.get("view") === "inside" && hasInside) setView("inside");
+}
+
+/* start */
 if (!car) {
-  if (shellEl) shellEl.style.display = "none";
-  if (notFoundEl) notFoundEl.style.display = "block";
+  $("studioShell").hidden = true;
+  $("studioNotFound").hidden = false;
 } else {
   initSidePanel(car);
   initStudio(car);
-}
-
-function initSidePanel(car) {
-  var fmt = window.ClassicAuto;
-  var bodyLabel = { hatchback: "Hatchback", sedan: "Sedan", suv: "SUV", "luxury-sedan": "Luxury Sedan" }[car.body] || car.body;
-  document.title = "Studio — " + fmt.carLabel(car) + " — Classic Auto";
-  document.getElementById("studioTitle").textContent = "Private 3D viewing bay — " + fmt.carLabel(car);
-  document.getElementById("studioBadge").textContent = bodyLabel + (car.status === "SOLD" ? " · Sold" : "");
-  document.getElementById("studioCarName").textContent = car.make + " " + car.model;
-  document.getElementById("studioPrice").textContent = fmt.money(car.price);
-  document.getElementById("studioMeta").innerHTML = "<span>" + car.year + "</span><span>" + fmt.formatKm(car.kms) + "</span><span>" + car.fuel + "</span>";
-  document.getElementById("studioEmi").textContent = fmt.rupees(fmt.emi(car.price)) + "/mo*";
-  document.getElementById("backToCarLink").href = "car.html?id=" + encodeURIComponent(car.id);
-  document.getElementById("studioVisitBtn").href = "car.html?id=" + encodeURIComponent(car.id) + "#visitSection";
-  document.getElementById("studioWaBtn").href = fmt.waLink("Hi, I just looked at the " + fmt.carFullLabel(car) + " in the Studio — is it available for a visit?");
-
-  var swatches = [car.paint, "#e11b22", "#101010", "#c9ccd0", "#2b3990", "#f5f1e8"];
-  var seen = {};
-  var paintRow = document.getElementById("paintRow");
-  swatches.forEach(function (hex, i) {
-    var key = hex.toLowerCase();
-    if (seen[key]) return;
-    seen[key] = true;
-    var btn = document.createElement("button");
-    btn.type = "button";
-    btn.className = "paint-swatch";
-    btn.style.background = hex;
-    btn.setAttribute("aria-pressed", i === 0 ? "true" : "false");
-    btn.setAttribute("aria-label", i === 0 ? "This car's colour, " + hex : "Preview paint " + hex);
-    btn.setAttribute("data-hex", hex);
-    paintRow.appendChild(btn);
-  });
-}
-
-function buildLaneLineTexture() {
-  var c = document.createElement("canvas");
-  c.width = 128; c.height = 512;
-  var ctx = c.getContext("2d");
-  ctx.fillStyle = "rgba(0,0,0,0)";
-  ctx.fillRect(0, 0, c.width, c.height);
-  ctx.fillStyle = "rgba(255,255,255,0.85)";
-  var dashH = 70, gap = 46;
-  for (var y = 0; y < c.height; y += dashH + gap) {
-    ctx.fillRect(c.width / 2 - 6, y, 12, dashH);
-  }
-  var tex = new THREE.CanvasTexture(c);
-  tex.wrapS = THREE.RepeatWrapping;
-  tex.wrapT = THREE.RepeatWrapping;
-  tex.repeat.set(1, 6);
-  return tex;
-}
-
-function buildContactShadowTexture() {
-  var c = document.createElement("canvas");
-  c.width = 256; c.height = 256;
-  var ctx = c.getContext("2d");
-  var g = ctx.createRadialGradient(128, 128, 10, 128, 128, 128);
-  g.addColorStop(0, "rgba(0,0,0,0.55)");
-  g.addColorStop(0.7, "rgba(0,0,0,0.25)");
-  g.addColorStop(1, "rgba(0,0,0,0)");
-  ctx.fillStyle = g;
-  ctx.fillRect(0, 0, 256, 256);
-  return new THREE.CanvasTexture(c);
-}
-
-function initStudio(car) {
-  var bay = document.getElementById("studioBay");
-  var loadingEl = document.getElementById("studioLoading");
-  var prefersReducedMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-
-  var scene = new THREE.Scene();
-
-  var camera = new THREE.PerspectiveCamera(35, bay.clientWidth / Math.max(bay.clientHeight, 1), 0.05, 100);
-
-  // preserveDrawingBuffer: true — a small cost, but it means the canvas can
-  // be screenshotted/pixel-sampled from outside the render loop (devtools,
-  // automated visual tests) instead of reading back an already-cleared buffer.
-  var renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
-  renderer.setSize(bay.clientWidth, bay.clientHeight);
-  renderer.outputColorSpace = THREE.SRGBColorSpace;
-  renderer.toneMapping = THREE.ACESFilmicToneMapping;
-  renderer.toneMappingExposure = 1.05;
-  renderer.shadowMap.enabled = true;
-  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-  bay.insertBefore(renderer.domElement, bay.firstChild);
-
-  var pmrem = new THREE.PMREMGenerator(renderer);
-  pmrem.compileEquirectangularShader();
-
-  // ---- Real road floor: asphalt PBR triplet + painted lane lines --------
-  var texLoader = new THREE.TextureLoader();
-  var diffMap = texLoader.load(ROAD_TEX.diff);
-  var norMap = texLoader.load(ROAD_TEX.nor);
-  var roughMap = texLoader.load(ROAD_TEX.rough);
-  [diffMap, norMap, roughMap].forEach(function (t) {
-    t.wrapS = t.wrapT = THREE.RepeatWrapping;
-    t.repeat.set(5, 5);
-    t.colorSpace = t === diffMap ? THREE.SRGBColorSpace : THREE.NoColorSpace;
-  });
-
-  var floorGeo = new THREE.CircleGeometry(11, 72);
-  var floorMat = new THREE.MeshStandardMaterial({
-    map: diffMap, normalMap: norMap, roughnessMap: roughMap,
-    roughness: 1, metalness: 0
-  });
-  var floor = new THREE.Mesh(floorGeo, floorMat);
-  floor.rotation.x = -Math.PI / 2;
-  floor.receiveShadow = true;
-  scene.add(floor);
-
-  var laneTex = buildLaneLineTexture();
-  var laneLines = new THREE.Mesh(
-    new THREE.PlaneGeometry(0.28, 9),
-    new THREE.MeshBasicMaterial({ map: laneTex, transparent: true, depthWrite: false })
-  );
-  laneLines.rotation.x = -Math.PI / 2;
-  laneLines.position.set(0, 0.003, -1.2);
-  scene.add(laneLines);
-
-  var ring = new THREE.Mesh(new THREE.RingGeometry(3.1, 3.14, 64), new THREE.MeshBasicMaterial({ color: 0xe11b22, transparent: true, opacity: 0.32, side: THREE.DoubleSide }));
-  ring.rotation.x = -Math.PI / 2;
-  ring.position.y = 0.004;
-  scene.add(ring);
-
-  var contactShadow = new THREE.Mesh(
-    new THREE.PlaneGeometry(4.6, 4.6),
-    new THREE.MeshBasicMaterial({ map: buildContactShadowTexture(), transparent: true, depthWrite: false })
-  );
-  contactShadow.rotation.x = -Math.PI / 2;
-  contactShadow.position.y = 0.005;
-  scene.add(contactShadow);
-
-  // ---- Lighting rig — a directional "sun" matched roughly to each HDRI,
-  // topped up by the HDRI itself via scene.environment for IBL. ------------
-  var ambient = new THREE.AmbientLight(0x8fa8c9, 0.25);
-  scene.add(ambient);
-
-  var key = new THREE.DirectionalLight(0xfff1d8, 2.1);
-  key.position.set(3.4, 5.6, 3.2);
-  key.castShadow = true;
-  key.shadow.mapSize.set(1536, 1536);
-  key.shadow.camera.near = 1;
-  key.shadow.camera.far = 16;
-  key.shadow.camera.left = -6; key.shadow.camera.right = 6;
-  key.shadow.camera.top = 6; key.shadow.camera.bottom = -6;
-  key.shadow.bias = -0.0015;
-  scene.add(key);
-
-  var rim = new THREE.DirectionalLight(0x8fd3ff, 1.1);
-  rim.position.set(-3.5, 3, -4.5);
-  scene.add(rim);
-
-  // ---- HDRI environments (Daylight / Evening) ----------------------------
-  var envMaps = {};
-  var rgbeLoader = new RGBELoader();
-  var lightingState = { evening: false, hdriReady: false };
-
-  function applyLighting() {
-    var envMap = lightingState.evening ? envMaps.evening : envMaps.daylight;
-    if (envMap) {
-      scene.environment = envMap;
-      scene.background = envMap;
-    }
-    if (lightingState.evening) {
-      ambient.intensity = 0.12;
-      key.intensity = 0.55;
-      key.color.set(0xffd8a0);
-      key.position.set(-4, 2.4, -3);
-      rim.intensity = 1.8;
-      rim.color.set(0x5aa8ff);
-      renderer.toneMappingExposure = 0.85;
-    } else {
-      ambient.intensity = 0.25;
-      key.intensity = 2.1;
-      key.color.set(0xfff1d8);
-      key.position.set(3.4, 5.6, 3.2);
-      rim.intensity = 1.1;
-      rim.color.set(0x8fd3ff);
-      renderer.toneMappingExposure = 1.05;
-    }
-  }
-
-  function loadHDR(name, url) {
-    return new Promise(function (resolve) {
-      rgbeLoader.load(url, function (tex) {
-        var envMap = pmrem.fromEquirectangular(tex).texture;
-        tex.dispose();
-        envMaps[name] = envMap;
-        resolve();
-      }, undefined, function () { resolve(); }); // never block the scene on a failed HDRI fetch
-    });
-  }
-  Promise.all([loadHDR("daylight", HDRI.daylight), loadHDR("evening", HDRI.evening)]).then(function () {
-    lightingState.hdriReady = true;
-    applyLighting();
-  });
-  // Fallback flat background so the bay isn't black while the ~1.4MB HDRIs stream in.
-  scene.background = new THREE.Color(0x0a1220);
-  applyLighting();
-
-  // ---- Controls ------------------------------------------------------------
-  var controls = new OrbitControls(camera, renderer.domElement);
-  controls.enableDamping = true;      // gives the orbit drag its inertial "glide"
-  controls.dampingFactor = 0.08;
-  controls.minDistance = 1.2;
-  controls.maxDistance = 9;
-  controls.maxPolarAngle = Math.PI / 2 - 0.02;
-  controls.target.set(0, 0.55, 0);
-
-  var CAM_PRESETS = {
-    overview: { pos: [3.2, 2.0, 3.7], look: [0, 0.55, 0] },
-    front: { pos: [0.01, 1.05, 4.3], look: [0, 0.6, 0] },
-    profile: { pos: [4.5, 1.05, 0.01], look: [0, 0.6, 0] },
-    rear: { pos: [0.01, 1.05, -4.3], look: [0, 0.6, 0] },
-    above: { pos: [0.01, 5.6, 0.02], look: [0, 0, 0] },
-    // Measured against this model's actual "steering_wheel"/"leather" node
-    // positions (~x -0.25, y 0.56-0.6, z -0.24) — see the temp debug block
-    // in the model-load callback below. Seated slightly behind/above the
-    // wheel, looking forward (+z) through the windscreen.
-    interior: { pos: [-0.15, 0.74, -0.18], look: [-0.1, 0.58, 3] }
-  };
-  camera.position.set.apply(camera.position, CAM_PRESETS.overview.pos);
-  camera.lookAt(new THREE.Vector3(0, 0.55, 0));
-
-  var camTween = null;
-  function flyTo(name) {
-    var preset = CAM_PRESETS[name];
-    if (!preset) return;
-    var fromPos = camera.position.clone();
-    var fromTarget = controls.target.clone();
-    var toPos = new THREE.Vector3(preset.pos[0], preset.pos[1], preset.pos[2]);
-    var toTarget = new THREE.Vector3(preset.look[0], preset.look[1], preset.look[2]);
-    var duration = prefersReducedMotion ? 1 : 700;
-    var start = performance.now();
-    controls.enabled = false;
-    controls.minDistance = name === "interior" ? 0.02 : 1.2;
-    camTween = function (now) {
-      var t = Math.min(1, (now - start) / duration);
-      var e = 1 - Math.pow(1 - t, 3); // ease-out cubic
-      camera.position.lerpVectors(fromPos, toPos, e);
-      controls.target.lerpVectors(fromTarget, toTarget, e);
-      if (t >= 1) { camTween = null; controls.enabled = true; }
-    };
-  }
-
-  document.querySelectorAll("[data-cam]").forEach(function (btn) {
-    btn.addEventListener("click", function () {
-      document.querySelectorAll("[data-cam]").forEach(function (b) { b.setAttribute("aria-pressed", "false"); });
-      btn.setAttribute("aria-pressed", "true");
-      // Pause auto-rotate so a chosen preset (e.g. Profile) reliably shows
-      // that actual angle instead of whatever angle the car has spun to.
-      autoRotate = false;
-      autoRotateBtn.setAttribute("aria-pressed", "false");
-      flyTo(btn.getAttribute("data-cam"));
-    });
-  });
-
-  // ---- Auto-rotate ------------------------------------------------------
-  var carGroup = new THREE.Group();
-  scene.add(carGroup);
-  var autoRotate = !prefersReducedMotion;
-  var autoRotateBtn = document.getElementById("autoRotateBtn");
-  autoRotateBtn.setAttribute("aria-pressed", String(autoRotate));
-  autoRotateBtn.addEventListener("click", function () {
-    autoRotate = !autoRotate;
-    autoRotateBtn.setAttribute("aria-pressed", String(autoRotate));
-  });
-
-  // ---- Evening/Daylight toggle -------------------------------------------
-  var lightBtn = document.getElementById("lightToggleBtn");
-  lightBtn.addEventListener("click", function () {
-    lightingState.evening = !lightingState.evening;
-    lightBtn.setAttribute("aria-pressed", String(lightingState.evening));
-    lightBtn.textContent = lightingState.evening ? "Daylight" : "Evening";
-    applyLighting();
-  });
-
-  // ---- Load model ---------------------------------------------------------
-  var bodyMaterial = null;
-  var currentFinish = "gloss";
-  // The three.js example car.glb uses KHR_draco_mesh_compression — a
-  // DRACOLoader (pointed at three.js's own hosted decoder) is required or
-  // GLTFLoader fails to parse the (Draco-compressed) mesh geometry.
-  var dracoLoader = new DRACOLoader();
-  dracoLoader.setDecoderPath("https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/libs/draco/");
-  var loader = new GLTFLoader();
-  loader.setDRACOLoader(dracoLoader);
-  loader.load(
-    MODEL_URL,
-    function (gltf) {
-      var root = gltf.scene;
-      // three.js's own "webgl_materials_car" example car: the mesh named
-      // "body" carries the paintable "Body_Color" material. Everything
-      // else (glass, wheels/rims, interior trim) keeps its own material.
-      root.traverse(function (node) {
-        if (node.isMesh) {
-          node.castShadow = true;
-          node.receiveShadow = false;
-          if (node.name === "body" && node.material) {
-            // Upgrade the flat Standard material to a physically-based
-            // clearcoat paint so it actually reads as automotive paint
-            // under the HDRI (brief: clearcoat 1, clearcoatRoughness 0.03,
-            // metalness 0.55, roughness 0.35).
-            var old = node.material;
-            var physical = new THREE.MeshPhysicalMaterial({
-              color: old.color ? old.color.clone() : new THREE.Color(car.paint),
-              metalness: 0.55, roughness: 0.35,
-              clearcoat: 1, clearcoatRoughness: 0.03
-            });
-            node.material = physical;
-            bodyMaterial = physical;
-          }
-        }
-      });
-
-      // Normalise scale/position: fit into a ~3.4-unit footprint, sit on floor.
-      var box = new THREE.Box3().setFromObject(root);
-      var size = new THREE.Vector3();
-      box.getSize(size);
-      var maxDim = Math.max(size.x, size.y, size.z) || 1;
-      var scale = 3.2 / maxDim;
-      root.scale.setScalar(scale);
-
-      box.setFromObject(root);
-      var center = new THREE.Vector3();
-      box.getCenter(center);
-      root.position.x -= center.x;
-      root.position.z -= center.z;
-      root.position.y -= box.min.y;
-
-      carGroup.add(root);
-      if (bodyMaterial) applyPaint(car.paint);
-
-      loadingEl.classList.add("is-hidden");
-    },
-    undefined,
-    function () {
-      loadingEl.innerHTML = "<span>Couldn't load the 3D model — please try again shortly.</span>";
-    }
-  );
-
-  function applyPaint(hex) {
-    if (!bodyMaterial) return;
-    bodyMaterial.color.set(hex);
-  }
-
-  document.getElementById("paintRow").addEventListener("click", function (e) {
-    var btn = e.target.closest(".paint-swatch");
-    if (!btn) return;
-    document.querySelectorAll(".paint-swatch").forEach(function (b) { b.setAttribute("aria-pressed", "false"); });
-    btn.setAttribute("aria-pressed", "true");
-    applyPaint(btn.getAttribute("data-hex"));
-    var picker = document.getElementById("paintCustom");
-    if (picker) picker.value = btn.getAttribute("data-hex");
-  });
-
-  // Native <input type="color"> — full custom colour, alongside the swatches.
-  var paintCustom = document.getElementById("paintCustom");
-  if (paintCustom) {
-    paintCustom.addEventListener("input", function () {
-      document.querySelectorAll(".paint-swatch").forEach(function (b) { b.setAttribute("aria-pressed", "false"); });
-      applyPaint(paintCustom.value);
-    });
-  }
-
-  function setFinish(finish) {
-    currentFinish = finish;
-    if (!bodyMaterial) return;
-    if (finish === "matte") {
-      bodyMaterial.roughness = 0.85; bodyMaterial.clearcoat = 0; bodyMaterial.metalness = 0.2;
-    } else {
-      bodyMaterial.roughness = 0.35; bodyMaterial.clearcoat = 1; bodyMaterial.clearcoatRoughness = 0.03; bodyMaterial.metalness = 0.55;
-    }
-  }
-  document.querySelectorAll("[data-finish]").forEach(function (btn) {
-    btn.addEventListener("click", function () {
-      document.querySelectorAll("[data-finish]").forEach(function (b) { b.setAttribute("aria-pressed", "false"); });
-      btn.setAttribute("aria-pressed", "true");
-      setFinish(btn.getAttribute("data-finish"));
-    });
-  });
-
-  // ---- Resize -------------------------------------------------------------
-  function onResize() {
-    var w = bay.clientWidth, h = bay.clientHeight;
-    if (!w || !h) return;
-    camera.aspect = w / h;
-    camera.updateProjectionMatrix();
-    renderer.setSize(w, h);
-  }
-  if (window.ResizeObserver) { new ResizeObserver(onResize).observe(bay); }
-  window.addEventListener("resize", onResize);
-
-  // ---- Render loop ----------------------------------------------------------
-  function animate(now) {
-    requestAnimationFrame(animate);
-    if (camTween) camTween(now);
-    if (autoRotate && !camTween) carGroup.rotation.y += 0.0035;
-    controls.update();
-    renderer.render(scene, camera);
-  }
-  requestAnimationFrame(animate);
-
-  // Exposed for the automated QA pass (Playwright) to confirm HDRI state
-  // without needing to read pixels, and to snap the turntable back to a
-  // canonical 0° heading before capturing the "Studio preview" card
-  // renders (scripts/gen-studio-previews) so front/profile/rear line up
-  // consistently across every car.
-  window.__studioState = {
-    get hdriReady() { return lightingState.hdriReady; },
-    get evening() { return lightingState.evening; },
-    get bodyColorHex() { return bodyMaterial ? "#" + bodyMaterial.color.getHexString() : null; },
-    resetHeading: function () { carGroup.rotation.y = 0; },
-    stopAutoRotate: function () { autoRotate = false; autoRotateBtn.setAttribute("aria-pressed", "false"); }
-  };
 }

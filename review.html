@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en-IN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Review Classic Auto on Google</title>
+<meta name="description" content="Bought a car from Classic Auto, Malad West? One tap opens Google's review box for our showroom.">
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#0A1633">
+<link rel="icon" type="image/png" sizes="32x32" href="assets/brand/favicon-32.png">
+<link rel="icon" type="image/png" sizes="48x48" href="assets/brand/favicon-48.png">
+<link rel="apple-touch-icon" href="assets/brand/apple-touch-icon.png">
+<link rel="preload" href="assets/fonts/bebas-neue-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="assets/fonts/manrope-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="assets/vendor/lenis/lenis.css">
+<link rel="stylesheet" href="assets/css/style.css">
+<link rel="stylesheet" href="assets/css/review-ask.css" id="raCss">
+<script>(function(){var d=document.documentElement,r=false;try{r=matchMedia("(prefers-reduced-motion: reduce)").matches}catch(e){}d.classList.add(r?"reduce":"motion");setTimeout(function(){if(!(window.CA_MOTION&&window.CA_MOTION.ready))d.classList.remove("motion")},5000)})();</script>
+<script src="assets/js/config.js"></script>
+<script src="assets/js/track.js" defer></script>
+</head>
+<body data-page="review">
+<script src="assets/js/chrome.js"></script>
+<div class="progress-rail" aria-hidden="true"><i></i></div>
+
+<!-- The link we send every buyer after delivery (and the QR at the counter). It only opens Google's own review box:
+     no rating question first, no filtering, nothing offered in return (Google's review rules, CCPA 2022 guidelines). -->
+<main id="main">
+  <section class="page-head">
+    <div class="container">
+      <h1 data-hero-in>Thank you for buying from us</h1>
+      <p class="lead" data-hero-in>Classic Auto, Prabhu Plaza, Malad West. Since 1974.</p>
+    </div>
+  </section>
+
+  <section class="section section--tight">
+    <div class="container">
+      <div data-review-ask="page"></div>
+      <p class="empty-note" id="raNoLink" hidden>Our Google review link is being set up. Please search "Classic Auto Malad West" on Google Maps and tap Write a review.</p>
+      <p style="margin-top:32px;color:var(--ink-2);">Need help with your car or its papers? That is separate from a review: <a class="link-arrow" href="visit.html" data-cta="visit" data-at="reviews">contact the showroom</a></p>
+    </div>
+  </section>
+</main>
+
+<div id="siteFooter"></div>
+<script>if (!(window.CA_SITE && window.CA_SITE.google_review_url)) document.getElementById("raNoLink").hidden = false;</script>
+<script src="assets/vendor/gsap/gsap.min.js" defer></script>
+<script src="assets/vendor/gsap/ScrollTrigger.min.js" defer></script>
+<script src="assets/vendor/lenis/lenis.min.js" defer></script>
+<script src="assets/js/cars.js" defer></script>
+<script src="assets/js/main.js" defer></script>
+<script src="assets/js/motion.js" defer></script>
+<script src="assets/js/forms.js" defer></script>
+<script src="assets/js/anita.js" defer></script>
+</body>
+</html>

@@ -1,41 +1,57 @@
-/* Sell page — validates then submits via the shared lead contract. */
+/* Sell / exchange page: validates, then submits via the shared lead contract.
+   Intent SELL or EXCHANGE is encoded in the first line of `message`. */
 (function () {
   "use strict";
   var form = document.getElementById("sellForm");
-  if (!form || !window.ClassicAutoLeads) return;
-  var statusEl = document.getElementById("sellStatus");
+  if (!form || !window.ClassicAutoLeads || !window.CAForms) return;
+  var F = window.CAForms, fmt = window.ClassicAuto;
+  var statusEl = document.getElementById("slStatus");
+  var $ = function (id) { return document.getElementById(id); };
+
+  form.querySelector("[data-extras]").innerHTML = F.extrasHTML("sl");
+
+  var target = $("slTarget");
+  if (typeof CARS !== "undefined") CARS.filter(function (c) { return c.status !== "SOLD"; }).forEach(function (c) {
+    var o = document.createElement("option"); o.value = c.id; o.textContent = fmt.carFullLabel(c); target.appendChild(o);
+  });
+
+  var mode = "sell";
+  var submitBtn = $("slSubmit");
+  function setMode(m) {
+    mode = m;
+    $("slTargetWrap").hidden = m !== "exchange";
+    submitBtn.textContent = m === "exchange" ? "Send exchange details" : "Send my car details";
+    submitBtn.setAttribute("data-cta", m === "exchange" ? "exchange" : "sell");
+    var radio = form.querySelector('input[name="slMode"][value="' + m + '"]'); if (radio) radio.checked = true;
+  }
+  form.addEventListener("change", function (e) { if (e.target.name === "slMode") setMode(e.target.value); });
+  var q = new URLSearchParams(window.location.search);
+  if (q.get("mode") === "exchange" || window.location.hash === "#exchange") setMode("exchange");
+  if (q.get("car")) { target.value = q.get("car"); if (target.value) setMode("exchange"); }
+
+  var rules = {
+    slMake: F.req("Enter the make."), slModel: F.req("Enter the model."),
+    slYear: function (el) { var y = +el.value, max = new Date().getFullYear() + 1; return y >= 1990 && y <= max ? true : "Enter a year between 1990 and " + max + "."; },
+    slKm: function (el) { return el.value !== "" && +el.value >= 0 ? true : "Enter the kilometres."; },
+    slName: F.req("Enter your name."), slPhone: F.phone
+  };
+  F.watch(form, rules);
+  var started = false;
+  form.addEventListener("focusin", function () { if (!started) { started = true; if (window.CA_TRACK) window.CA_TRACK("form_start", { form: mode === "exchange" ? "exchange" : "sell" }); } });
 
   form.addEventListener("submit", function (e) {
     e.preventDefault();
-    var fields = ["sellMake", "sellYear", "sellKm", "sellPrice", "sellName", "sellPhone"];
-    var ok = true;
-    var values = {};
-    fields.forEach(function (id) {
-      var input = document.getElementById(id);
-      values[id] = input.value.trim();
-      var fieldWrap = input.closest(".field");
-      if (!values[id]) { fieldWrap.classList.add("has-error"); ok = false; }
-      else fieldWrap.classList.remove("has-error");
-    });
-    if (!ok) {
-      statusEl.textContent = "Please fill in every required field.";
-      statusEl.className = "form-status is-error";
-      return;
-    }
-
-    var notes = document.getElementById("sellNotes").value.trim();
-    statusEl.textContent = "Sending your details…";
-    statusEl.className = "form-status";
-
-    window.ClassicAutoLeads.submitLead({
-      name: values.sellName, phone: values.sellPhone,
-      car: values.sellMake + " (" + values.sellYear + ")",
-      message: "Sell/exchange enquiry — KM: " + values.sellKm + ", Expected price: ₹" + values.sellPrice + " Lakh." + (notes ? (" Notes: " + notes) : ""),
-      budget: "", visit_at: "", page: "sell.html"
-    }).then(function (res) {
-      statusEl.textContent = window.ClassicAutoLeads.doneText(res, "Thanks! We'll review your car and reply on WhatsApp.");
-      statusEl.className = "form-status is-ok";
-      form.reset();
-    });
+    if (!F.validateAll(form, rules)) { F.status(statusEl, "Check the highlighted fields and try again.", "error"); return; }
+    var carDesc = $("slMake").value.trim() + " " + $("slModel").value.trim() + " " + $("slYear").value;
+    var parts = [["Your car", carDesc], ["Driven", Number($("slKm").value).toLocaleString("en-IN") + " km"]];
+    if ($("slRto").value.trim()) parts.push(["RTO", $("slRto").value.trim().toUpperCase()]);
+    if ($("slPrice").value) parts.push(["Expected", "₹" + $("slPrice").value + " lakh"]);
+    var tgt = target.value && typeof CARS !== "undefined" ? CARS.filter(function (c) { return c.id === target.value; })[0] : null;
+    if (mode === "exchange" && tgt) parts.push(["Exchange for", fmt.carLeadLabel(tgt)]);
+    var msg = window.CA.buildMessage({ intent: mode === "exchange" ? "EXCHANGE" : "SELL", parts: parts, marketing: $("slMarketing").checked, text: $("slNotes").value.trim() });
+    F.send(form, statusEl, {
+      name: $("slName").value.trim(), phone: $("slPhone").value.trim(), car: carDesc, message: msg,
+      budget: tgt && tgt.price ? tgt.price : "", visit_at: "", page: "sell.html" + (mode === "exchange" ? "#exchange" : "")
+    }, "Sent. We'll message you to arrange an inspection.").then(function (r) { if (r && r.ok) { form.reset(); setMode("sell"); started = false; } });
   });
 })();
