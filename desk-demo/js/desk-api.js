@@ -5,6 +5,7 @@
 // desk-mock.js with the same JSON shapes; actions change an in-memory copy only and toast "Demo: nothing is saved".
 import * as api from "./api.js";
 import { ApiError, DEMO } from "./api.js";
+export { OFFLINE_MSG } from "./api.js";
 import { state } from "./state.js";
 import { createStore } from "./desk-mock.js";
 import { toast } from "./ui.js";

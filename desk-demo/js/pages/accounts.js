@@ -18,7 +18,7 @@ export async function render(ctx) {
   const tab = ctx.query.get("tab") || "cash";
   const tabs = [{ id: "cash", label: "Cashbook" }, { id: "owed", label: "Owed and payable" }, { id: "recon", label: "Bank reconciliation" }, { id: "tax", label: "GST and TCS" }];
   mount(ctx.root, pageHead({ title: "Accounts", sub: `${esc(periodLabel(p))}. Every rupee in and out, by cash, bank, UPI and cheque.`,
-    actions: can("accounts.manage") ? `<button class="btn primary" type="button" id="add-entry">${icon("plus")}Add ledger entry</button>` : "" })
+    actions: can("accounts.manage") ? `<button class="btn" type="button" id="cash-up">${icon("upload")}Upload cash Excel</button><button class="btn primary" type="button" id="add-entry">${icon("plus")}Add ledger entry</button>` : "" })
     + `<section class="card flush rise">${tabsHtml(tabs, tab, "Accounts sections")}<div id="pane"></div></section>`);
   const pane = ctx.root.querySelector("#pane");
   const show = async (t) => {
@@ -33,6 +33,7 @@ export async function render(ctx) {
   bindTabs(ctx.root, (t) => { history.replaceState(null, "", `#/accounts?tab=${t}`); show(t); });
   await show(tab);
   ctx.root.querySelector("#add-entry")?.addEventListener("click", () => entryForm(banks.data, ctx));
+  ctx.root.querySelector("#cash-up")?.addEventListener("click", () => cashUpload(ctx));
 }
 
 const cashParams = (p) => (/^\d{4}-\d{2}$/.test(p) ? { period: p } : { period: p });
@@ -74,6 +75,59 @@ function entryForm(banks, ctx) {
       { name: "counterparty", label: "Who", type: "text", full: true }, { name: "reference", label: "Reference", type: "text" }, { name: "description", label: "Note", type: "text" },
     ],
     onSubmit: async (v) => { const r = await api.post("accounts/ledger", { ...v, bank_account_id: v.bank_account_id ? +v.bank_account_id : null }); if (r.cash_limit_flag) toast("Saved, and flagged: cash receipts of ₹2 L or more need a closer look.", "err"); ctx.refresh(); } });
+}
+
+// ------------------------------------------------------------------ the accountant's own cash book (Excel or CSV)
+// Check the file first (a dry run: nothing is saved), then "Add N entries". Rows added before are skipped, so the same
+// file twice adds nothing.
+const LEDGER_NAME = Object.fromEntries(LEDGER_CATS);
+function cashUpload(ctx) {
+  let file = null, checked = null;
+  const d = openDrawer({ title: "Upload cash Excel", sub: "Your own cash book: every row is cash that came in or went out.", wide: true,
+    body: `<div class="dz">${icon("upload", "")}<b>Choose the cash book file</b><span>Excel (.xlsx) or CSV, up to 15 MB. Columns: Date, Description or Particulars, and Received and Paid (or Money in and Money out, Debit and Credit, or one Amount with a minus for money out).</span><input class="input" id="cash-f" type="file" accept=".xlsx,.xls,.csv"></div><div id="cash-res" class="sec" aria-live="polite"></div>`,
+    foot: `<button class="btn" type="button" data-x>Cancel</button><button class="btn" type="button" id="cash-check" disabled>${icon("search")}Check the file</button><button class="btn primary" type="button" id="cash-add" disabled>Add entries</button>` });
+  const el = (q) => d.el.querySelector(q);
+  const res = el("#cash-res"), bCheck = el("#cash-check"), bAdd = el("#cash-add");
+  const input = el("#cash-f");
+  const send = (dry, f) => { const fd = new FormData(); fd.append("file", f); if (dry) fd.append("dry_run", "1"); return api.upload("accounts/cash-upload", fd); };
+  const busy = async (fn) => { input.disabled = true; try { return await fn(); } finally { input.disabled = false; } };
+  el("[data-x]").addEventListener("click", () => d.close());
+  el("#cash-f").addEventListener("change", (e) => { file = e.target.files[0] || null; checked = null; res.innerHTML = ""; bCheck.disabled = !file; bAdd.disabled = true; bAdd.textContent = "Add entries"; });
+  bCheck.addEventListener("click", async () => {
+    const f = file;
+    const r = await busy(() => save(bCheck, () => send(true, f), { ok: "" }));
+    if (!r || !d.el.isConnected || f !== file) return;             // another file was picked meanwhile: check that one
+    checked = { r, f }; res.innerHTML = cashPreviewHtml(r);
+    bAdd.disabled = !r.new; bAdd.textContent = r.new ? `Add ${num(r.new)} ${r.new === 1 ? "entry" : "entries"}` : "Nothing new to add";
+  });
+  bAdd.addEventListener("click", async () => {
+    if (!checked || !checked.r.new || checked.f !== file) return;  // only ever the file that was checked
+    const f = checked.f;
+    const r = await busy(() => save(bAdd, () => send(false, f), { ok: "" }));
+    if (!r) return;
+    toast(`${num(r.expenses_added)} ${r.expenses_added === 1 ? "expense" : "expenses"} and ${num(r.ledger_added)} cashbook ${r.ledger_added === 1 ? "entry" : "entries"} added${r.duplicates ? `, ${num(r.duplicates)} were already in` : ""}.${r.cash_limit_flags ? " Large cash receipts are flagged in the cashbook." : ""}`, "ok");
+    d.close(); ctx.refresh();
+  });
+}
+function cashPreviewHtml(r) {
+  const E = r.expenses || { count: 0, amount: 0, categories: {} }, B = r.cashbook || { count: 0, in: 0, out: 0, categories: {} };
+  const kvs = (o, name) => Object.entries(o || {}).sort((a, b) => b[1] - a[1]).map(([c, n]) => `<div class="kv"><span>${esc(name(c))}</span><b>${num(n)}</b></div>`).join("");
+  const cats = (E.count ? `<div class="sec"><div class="mini-h">Expenses, by category</div>${kvs(E.categories, catLabel)}</div>` : "")
+    + (B.count ? `<div class="sec"><div class="mini-h">Cashbook entries, by category</div>${kvs(B.categories, (c) => LEDGER_NAME[c] || catLabel(c))}</div>` : "");
+  const rows = (r.preview || []).slice(0, 60);
+  return `${r.cash_limit_flags ? `<div class="callout warn" role="alert">${icon("alert", "")}<div><b>${num(r.cash_limit_flags)} cash ${r.cash_limit_flags === 1 ? "receipt is" : "receipts are"} at or over ${esc(inr(r.cash_receipt_limit))}</b><p>They are added, and flagged in the cashbook for a closer look.</p></div></div>` : ""}
+    <div class="callout${r.cash_limit_flags ? " sec" : ""}">${icon("info", "")}<div><b>${num(E.count)} ${E.count === 1 ? "expense" : "expenses"} (${esc(inr(E.amount))}) · ${num(B.count)} cashbook ${B.count === 1 ? "entry" : "entries"} (${esc(inr(B.in))} in / ${esc(inr(B.out))} out)</b><p>Rent, salaries and other overheads go to Expenses as paid in cash, so they count in the P&amp;L${E.count && !E.approved ? " once the owner approves them (they wait in Expenses)" : ""}. Everything else goes to the cashbook.</p></div></div>
+    <div class="sec"><div class="mini-h">What we found</div>
+      <div class="kv"><span>Entries read</span><b>${num(r.lines)} of ${num(r.rows)} rows</b></div>
+      <div class="kv"><span>New, to be added</span><b>${num(r.new)}</b></div>
+      <div class="kv"><span>Already added before</span><b>${num(r.duplicates)}</b></div>
+      <div class="kv"><span>Rows that could not be read</span><b>${num(r.skipped)}</b></div>
+      <div class="kv"><span>Money in (new entries)</span><b class="ledger-in">${esc(inr(r.money_in))}</b></div>
+      <div class="kv"><span>Money out (new entries)</span><b class="ledger-out">${esc(inr(r.money_out))}</b></div>
+      <div class="kv"><span>Dates</span><b>${esc(dateFmt(r.date_from, false))} to ${esc(dateFmt(r.date_to, false))}</b></div></div>
+    ${cats}
+    <div class="sec"><div class="mini-h">First entries</div><div class="scroll-x"><table class="tbl left"><thead><tr><th>Date</th><th>Details</th><th class="r">In</th><th class="r">Out</th></tr></thead><tbody>${rows.map((x) => `<tr><td>${dateFmt(x.date, false)}</td><td>${esc(x.description || x.reference || "—")}<span class="sub">${x.destination === "expense" ? `Expense · ${esc(catLabel(x.category))}` : `Cashbook · ${esc(LEDGER_NAME[x.category] || catLabel(x.category))}`}${x.keyword ? " · " + esc(x.keyword) : ""}${x.duplicate ? " · already added" : ""}</span></td><td class="r ledger-in">${x.direction === "in" ? inr(x.amount) : ""}</td><td class="r ledger-out">${x.direction === "out" ? inr(x.amount) : ""}</td></tr>`).join("")}</tbody></table></div>
+    ${(r.preview || []).length > rows.length ? `<p class="note">${icon("info", "")}Showing ${num(rows.length)} of ${num(r.lines)}.</p>` : ""}</div>`;
 }
 
 // ------------------------------------------------------------------ owed and payable

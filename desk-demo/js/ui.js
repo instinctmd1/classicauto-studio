@@ -19,7 +19,7 @@ window.addEventListener("ca:toast", (e) => toast(e.detail.msg, e.detail.kind));
 
 /** Run a mutation with a busy button and consistent feedback. Returns the result, or undefined on failure. */
 export async function save(btn, fn, { ok = "Saved" } = {}) {
-  const label = btn ? btn.innerHTML : "";
+  const label = btn ? (window.caI18n ? window.caI18n.html(btn) : btn.innerHTML) : "";
   if (btn) { btn.disabled = true; btn.innerHTML = `<span class="spin"></span>${btn.textContent.trim() ? " " + esc(btn.textContent.trim()) : ""}`; }
   try {
     const r = await fn();
@@ -189,13 +189,17 @@ export function openMenu(anchor, items, { align = "left" } = {}) {
     m.appendChild(b);
   });
   document.getElementById("overlay").appendChild(m);
-  const r = anchor.getBoundingClientRect();
-  const mw = m.offsetWidth, mh = m.offsetHeight;
-  let left = align === "right" ? r.right - mw : r.left;
-  left = Math.max(8, Math.min(left, window.innerWidth - mw - 8));
-  let top = r.bottom + 6;
-  if (top + mh > window.innerHeight - 8) top = Math.max(8, r.top - mh - 6);
-  m.style.left = left + "px"; m.style.top = top + "px";
+  const place = () => {
+    const r = anchor.getBoundingClientRect();
+    const mw = m.offsetWidth, mh = m.offsetHeight;
+    let left = align === "right" ? r.right - mw : r.left;
+    left = Math.max(8, Math.min(left, window.innerWidth - mw - 8));
+    let top = r.bottom + 6;
+    if (top + mh > window.innerHeight - 8) top = Math.max(8, r.top - mh - 6);
+    m.style.left = left + "px"; m.style.top = top + "px";
+  };
+  place();
+  requestAnimationFrame(place);                  // again once Hindi / Hinglish has replaced the words: they are longer than the English they were measured on
   openMenuEl = m;
   anchor.setAttribute("data-menu-anchor", "");
   document.addEventListener("pointerdown", outside, true);
@@ -234,7 +238,8 @@ export function formHtml(fields, values = {}) {
 
 /** "Choose a category" / "Enter an amount" instead of a generic "This field is required." */
 function requiredText(control, root) {
-  const label = (root.querySelector(`label[for="${control.id}"]`)?.textContent || "").replace(/[*(].*$/, "").trim().toLowerCase();
+  const lab = root.querySelector(`label[for="${control.id}"]`);
+  const label = (lab ? (window.caI18n ? window.caI18n.src(lab) : lab.textContent) : "").replace(/[*(].*$/, "").trim().toLowerCase();
   if (!label) return "This field is required.";
   return `${control.tagName === "SELECT" ? "Choose" : "Enter"} ${/^[aeiou]/.test(label) ? "an" : "a"} ${label}`.replace(/ (an?) (the|your) /, " $2 ");
 }
@@ -345,8 +350,9 @@ export function formDrawer({ title, sub = "", fields, values = {}, submit = "Sav
     e.preventDefault(); showErrors(form, null);
     const btn = d.el.querySelector('button[type="submit"]');
     const vals = readForm(form, fields);
-    const r = await save(btn, async () => { try { return (await onSubmit(vals, d)) ?? true; } catch (ex) { if (ex instanceof ApiError || ex.fields) showErrors(form, ex); throw ex; } }, { ok });
-    if (r) d.close();
+    let demoNoSave = false;                       // the static demo refuses writes with a toast: the form then closes as if saved
+    const r = await save(btn, async () => { try { return (await onSubmit(vals, d)) ?? true; } catch (ex) { if (ex instanceof ApiError && ex.code === "demo") demoNoSave = true; else if (ex instanceof ApiError || ex.fields) showErrors(form, ex); throw ex; } }, { ok });
+    if (r || demoNoSave) d.close();
   });
   return d;
 }

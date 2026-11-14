@@ -25,15 +25,39 @@ export function keyFor(path, params) {
 let manifest = null;
 export const demoMisses = [];
 
-// Demo only: roles the recordings do not have. The maintenance person is added in the browser: /api/me is made up here, and every
-// other recorded answer is the manager's (the sample store in desk-mock-maint.js answers the maintenance pages itself).
+// Demo only: roles the recordings do not have. They are added in the browser: /api/me is made up here (the role's default
+// capabilities, app/caps.py ROLE_TEMPLATES), and every other recorded answer is the base role's (the manager's, or the owner's
+// for the accountant); the menu only offers the pages the role's capabilities open. The sample stores answer the Desk screens
+// (desk-mock-maint.js the maintenance pages, desk-mock-calldesk.js the call desk).
+const SETTINGS_PUBLIC = { band_labels: { low: "Budget (under 20 L)", luxury: "Luxury (50 L+)", middle: "Mid (20-50 L)", unknown: "Unknown" }, ig_follower_goal: 50000, segment_bands: { low_max: 2000000, middle_max: 5000000 } };
 const SYNTH = {
   maintenance: {
     label: "Maintenance", hint: "the yard and workshop: where each car is, checklists with photos, inspections. No prices or money",
     me: { capabilities: ["chat.use", "maint.inspect", "maint.view", "maint.work"], capabilities_locked: [], csrf: "demo", idle_timeout_minutes: 120,
       mfa: { enrolled: false, required: false, setup_required: false, verified: false }, permissions: ["stock", "car_file"],
-      settings_public: { band_labels: { low: "Budget (under 20 L)", luxury: "Luxury (50 L+)", middle: "Mid (20-50 L)", unknown: "Unknown" }, ig_follower_goal: 50000, segment_bands: { low_max: 2000000, middle_max: 5000000 } },
+      settings_public: SETTINGS_PUBLIC,
       user: { display_name: "Vikram (demo)", engine_name: null, id: 9, is_super_admin: false, must_change_password: false, role: "maintenance", role_label: "Maintenance", staff_id: null, username: "demo-maintenance" } },
+  },
+  calldesk: {
+    label: "Call desk", hint: "the office phone: every call to the showroom number, the phone inquiry form and its script, sending it to a salesman. No money",
+    me: { capabilities: ["calldesk.use", "chat.use"], capabilities_locked: [], csrf: "demo", idle_timeout_minutes: 120,
+      mfa: { enrolled: true, required: false, setup_required: false, verified: true }, permissions: [],
+      settings_public: SETTINGS_PUBLIC,
+      user: { display_name: "Neha (demo)", engine_name: null, id: 41, is_super_admin: false, must_change_password: false, role: "calldesk", role_label: "Call desk", staff_id: null, username: "demo-calldesk" } },
+  },
+  accountant: {
+    label: "Accounts", base: "owner", hint: "the books: cash entries, the Excel cash book upload, expenses, bills owed, bank lines to match. No leads or customers",
+    me: { capabilities: ["today.view", "money.view", "accounts.view", "accounts.manage", "expenses.view", "expenses.manage", "exports.money", "chat.use"], capabilities_locked: [], csrf: "demo", idle_timeout_minutes: 120,
+      mfa: { enrolled: true, required: false, setup_required: false, verified: true }, permissions: [],
+      settings_public: SETTINGS_PUBLIC,
+      user: { display_name: "Farah (demo)", engine_name: null, id: 42, is_super_admin: false, must_change_password: false, role: "accountant", role_label: "Accountant", staff_id: null, username: "demo-accountant" } },
+  },
+  rto: {
+    label: "RTO", hint: "transfers and papers: each RTO case from delivery to the RC, the expiry calendar, the stock list without prices",
+    me: { capabilities: ["rto.view", "rto.manage", "documents.view", "stock.view", "chat.use"], capabilities_locked: [], csrf: "demo", idle_timeout_minutes: 120,
+      mfa: { enrolled: true, required: false, setup_required: false, verified: true }, permissions: [],
+      settings_public: SETTINGS_PUBLIC,
+      user: { display_name: "Sameer (demo)", engine_name: null, id: 43, is_super_admin: false, must_change_password: false, role: "rto", role_label: "RTO", staff_id: null, username: "demo-rto" } },
   },
 };
 if (DEMO) window.__demoMisses = demoMisses;
@@ -51,7 +75,7 @@ async function loadManifest() {
     manifest = await r.json();
     for (const [id, s] of Object.entries(SYNTH)) {
       if (manifest.roles[id]) continue;
-      manifest.roles[id] = { ...(manifest.roles.manager || {}) };
+      manifest.roles[id] = { ...(manifest.roles[s.base || "manager"] || {}) };
       delete manifest.roles[id].me;
       manifest.meta.roles.push({ id, label: s.label, hint: s.hint });
     }
@@ -135,7 +159,7 @@ export async function get(path, params, opts = {}) {
 }
 
 function blocked() {
-  window.dispatchEvent(new CustomEvent("ca:toast", { detail: { msg: "Demo data: changes are not saved.", kind: "demo" } }));
+  window.dispatchEvent(new CustomEvent("ca:toast", { detail: { msg: "Demo: in the real app this is saved now. Nothing is saved in the demo.", kind: "demo" } }));
   return Promise.reject(new ApiError(0, "demo", "Demo mode: changes are not saved."));
 }
 

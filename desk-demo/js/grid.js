@@ -61,7 +61,7 @@ export const col = {
   date: (f, t, o) => base(f, t, { sorter: "string", formatter: (c) => dateFmt(c.getValue()), ...o }),
   html: (f, t, o) => base(f, t, { formatter: (c) => c.getValue() ?? "", ...o }),
 };
-export const cellMain = (main, sub) => `<span class="cell-main"><b>${esc(main)}</b>${sub ? `<small>${esc(sub)}</small>` : ""}</span>`;
+export const cellMain = (main, sub) => `<span class="cell-main"><b translate="no">${esc(main)}</b>${sub ? `<small>${esc(sub)}</small>` : ""}</span>`;
 
 // ------------------------------------------------------------------ export + toolbar bits
 let xlsxLoading = null;

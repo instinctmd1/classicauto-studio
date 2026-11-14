@@ -69,8 +69,8 @@
   --plate: #F5F2EC;
 
   /* type */
-  --font-display: "Bebas Neue", "Arial Narrow", Impact, sans-serif;
-  --font-ui: "Manrope", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-display: "Bebas Neue", "Arial Narrow", Impact, "Noto Sans Devanagari", "Kohinoor Devanagari", "Nirmala UI", sans-serif;
+  --font-ui: "Manrope", system-ui, -apple-system, "Segoe UI", "Noto Sans Devanagari", "Kohinoor Devanagari", "Nirmala UI", sans-serif;   /* the last three draw Hindi: Android, iPhone, Windows */
 
   /* geometry */
   --r-sm: 8px;

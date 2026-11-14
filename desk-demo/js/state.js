@@ -18,7 +18,7 @@ export const isLocked = (...caps) => caps.some((c) => state.locked.includes(c));
 export const isSuper = () => !!state.user?.is_super_admin;
 export const hasMoney = () => state.caps.has("money.view");
 /** Which home the person lands on. Salesmen see only their own work; managers get the command centre. */
-export const homeKind = () => (state.user?.role === "accountant" ? "accountant" : state.user?.role === "maintenance" ? "maintenance" : state.user?.role === "rto" ? "rto" : !can("records.all") ? "salesman" : state.user?.role === "manager" ? "manager" : "owner");
+export const homeKind = () => (state.user?.role === "accountant" ? "accountant" : state.user?.role === "maintenance" ? "maintenance" : state.user?.role === "rto" ? "rto" : state.user?.role === "calldesk" ? "calldesk" : !can("records.all") ? "salesman" : state.user?.role === "manager" ? "manager" : "owner");
 export const currentMonth = () => state.today.slice(0, 7);
 export const bandLabel = (b) => state.settings.band_labels?.[b] || { low: "Budget (under 20 L)", middle: "Mid (20-50 L)", luxury: "Luxury (50 L+)", unknown: "Unknown" }[b] || b;
 export const bandShort = (b) => ({ low: "Budget", middle: "Mid", luxury: "Luxury", unknown: "Unknown" }[b] || b);
@@ -59,4 +59,4 @@ export function compareLabel(c) {
   return `${monthLabel(c.from, false)}–${monthLabel(c.to, false)}`;
 }
 export const isMonthPeriod = (p = state.period) => /^\d{4}-\d{2}$/.test(p);
-export const chan = (c) => ({ olx: "OLX", cardekho: "CarDekho", carwale: "CarWale", whatsapp: "WhatsApp", instagram: "Instagram", facebook: "Facebook", website: "Website", call: "Phone call", visit: "Walk-in", email: "Email" }[c] || (c ? c.charAt(0).toUpperCase() + c.slice(1) : "—"));
+export const chan = (c) => ({ olx: "OLX", cardekho: "CarDekho", carwale: "CarWale", whatsapp: "WhatsApp", instagram: "Instagram", facebook: "Facebook", website: "Website", call: "Phone call", visit: "Walk-in", email: "Email", desk: "Call desk", phone: "Phone (Exotel)", cartrade: "CarTrade" }[c] || (c ? c.charAt(0).toUpperCase() + c.slice(1) : "—"));

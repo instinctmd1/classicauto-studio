@@ -683,3 +683,30 @@ button.plain { background: transparent; border: 0; padding: 0; color: inherit; t
   .side-foot { margin-top: 6px; padding-top: 8px; }
 }
 @media (min-width: 1100px) and (max-height: 860px) { .side-foot { display: none; } .side::after { display: none; } }
+
+/* Language control (js/i18n.js): English, हिंदी, Hinglish, one tap each. In the sign-in cards, in the top bar on a desktop screen, and
+   as a strip above the top bar on a phone and tablet, where the bar is full. The account menu has the same three choices. */
+.lang-seg { display: inline-flex; flex: none; border: 1px solid var(--line-strong); border-radius: 12px; background: var(--card); overflow: hidden; }
+.lang-seg button { min-height: 44px; min-width: 48px; padding: 0 12px; border: 0; border-radius: 0; background: transparent; color: var(--muted); font: 700 14px/1.2 var(--font-ui); white-space: nowrap; cursor: pointer; transition: background var(--dur-1), color var(--dur-1); }
+.lang-seg button + button { border-left: 1px solid var(--line); }
+.lang-seg button:hover { background: var(--card-2); color: var(--text); }
+.lang-seg button[aria-pressed="true"] { background: var(--red); color: #fff; }
+.lang-login { display: flex; width: 100%; margin: 0 0 14px; }
+.lang-login button { flex: 1; }
+.lang-strip { display: flex; justify-content: center; padding: 8px var(--gutter) 0; }
+.lang-strip .lang-seg { width: 100%; max-width: 420px; }
+.lang-strip .lang-seg button { flex: 1; }
+@media (max-width: 1099px) { .top .lang-seg { display: none; } }
+@media (min-width: 1100px) { .lang-strip { display: none; } }
+body[data-view="chat"][data-sub="1"] .lang-strip { display: none; }                 /* the open chat room is a full-screen view */
+
+/* Devanagari: letter-spacing pulls the vowel marks off their letters, and the display face (Bebas, capitals only) has no Devanagari,
+   so headings use the UI face in bold and a taller line, or the marks above and below the line are cut off. */
+:root[lang="hi"] body :not(.code-input):not(.masked):not(.revealed),
+:root[lang="hi"] body :not(.code-input):not(.masked):not(.revealed)::before,
+:root[lang="hi"] body :not(.code-input):not(.masked):not(.revealed)::after { letter-spacing: normal; }
+:root[lang="hi"] body { line-height: 1.55; }
+:root[lang="hi"] :is(h1, h2, h3, h4, .display, .page-title, .kpi-label, .eyebrow, .mini-h, .nav-group, .login-card h1, .crumb) { font-family: var(--font-ui); font-weight: 700; text-transform: none; line-height: 1.35; }
+:root[lang="hi"] :is(.btn, .badge, .pill, .tab-l, .nav a, .tabs button, .link-btn, .lang-btn, .field label, .tbl th) { line-height: 1.4; }
+.period .label { white-space: nowrap; }
+@media (max-width: 719px) { .period .step { width: 32px; } }

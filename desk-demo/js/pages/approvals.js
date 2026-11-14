@@ -71,7 +71,7 @@ function queueHtml(list, decide) {
     const own = a.requested_by === state.user.id && !isSuper();
     const who = [a.requested_by_name && `Asked by ${short(a.requested_by_name)}`, ago(a.requested_at), a.lead_name && `for ${a.lead_name}`, a.person_name && `for ${a.person_name}`].filter(Boolean).map(esc).join(" · ");
     return `<article class="queue-card"><div class="hd"><div><b class="ap-t">${icon(KIND[a.kind][1], "ico")}${esc(KIND[a.kind][0])} · ${esc(carName(a))}</b><div class="muted">${who}</div></div>${badge(ST[a.status][0], ST[a.status][1])}</div>
-      <div>${askLine(a)}</div>${a.note ? `<div class="muted">“${esc(a.note)}”</div>` : ""}${flags(a)}
+      <div>${askLine(a)}</div>${a.note ? `<div class="muted" translate="no">“${esc(a.note)}”</div>` : ""}${flags(a)}
       <div class="pill-row">${decide && !own ? `<button class="btn sm pos" type="button" data-ap="${a.id}">${icon("check")}Approve</button><button class="btn sm danger" type="button" data-rj="${a.id}">Reject</button>` : `<span class="muted">${own ? "Your own request: another manager or an owner decides it." : "Waiting for the manager."}</span>`}<a class="btn sm" href="#/inventory?car=${a.car_id}">${icon("car")}Car file</a></div></article>`;
   }).join("")}</div>`;
 }
@@ -135,7 +135,7 @@ async function askRequests(ctx) {
     const ap = e.target.closest("[data-askap]"), rj = e.target.closest("[data-askrj]");
     if (ap) { const ok = await save(ap, () => api.post(`ask/actions/${ap.dataset.askap}/decision`, { decision: "approve" }), { ok: "Approved" }); if (ok) ctx.refresh(); }
     if (rj) {
-      const note = (window.prompt("Why not? (5-200 characters, the salesman sees it)") || "").trim();
+      const note = (window.prompt(window.caI18n ? window.caI18n.t("Why not? (5-200 characters, the salesman sees it)") : "Why not? (5-200 characters, the salesman sees it)") || "").trim();
       if (!note) return;
       if (note.length < 5 || note.length > 200) { toast("Give a reason of 5 to 200 characters.", "err"); return; }
       const ok = await save(rj, () => api.post(`ask/actions/${rj.dataset.askrj}/decision`, { decision: "reject", note }), { ok: "Rejected" });

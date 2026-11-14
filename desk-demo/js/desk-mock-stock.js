@@ -89,7 +89,7 @@ const page = () => (location.hash.replace(/^#\/?/, "").split(/[/?]/)[0] || "home
 let busy = false;
 async function place() {
   if (busy || !PAGES.has(page())) return;
-  if (["maintenance", "rto"].includes(homeKind())) return;        // their home is the yard / papers: no prices (the role promises none)
+  if (["maintenance", "rto", "calldesk", "accountant"].includes(homeKind())) return;        // their home is the yard / papers / books: no stock card (no prices for the first three)
   const main = document.getElementById("main");
   if (!main || main.querySelector("#real-stock") || !main.children.length) return;
   busy = true;

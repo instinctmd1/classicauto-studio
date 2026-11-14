@@ -10,11 +10,11 @@ export async function render(ctx) {
   const m = state.mfa || {};
   const enrolled = !!m.enrolled;
   const heldOff = state.locked.slice().sort();
-  const why = ctx.locked ? `<div class="callout warn rise" role="note">${icon("lock", "")}<div><b>${esc(ctx.locked)} is locked.</b><p>You have access to it, but money pages only open after you sign in with a two-factor code. ${enrolled ? "Sign out and sign in again, entering the 6 digits from your app." : "Set it up below; it takes about a minute."}</p></div></div>` : "";
+  const why = ctx.locked ? `<div class="callout warn rise" role="note">${icon("lock", "")}<div><b>${esc(ctx.locked)} is locked.</b><p>You have access to it. Money pages lock after 30 idle minutes; you stay signed in. ${enrolled ? "Type the 6 digits from your app below to open them." : "Set up two-factor below; it takes about a minute."}</p></div></div>` : "";
 
   const rules = `<ul class="rules">
     <li>${icon("check", "")}<div><b>Sign-in asks for a code</b><span>After the password, a 6-digit code from your phone. Each code works once.</span></div></li>
-    <li>${icon("check", "")}<div><b>Money pages lock after 30 idle minutes</b><span>Everyone else is signed out after 2 hours. The timer is in the top bar.</span></div></li>
+    <li>${icon("check", "")}<div><b>Money pages lock after 30 idle minutes</b><span>You stay signed in on your phone for 30 days. Only the money pages lock, and your 6-digit code opens them again. The timer is in the top bar.</span></div></li>
     <li>${icon("check", "")}<div><b>Bank details stay masked</b><span>To unmask an account number you enter your password and a fresh code, and the reveal is logged first.</span></div></li>
     <li>${icon("check", "")}<div><b>Every money view and export is logged</b><span>The audit log shows who looked at what, and when.</span></div></li>
     <li>${icon("check", "")}<div><b>Lost your phone?</b><span>${isSuper() ? "You can reset anyone else's from Users and access. Yours is reset from the server shell with create_user.py --reset-totp." : "Ask the owner. He resets it from Users and access, then you set it up again."}</span></div></li>
@@ -24,7 +24,7 @@ export async function render(ctx) {
 
   let steps;
   if (enrolled) {
-    steps = `<div class="callout pos">${icon("shieldcheck", "")}<div><b>Two-factor is on for ${esc(state.user.display_name.replace(/\s*\(.*\)$/, ""))}.</b><p>${m.verified ? "This session passed the code check, so your money pages are open." : "This session has not passed the code check. Sign out and sign in again with your code."}</p></div></div>${held}`;
+    steps = `<div class="callout pos">${icon("shieldcheck", "")}<div><b>Two-factor is on for ${esc(state.user.display_name.replace(/\s*\(.*\)$/, ""))}.</b><p>${m.verified ? "Your money pages are open." : "Your money pages are locked. Type the newest 6 digits from your app to open them."}</p></div></div>${m.verified ? "" : `<form id="unlock" class="stack-form" novalidate><div class="field"><label for="uc">6-digit code</label><input class="input code-input" id="uc" name="code" inputmode="numeric" autocomplete="one-time-code" maxlength="6" pattern="[0-9]*" placeholder="123456"><div class="err" id="uc-e" role="alert" hidden></div></div><button class="btn primary" type="submit">Open money pages</button></form>`}${held}`;
   } else {
     steps = `<div class="steps" id="steps">
       <section class="step-card" id="s1"><div class="st"><span class="badge-n">1</span><h3>Confirm your password</h3></div>
@@ -39,7 +39,21 @@ export async function render(ctx) {
     + card({ title: enrolled ? "Two-factor" : "Turn on two-factor", sub: enrolled ? "Authenticator app, 6 digits, 30 seconds." : "Use any authenticator app: Google Authenticator, Microsoft Authenticator, Authy, 1Password.", body: steps })
     + card({ title: "What this protects", body: rules }));
 
-  if (enrolled) return;
+  if (enrolled) {
+    const fu = ctx.root.querySelector("#unlock");
+    if (fu) {
+      fu.code.focus();
+      fu.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const err = ctx.root.querySelector("#uc-e"); err.hidden = true;
+        const code = fu.code.value.trim();
+        if (!/^\d{6}$/.test(code)) { err.textContent = "The code is 6 digits."; err.hidden = false; return; }
+        const ok = await save(fu.querySelector("button"), async () => { try { await api.post("me/unlock", { code }); } catch (ex) { err.textContent = ex.message; err.hidden = false; fu.code.value = ""; throw ex; } }, { ok: "Money pages are open" });
+        if (ok) window.dispatchEvent(new CustomEvent("ca:reboot"));
+      });
+    }
+    return;
+  }
   const f1 = ctx.root.querySelector("#f1"), s2 = ctx.root.querySelector("#s2");
   f1.addEventListener("submit", async (e) => {
     e.preventDefault();

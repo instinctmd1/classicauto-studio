@@ -28,7 +28,10 @@
 .demo-say { flex: 1; min-width: 0; font-weight: 600; color: #3A4468; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .demo-say b { color: #C4141B; font-weight: 800; }
 .demo-acts { display: flex; align-items: center; gap: 8px; flex: none; }
-.demo-roles { margin-left: 0; }
+.demo-roles { margin-left: 0; min-width: 0; overflow-x: auto; scrollbar-width: none; }   /* seven roles: the strip scrolls sideways when it must */
+.demo-roles::-webkit-scrollbar { display: none; }
+.demo-roles button { flex: none; white-space: nowrap; }
+.demo-acts { min-width: 0; flex: 0 1 auto; }
 .demo-test {
   display: inline-flex; align-items: center; gap: 6px; height: 38px; padding: 0 12px; border-radius: 10px; border: 1px solid rgba(10, 22, 51, 0.18);
   background: #fff; color: #0A1633; font: 700 13px/1 var(--font-ui); white-space: nowrap;
@@ -46,6 +49,12 @@
   .demo-test { height: 42px; padding: 0 10px; }
   .demo-test .long { display: none; }
   .demo-test .short { display: inline; }
+  /* seven demo roles: the buttons wrap onto two rows next to the test button, so none hides off the edge */
+  html[data-demo] { --banner-h: 110px; }
+  .demo-acts { flex-wrap: wrap; justify-content: flex-start; gap: 4px; }
+  .demo-roles { display: contents; }
+  .demo-roles button { height: 34px; padding: 0 9px; background: rgba(10, 22, 51, 0.06); }
+  .demo-test { height: 34px; margin-left: auto; }
 }
 @media (max-width: 360px) { .demo-roles button { padding: 0 7px; font-size: 12px; } }
 

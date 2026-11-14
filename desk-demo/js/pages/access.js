@@ -9,18 +9,20 @@ import { bindTabs, confirmDialog, formDrawer, openDrawer, pageHead, save, tabsHt
 import { CAP_OPENS, GROUPS, PERSONAL_DATA, ROLE_PLAIN, capName, capNote, opensGroup } from "../caps.js";
 import { card } from "./_shared.js";
 
-const SYSTEM = (u) => /^(demo-)?system$/.test(u.username);
+const SYSTEM = (u) => /^((demo-)?system|stock-import)$/.test(u.username);   // accounts nobody signs in with
 
 export async function render(ctx) {
-  const [users, capsRes] = await Promise.all([get("admin/users"), get("admin/capabilities")]);
+  const [users, capsRes, reqs, staffRes] = await Promise.all([get("admin/users"), get("admin/capabilities"),
+    get("admin/access-requests").catch(() => ({ pending: [], recent: [] })), get("admin/staff").catch(() => ({ data: [] }))]);
   if (!ctx.alive()) return;
   const people = users.data.filter((u) => !SYSTEM(u));
   const roles = Object.fromEntries((capsRes.roles || []).map((r) => [r.key, r]));
   const grantable = new Set(capsRes.you_can_grant || []);
   const catalogue = Object.fromEntries((capsRes.capabilities || []).map((c) => [c.key, c]));
   const narrow = window.matchMedia("(max-width: 1099px)").matches;      // the matrix needs about 1,000 px: below that start on the People list
-  const tab = ctx.query.get("tab") || (narrow ? "people" : "matrix");
-  const tabs = [...(narrow ? [] : [{ id: "matrix", label: "Who can do what" }]), { id: "people", label: "People" }, { id: "history", label: "Grant history" }];
+  const waiting = reqs.pending.length;
+  const tab = ctx.query.get("tab") || (waiting ? "requests" : narrow ? "people" : "matrix");
+  const tabs = [{ id: "requests", label: waiting ? `Requests (${waiting})` : "Requests" }, ...(narrow ? [] : [{ id: "matrix", label: "Who can do what" }]), { id: "people", label: "People" }, { id: "history", label: "Grant history" }];
   const sup = isSuper();
   mount(ctx.root, pageHead({ title: "Users and access", sub: sup ? "You are the super-admin: you hold everything and decide who else gets money, accounts, expenses and the bank file." : "You can manage the operational columns. Money columns change only by the owner, or someone he allowed.",
     actions: can("users.manage") ? `<button class="btn primary" type="button" id="new-user">${icon("plus")}Add a person</button>` : "" })
@@ -28,6 +30,7 @@ export async function render(ctx) {
     + `<section class="card flush rise">${tabsHtml(tabs, tab, "Access sections")}<div id="pane"></div></section>`);
   const pane = ctx.root.querySelector("#pane");
   const show = async (t) => {
+    if (t === "requests") { pane.innerHTML = requestsHtml(reqs, roles, staffRes.data || []); return; }
     if (t === "matrix" && !narrow) { pane.innerHTML = matrixHtml(people, roles, grantable, sup); matrixCue(pane); }
     else if (t === "people" || t === "matrix") { pane.innerHTML = peopleHtml(people, roles); }
     else { pane.innerHTML = `<div class="skel card"></div>`; const g = await get("admin/grants"); pane.innerHTML = historyHtml(g.data); }
@@ -35,7 +38,30 @@ export async function render(ctx) {
   bindTabs(ctx.root, (t) => { history.replaceState(null, "", `#/access?tab=${t}`); show(t); });
   await show(tab);
   const byId = (id) => people.find((u) => u.id === id);
-  pane.addEventListener("click", (e) => {
+  pane.addEventListener("change", (e) => {
+    const sel = e.target.closest("[data-req-role]"); if (!sel) return;
+    const seat = pane.querySelector(`[data-req-staff="${sel.dataset.reqRole}"]`); if (seat) seat.hidden = sel.value !== "salesman";
+  });
+  pane.addEventListener("click", async (e) => {
+    const ap = e.target.closest("[data-approve]"), rj = e.target.closest("[data-reject]");
+    if (ap || rj) {
+      const id = (ap || rj).dataset.approve || (ap || rj).dataset.reject, r = reqs.pending.find((x) => String(x.id) === id);
+      if (rj) {
+        const ok = await confirmDialog({ title: r.kind === "return" ? `Switch ${r.display_name} off?` : `Say no to ${r.display_name}?`,
+          text: r.kind === "return" ? "Their account is switched off. You can switch it on again later in People." : "No account is made. They can ask again.",
+          confirmLabel: r.kind === "return" ? "Switch off" : "Say no", danger: true });
+        if (!ok) return;
+        try { await api.post(`admin/access-requests/${id}/reject`, {}); toast("Done"); } catch (ex) { toast(ex.message, "err"); return; }
+      } else {
+        const role = pane.querySelector(`[data-req-role="${id}"]`)?.value, staff = pane.querySelector(`[data-req-staff="${id}"] select`)?.value;
+        if (r.kind === "new" && !role) { toast("Pick a role first.", "err"); return; }
+        if (role === "salesman" && !staff) { toast("Pick which salesman seat this is (Settings > Staff), so his leads reach him.", "err"); return; }
+        try { await api.post(`admin/access-requests/${id}/approve`, r.kind === "new" ? { role, ...(role === "salesman" ? { staff_id: +staff } : {}) } : {}); }
+        catch (ex) { toast(ex.message, "err"); return; }
+        toast(r.kind === "new" ? `${r.display_name} can sign in now` : `${r.display_name} is back in`);
+      }
+      return render(ctx);
+    }
     const c = e.target.closest("[data-cell]");
     if (c) { openPerson(byId(+c.dataset.user), roles, grantable, catalogue, c.dataset.cell, ctx); return; }
     const r = e.target.closest("[data-person]"); if (r) openPerson(byId(+r.dataset.person), roles, grantable, catalogue, null, ctx);
@@ -92,10 +118,31 @@ function moneyLine(u, roles) {
   return `Money: ${names.join(", ")}${u.two_factor ? "" : " (waiting for two-factor)"}`;
 }
 
+function requestsHtml(reqs, roles, staff) {
+  const assignable = Object.values(roles).filter((r) => r.assignable !== false);
+  const seatOpts = staff.filter((s) => s.active).map((s) => `<option value="${s.id}">${esc(s.name)}</option>`).join("");
+  const item = (r) => `<li class="req"><span class="avatar sm">${esc(initials(r.display_name))}</span><span class="grow">
+      <b>${esc(r.display_name)}</b> <span class="muted">${esc(r.username)}</span>
+      <span class="sub">${esc(r.email)} · ${r.kind === "return" ? `signed out, asks to come back in as ${esc(roles[r.current_role]?.label || r.current_role || "")}` : "new request"} · ${esc(ago(r.created_at))}</span>
+      ${r.note ? `<span class="sub" translate="no">“${esc(r.note)}”</span>` : ""}
+      ${r.kind === "new" ? `<span class="req-pick"><label class="sub" for="rr-${r.id}">Role</label>
+        <select class="input" id="rr-${r.id}" data-req-role="${r.id}"><option value="">Pick a role</option>${assignable.map((a) => `<option value="${a.key}">${esc(a.label)}</option>`).join("")}</select>
+        <span data-req-staff="${r.id}" hidden><label class="sub" for="rs-${r.id}">Salesman seat</label><select class="input" id="rs-${r.id}"><option value="">Pick his seat</option>${seatOpts}</select></span></span>` : ""}
+    </span><span class="req-act"><button class="btn primary sm" type="button" data-approve="${r.id}">${r.kind === "return" ? "Let back in" : "Approve"}</button>
+      <button class="btn sm" type="button" data-reject="${r.id}">${r.kind === "return" ? "Switch off" : "Say no"}</button></span></li>`;
+  const pending = reqs.pending.length ? `<ul class="list pad-box">${reqs.pending.map(item).join("")}</ul>`
+    : `<div class="empty">${icon("check", "")}<b>Nobody is waiting</b><p>When someone taps "Request access" on the sign-in page, or signs out, they show up here. They see nothing until you approve them.</p></div>`;
+  const recent = reqs.recent.length ? `<h3 class="pad-box sub">Answered</h3><ul class="list pad-box hist-list">${reqs.recent.map((r) => `<li><span class="grow"><div class="t">${esc(r.display_name)} <span class="muted">${esc(r.email)}</span></div><div class="s">${r.status === "approved" ? `Approved${r.decided_role ? " as " + esc(roles[r.decided_role]?.label || r.decided_role) : ""}` : "Said no"} by ${esc(r.decided_by_name || "—")} on ${dateFmt(r.decided_at)}</div></span></li>`).join("")}</ul>` : "";
+  return pending + recent;
+}
+
+/** The approval record: who added this account and when ("Server setup" = made on the server, e.g. the owner's own account). */
+const addedBy = (u) => `Added by ${u.created_by_name ? u.created_by_name.replace(/\s*\(.*\)$/, "") : "Server setup"}${u.created_at ? " on " + dateFmt(u.created_at) : ""}`;
+
 function peopleHtml(people, roles) {
   _keys = GROUPS.flatMap((g) => g.caps);
-  const cards = `<ul class="list people-cards only-narrow">${people.map((u) => `<li><button class="pcard" type="button" data-person="${u.id}"><span class="avatar sm">${esc(initials(u.display_name))}</span><span class="grow"><b>${esc(u.display_name)}</b><span class="sub">${u.is_super_admin ? "Super-admin" : esc(roles[u.role]?.label || sentence(u.role))} · ${u.two_factor ? "two-factor on" : "two-factor off"}${u.active ? "" : " · disabled"}</span><span class="sub">${esc(moneyLine(u, roles))}</span></span>${icon("right", "ico-s")}</button></li>`).join("")}</ul>`;
-  return `${cards}<div class="scroll-x only-wide"><table class="tbl left"><thead><tr><th>Person</th><th>Role</th><th>Two-factor</th><th>Last sign-in</th><th>Status</th></tr></thead><tbody>${people.map((u) => `<tr class="row-btn" tabindex="0" data-person="${u.id}"><td><div class="person"><span class="avatar sm">${esc(initials(u.display_name))}</span><div><span class="nm">${esc(u.display_name)}</span><span class="sub">${esc(u.username)}</span></div></div></td><td>${u.is_super_admin ? badge("Super-admin", "red") : esc(roles[u.role]?.label || sentence(u.role))}<span class="sub">${esc(u.is_super_admin ? "Holds everything" : ROLE_PLAIN[u.role] || "")}</span></td><td>${u.two_factor ? badge("On", "pos") : badge("Off", u.grants?.length ? "warn" : "")}</td><td>${u.last_login_at ? esc(ago(u.last_login_at)) : "Never"}</td><td>${u.active ? badge("Active", "pos") : badge("Disabled", "neg")}${u.locked_until ? " " + badge("Locked", "warn") : ""}</td></tr>`).join("")}</tbody></table></div>`;
+  const cards = `<ul class="list people-cards only-narrow">${people.map((u) => `<li><button class="pcard" type="button" data-person="${u.id}"><span class="avatar sm">${esc(initials(u.display_name))}</span><span class="grow"><b>${esc(u.display_name)}</b><span class="sub">${u.is_super_admin ? "Super-admin" : esc(roles[u.role]?.label || sentence(u.role))} · ${u.two_factor ? "two-factor on" : "two-factor off"}${u.active ? "" : " · disabled"}</span><span class="sub">${esc(moneyLine(u, roles))}</span><span class="sub">${esc(addedBy(u))}</span></span>${icon("right", "ico-s")}</button></li>`).join("")}</ul>`;
+  return `${cards}<div class="scroll-x only-wide"><table class="tbl left"><thead><tr><th>Person</th><th>Role</th><th>Two-factor</th><th>Last sign-in</th><th>Added by</th><th>Status</th></tr></thead><tbody>${people.map((u) => `<tr class="row-btn" tabindex="0" data-person="${u.id}"><td><div class="person"><span class="avatar sm">${esc(initials(u.display_name))}</span><div><span class="nm">${esc(u.display_name)}</span><span class="sub">${esc(u.username)}</span></div></div></td><td>${u.is_super_admin ? badge("Super-admin", "red") : esc(roles[u.role]?.label || sentence(u.role))}<span class="sub">${esc(u.is_super_admin ? "Holds everything" : ROLE_PLAIN[u.role] || "")}</span></td><td>${u.two_factor ? badge("On", "pos") : badge("Off", u.grants?.length ? "warn" : "")}</td><td>${u.last_login_at ? esc(ago(u.last_login_at)) : "Never"}</td><td>${esc(addedBy(u).replace(/^Added by /, ""))}</td><td>${u.active ? badge("Active", "pos") : badge("Disabled", "neg")}${u.locked_until ? " " + badge("Locked", "warn") : ""}</td></tr>`).join("")}</tbody></table></div>`;
 }
 
 const nameOf = (display, username) => (display || username || "").replace(/\s*\(.*\)$/, "");

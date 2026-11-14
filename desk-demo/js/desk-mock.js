@@ -6,6 +6,7 @@ import { accAllowedFor, accData, createAccStore } from "./desk-mock-acc.js";
 import { createIntakeStore, intakeFormat } from "./desk-mock-intake.js";
 import { createBankStore } from "./desk-mock-bank.js";
 import { createMaintStore } from "./desk-mock-maint.js";
+import { createCalldeskStore } from "./desk-mock-calldesk.js";
 
 const BASE = "2026-10-05 11:20:00";              // the moment these answers describe; times are moved to "now" on load
 const ME = { salesman: "Kabir (demo)", manager: "Demo Manager", owner: "Partners (demo)", staff: "Demo Staff" };
@@ -346,6 +347,7 @@ export function createStore({ role, roleId, me, load }) {
   const intakes = createIntakeStore({ role, me, myName, now: (min = 0) => istStr(Date.now() + min * 60000) });   // car intake (desk-mock-intake.js)
   const bank = createBankStore({ role, myName, now: () => istStr(Date.now()) });   // bank keywords (desk-mock-bank.js): made-up lines only
   const maint = createMaintStore({ role: roleId || role, myName: roleId === "maintenance" ? (me?.display_name || "Vikram (demo)") : myName, load });   // maintenance (desk-mock-maint.js): made-up work on the stock list
+  const calldesk = createCalldeskStore({ myName: roleId === "calldesk" ? me?.display_name : myName, load });   // the call desk (desk-mock-calldesk.js): made-up calls and inquiries
   const askUploads = new Map();
   let nextUpload = 1;
   /** The sample chat, plus a filled NEW CAR format pasted with its 8 photos and the read-back card it gets (owner and manager). */
@@ -374,6 +376,7 @@ export function createStore({ role, roleId, me, load }) {
       if (/^intakes(\/|$)/.test(path)) { const a = intakes.get(path, params); if (a !== undefined) return clone(a); }
       if (/^banktag(\/|$)/.test(path)) return clone(bank.get(path, params));
       if (/^maint(\/|$)/.test(path)) return clone(await maint.get(path, params));
+      if (/^calldesk\//.test(path)) return clone(await calldesk.get(path, params));
       if (/^acc\/|^desk\/leads\/\d+\/acc$/.test(path)) { await loadViews(); const a = await acc.get(path, params); if (a !== undefined) return a; }
       let m = path.match(/^desk\/leads\/(\d+)$/);
       if (m) { await loadViews(); rollClocks(); return detail(+m[1]); }
@@ -433,6 +436,7 @@ export function createStore({ role, roleId, me, load }) {
       if (/^intakes(\/|$)/.test(path)) { const a = intakes.send(method, path, body); if (a !== undefined) return clone(a); }
       if (/^banktag(\/|$)/.test(path)) return clone(bank.send(method, path, body));
       if (/^maint(\/|$)/.test(path)) return clone(await maint.send(method, path, body));
+      if (/^calldesk\//.test(path)) return clone(await calldesk.send(method, path, body));
       if (/^acc\/|^desk\/leads\/\d+\/(call-attempt|brief|reassign)$/.test(path)) {
         await loadViews();
         const lid = +((path.match(/^desk\/leads\/(\d+)\//) || [])[1] || 0);

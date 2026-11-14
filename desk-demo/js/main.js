@@ -10,6 +10,10 @@ import { disposeGrids } from "./grid.js";
 import { forgetThisDevice, isStandalone, registerServiceWorker, resetPageScope, sendTestNotification, setServerNow, startBadges, startFeed, stopFeed, syncPush } from "./desk.js";
 import { get as deskGet, resetDeskStore } from "./desk-api.js";
 
+// English / Hindi / Hinglish (js/i18n.js): the three-way control, and the English a node is made of (for code that copies text).
+const langBtn = (cls = "") => (window.caI18n ? window.caI18n.buttonHtml(cls) : "");
+const srcText = (el) => (!el ? "" : window.caI18n ? window.caI18n.src(el) : el.textContent || "");
+
 const FIN = ["money.view", "deals.profit.view", "accounts.view", "expenses.view", "bank.view"];
 
 /** any: the capabilities that open the page (one is enough). period: show the month picker. */
@@ -31,6 +35,9 @@ const NAV = [
     // the evening roll-call and the owner reports (APP-SPEC 12): live app only (the demo bundle has no engine to answer them)
     { id: "rollcall", label: "Roll-call", icon: "moon", any: ["desk.inbox"], onlyIf: () => !DEMO },
     { id: "reports", label: "Owner reports", icon: "reports", any: ["records.all"], onlyIf: () => !DEMO && (isSuper() || ["owner", "manager"].includes(state.user?.role)) },
+    // the office call desk (CALLDESK-SPEC.md): the calls and the phone inquiry form; it is the home of the calldesk role
+    { id: "calldesk", label: "Call desk", icon: "phone", any: ["calldesk.use"], onlyIf: () => homeKind() !== "calldesk" },
+    { id: "calldesk-report", label: "Call desk today", icon: "reports", any: ["calldesk.report"] },
     { id: "install", label: "Install the app", icon: "download", any: [], onlyIf: () => !isStandalone() } ] },
   { group: null, items: [
     { id: "home", label: "Home", icon: "overview", any: [], period: true },
@@ -78,7 +85,7 @@ function applyTheme(t) { document.documentElement.setAttribute("data-theme", t);
 const theme = () => document.documentElement.getAttribute("data-theme") || "dark";
 
 // ------------------------------------------------------------------ sign-in (password, then the 6-digit code)
-function loginView(message = "") {
+function loginView(message = "", ok = false) {
   closeDrawer(); closeMenu(); disposeCharts(); disposeGrids(); stopIdle();
   // The server never says whether a code is needed (that would confirm a right password), so the code field shows on
   // a phone that has signed in with one before, or after a tap on "I use a two-factor code".
@@ -86,10 +93,11 @@ function loginView(message = "") {
   app.innerHTML = `<div class="login">
     <section class="login-art" aria-hidden="true"><div class="checker"></div><div class="big">Classic<span>Auto</span></div><p>Leads, team chat and the back office in one private place.</p><div class="est">Malad West since 1974</div></section>
     <main class="login-main"><div class="login-card">
+      ${langBtn("lang-login")}
       <span class="plate"><img src="img/logo.svg" alt="Classic Auto, since 1974" width="840" height="496"></span>
-      <h1 id="lg-h">Sign in to CA Desk</h1><p class="lede" id="lg-lede">For the Classic Auto team. Use the username and password you were given.</p>
+      <h1 id="lg-h">Sign in to CA Desk</h1><p class="lede" id="lg-lede">For the Classic Auto team. Use the username and password you chose when you asked for access.</p>
       <form id="login-form" novalidate>
-        ${message ? `<div class="form-err" role="alert">${esc(message)}</div>` : ""}
+        ${message ? `<div class="form-err${ok ? " ok" : ""}" role="${ok ? "status" : "alert"}">${esc(message)}</div>` : ""}
         <div class="field"><label for="u">Username</label><input class="input" id="u" name="username" autocomplete="username" autocapitalize="none" spellcheck="false" required></div>
         <div class="field"><label for="p">Password</label><div class="pw"><input class="input" id="p" name="password" type="password" autocomplete="current-password" required><button type="button" id="pw-show" aria-pressed="false">Show</button></div></div>
         <div class="field" id="t-field"${withCode ? "" : " hidden"}><label for="t">Two-factor code</label><input class="input code-input" id="t" name="totp" inputmode="numeric" autocomplete="one-time-code" maxlength="6" pattern="[0-9]*" placeholder="123456"><div class="hint">The 6 digits from your authenticator app. Each code works once.</div></div>
@@ -97,8 +105,10 @@ function loginView(message = "") {
         <div class="err" id="login-err" role="alert" hidden></div>
         <button class="btn primary" type="submit" id="go">Sign in</button>
       </form>
+      <p class="fine center">New here? <button class="link-btn" type="button" id="ask-btn">Request access</button></p>
       <p class="fine">${icon("lock", "")}<span>Private server. Every sign-in is logged.</span></p>
     </div></main></div>`;
+  $("#ask-btn").addEventListener("click", () => requestView());
   const form = $("#login-form"), err = $("#login-err"), go = $("#go");
   $("#pw-show").addEventListener("click", (e) => { const i = $("#p"); const show = i.type === "password"; i.type = show ? "text" : "password"; e.currentTarget.textContent = show ? "Hide" : "Show"; e.currentTarget.setAttribute("aria-pressed", String(show)); });
   $("#t-show").addEventListener("click", (e) => { e.currentTarget.hidden = true; $("#t-field").hidden = false; $("#t").focus(); });
@@ -117,7 +127,8 @@ function loginView(message = "") {
       await boot();
     } catch (ex) {
       go.disabled = false; go.textContent = "Sign in";
-      err.textContent = ex.status === 429 ? "Too many attempts. Wait a few minutes and try again."
+      err.textContent = ex.status === 403 && ex.code === "awaiting_approval" ? ex.message
+        : ex.status === 429 ? "Too many attempts. Wait a few minutes and try again."
         : ex.status === 401 ? "Those details do not match. Check the username and password, and the two-factor code if you use one." : (ex.message || "Could not sign in.");
       err.hidden = false;
       form.totp.value = ""; form.password.value = ""; form.password.focus();
@@ -125,8 +136,45 @@ function loginView(message = "") {
   });
 }
 
+// ------------------------------------------------------------------ sign-up: ask for access, the owner approves (13 Nov 2026)
+function requestView() {
+  app.innerHTML = `<div class="login"><main class="login-main"><div class="login-card">
+    ${langBtn("lang-login")}
+    <span class="plate"><img src="img/logo.svg" alt="Classic Auto" width="840" height="496"></span>
+    <h1>Request access</h1><p class="lede">Fill this in once. the owner approves you and decides what you can see. Then you sign in with the username and password you choose here, and this phone stays signed in.</p>
+    <form id="ask-form" novalidate>
+      <div class="field"><label for="a-name">Your full name</label><input class="input" id="a-name" name="display_name" autocomplete="name" required></div>
+      <div class="field"><label for="a-phone">Mobile number</label><input class="input" id="a-phone" name="phone" type="tel" inputmode="tel" autocomplete="tel" maxlength="16" placeholder="98xxxxxxxx" required></div>
+      <div class="field"><label for="a-email">E-mail</label><input class="input" id="a-email" name="email" type="email" inputmode="email" autocomplete="email" autocapitalize="none" spellcheck="false" required></div>
+      <div class="field"><label for="a-user">Choose a username</label><input class="input" id="a-user" name="username" autocomplete="username" autocapitalize="none" spellcheck="false" required><div class="hint">Small letters or digits, no spaces. Example: neha.k</div></div>
+      <div class="field"><label for="a-pw">Choose a password</label><input class="input" id="a-pw" name="password" type="password" autocomplete="new-password" minlength="12" required><div class="hint">12 or more characters, not your username. Only you know it.</div></div>
+      <div class="field"><label for="a-pw2">Type the password again</label><input class="input" id="a-pw2" name="password2" type="password" autocomplete="new-password" required></div>
+      <div class="field"><label for="a-note">What do you do at Classic Auto? (optional)</label><input class="input" id="a-note" name="note" maxlength="200" placeholder="e.g. salesman, accounts, workshop"></div>
+      <div class="err" id="ask-err" role="alert" hidden></div>
+      <button class="btn primary" type="submit" id="ask-go">Send request</button>
+      <button class="link-btn" type="button" id="ask-back">Back to sign in</button>
+    </form></div></main></div>`;
+  $("#ask-back").addEventListener("click", () => loginView());
+  $("#a-name").focus();
+  $("#ask-form").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const f = e.currentTarget, err = $("#ask-err"), go = $("#ask-go"); err.hidden = true;
+    if (f.password.value !== f.password2.value) { err.textContent = "The two passwords are not the same."; err.hidden = false; return; }
+    go.disabled = true;
+    try {
+      const r = await api.post("auth/request-access", { display_name: f.display_name.value, phone: f.phone.value.trim(), email: f.email.value.trim(), username: f.username.value.trim().toLowerCase(), password: f.password.value, note: f.note.value });
+      loginView(r.message, true);
+    } catch (ex) {
+      go.disabled = false;
+      err.textContent = ex.fields ? Object.entries(ex.fields).map(([k, v]) => `${{ display_name: "Name", phone: "Mobile number", username: "Username", password: "Password", email: "E-mail" }[k] || k}: ${[].concat(v).join(", ")}`).join(". ") : ex.message;
+      err.hidden = false;
+    }
+  });
+}
+
 function passwordView(user) {
   app.innerHTML = `<div class="login"><main class="login-main"><div class="login-card">
+    ${langBtn("lang-login")}
     <span class="plate"><img src="img/logo.svg" alt="Classic Auto" width="840" height="496"></span>
     <h1>Set a new password</h1><p class="lede">${esc(user.display_name)}, your account needs a password only you know. Use at least 12 characters.</p>
     <form id="pw-form" novalidate>
@@ -182,6 +230,7 @@ function buildShell() {
       <div class="side-foot"><div class="lock">${icon("shieldcheck", "")}<span>Private server. Nothing leaves it. Activity is logged.</span></div><div>Prabhu Plaza, S.V. Road, Malad West</div></div>
     </aside>
     <div class="main-col">
+      <div class="lang-strip">${langBtn()}</div>
       <header class="top">
         <button class="icon-btn burger" id="burger" type="button" aria-label="Open menu" aria-controls="side" aria-expanded="false">${icon("menu")}</button>
         <div class="crumb" id="crumb"></div>
@@ -193,6 +242,7 @@ function buildShell() {
           <button class="label" id="p-label" type="button" aria-haspopup="menu"></button>
           <button class="step" id="p-next" type="button" aria-label="Next month">${icon("right")}</button>
         </div>
+        ${langBtn("lang-top")}
         <button class="icon-btn" id="theme" type="button" aria-label="Switch theme"></button>
         <button class="user-btn" id="user" type="button" aria-haspopup="menu" aria-label="Account menu"><span class="avatar">${esc(initials(state.user.display_name))}</span><span class="who"><b>${esc(state.user.display_name.replace(/\s*\(.*\)$/, ""))}</b><span>${esc(roleLabel)}</span></span></button>
       </header>
@@ -235,7 +285,7 @@ function buildShell() {
 
 // ------------------------------------------------------------------ static demo: banner and role switch
 let demoInfo = null;
-const ROLE_ORDER = ["maintenance", "salesman", "manager", "owner"];
+const ROLE_ORDER = ["owner", "manager", "salesman", "calldesk", "maintenance", "accountant", "rto"];
 const roleRank = (id) => { const i = ROLE_ORDER.indexOf(id); return i < 0 ? 9 : i; };
 function demoBannerHtml() {
   const m = demoInfo;
@@ -297,6 +347,7 @@ function openPeriodMenu(anchor) {
 function openUserMenu(anchor) {
   openMenu(anchor, [
     { heading: `${state.user.display_name.replace(/\s*\(.*\)$/, "")} · ${state.user.role_label || state.user.role}` },
+    ...(window.caI18n ? window.caI18n.menuItems() : []),
     { label: "Dark theme", icon: "moon", checked: theme() === "dark", onClick: () => { applyTheme("dark"); $("#theme").innerHTML = icon("sun"); render(true); } },
     { label: "Light theme", icon: "sun", checked: theme() === "light", onClick: () => { applyTheme("light"); $("#theme").innerHTML = icon("moon"); render(true); } },
     { divider: true },
@@ -322,7 +373,11 @@ function changePasswordDrawer() {
 }
 
 async function signOut() {
-  if (DEMO) { toast("The demo has no sign-in. Use the buttons at the top to switch between owner, manager and salesman.", "demo"); return; }
+  if (DEMO) { toast("The demo has no sign-in. Use the buttons at the top to switch between the roles.", "demo"); return; }
+  if (!isSuper()) {                                     // 13 Nov 2026: signing out on purpose needs the owner's approval to come back
+    const ok = await confirmDialog({ title: "Sign out?", text: "This phone stays signed in if you just close the app. If you sign out, the owner has to approve you again before you can come back in.", confirmLabel: "Sign out" });
+    if (!ok) return;
+  }
   stopFeed();
   await forgetThisDevice();                             // this phone stops getting pushes for this person
   try { await api.post("auth/logout"); } catch { /* session may already be gone */ }
@@ -351,26 +406,28 @@ function startIdle() {
   const chip = $("#session-chip");
   const money = can(...FIN) || isSuper() || state.locked.length > 0;
   if (!chip || !money) return;
+  if (state.noMoneyLock && state.mfa?.verified) { chip.hidden = true; return; }   // the owner: money stays open
   chip.hidden = false;
   const tick = async () => {
     if (!state.user) return;
     const left = Math.max(0, state.idleMinutes - (Date.now() - api.lastTouch) / 60000);
     const warn = left <= 5;
     chip.className = "session-chip" + (warn ? " warn" : "");
-    chip.innerHTML = `${icon("lock", "")}<span>Locks in ${Math.ceil(left)} min</span>`;
-    chip.title = `Money pages sign you out after ${state.idleMinutes} idle minutes. Any click that loads data keeps the session alive.`;
-    if (left <= 2 && !warned) {
+    if (!state.mfa?.verified) { chip.className = "session-chip warn"; chip.innerHTML = `${icon("lock", "")}<span>Money locked</span>`;
+      chip.title = "Money pages are locked. Tap to open them with your 6-digit code. You stay signed in."; chip.onclick = () => { location.hash = "#/security"; }; return; }
+    chip.onclick = null;
+    chip.innerHTML = `${icon("lock", "")}<span>Money locks in ${Math.ceil(left)} min</span>`;
+    chip.title = `You stay signed in. Money pages lock after ${state.idleMinutes} idle minutes and open again with your 6-digit code.`;
+    if (left <= 0 && !warned) {
       warned = true;
-      const stay = await confirmDialog({ title: "Still there?", text: `For safety, this session ends in about ${Math.ceil(left)} minutes of no activity.`, confirmLabel: "Stay signed in" });
-      if (stay) { try { await api.get("me"); } catch { /* the 401 handler shows the sign-in page */ } }
-      warned = false;
+      try { await boot(); toast("Money pages are locked. Tap 'Money locked' and type your code to open them.", ""); } catch { /* shown by boot */ }
     }
-    if (left <= 0) { try { await api.get("me"); } catch { /* signed out by the server */ } }
   };
   tick();
   idleTimer = setInterval(tick, 20000);
 }
-window.addEventListener("ca:mfa", () => { if (state.user && route.page !== "security") { toast("That page needs your two-factor code first.", "err"); location.hash = "#/security"; } });
+window.addEventListener("ca:reboot", () => { boot().catch(() => {}); });   // money pages unlocked with the code: reload caps
+window.addEventListener("ca:mfa", () => { if (state.user && route.page !== "security") { toast("Money pages are locked. Type your 6-digit code to open them.", "err"); location.hash = "#/security"; } });
 
 // ------------------------------------------------------------------ router
 function parseHash() {
@@ -381,11 +438,14 @@ function parseHash() {
 }
 export function go(hash) { location.hash = hash; }
 
-const HOME_MODULE = { owner: "overview", manager: "manager", salesman: "mine", accountant: "accountant", maintenance: "maint", rto: "rto" };
+const HOME_MODULE = { owner: "overview", manager: "manager", salesman: "mine", accountant: "accountant", maintenance: "maint", rto: "rto", calldesk: "calldesk" };
 
 async function render(keepScroll = false, restoreY = 0) {
   const meta = ALL[route.page] || ALL.home;
-  const main = $("#main"); if (!main) return;
+  let main = $("#main"); if (!main) return;
+  // #main lives across every route and pages bind their click handlers on it (ctx.root): a fresh #main per render, so one page's handlers
+  // never fire on the next page (Cars in and out sent every tab tap on every later page to #/intakes?tab=...)
+  { const fresh = main.cloneNode(false); main.replaceWith(fresh); main = fresh; }
   const token = ++renderToken;
   disposeCharts(); disposeGrids(); resetPageScope();
   document.body.dataset.view = route.page;
@@ -394,7 +454,7 @@ async function render(keepScroll = false, restoreY = 0) {
   $$("[data-page]").forEach((a) => { if (a.dataset.page === tabPage) a.setAttribute("aria-current", "page"); else a.removeAttribute("aria-current"); });
   document.title = `${meta.label} · Classic Auto`;
   $("#crumb").textContent = meta.label;
-  $("#period").hidden = !meta.period || (route.page === "home" && ["maintenance", "rto"].includes(homeKind()));
+  $("#period").hidden = !meta.period || (route.page === "home" && ["maintenance", "rto", "calldesk"].includes(homeKind()));
   updatePeriodUi();
   if (!keepScroll) window.scrollTo(0, 0);
   main.innerHTML = `<div class="g"><div class="skel card c12"></div></div><div class="kpis"><div class="skel kpi"></div><div class="skel kpi"></div><div class="skel kpi"></div></div>`;
@@ -410,7 +470,7 @@ async function render(keepScroll = false, restoreY = 0) {
     await mod.render(ctx);
     if (restoreY && token === renderToken) window.scrollTo(0, restoreY);
     if (token === renderToken) {                      // the top bar and the page heading say the same thing
-      const h1 = main.querySelector(".page-title")?.textContent?.trim();
+      const h1 = srcText(main.querySelector(".page-title")).trim();
       if (h1) { $("#crumb").textContent = h1; document.title = `${h1} · Classic Auto`; }
     }
     main.focus({ preventScroll: true });
@@ -440,7 +500,7 @@ function onRoute(restoreY = 0) {
 // The demo recordings predate the Desk capabilities: the demo adds the role defaults (APP-SPEC 8.2) when they are missing.
 const ACC_TEAM = ["acc.own", "acc.team", "acc.review", "acc.reassign", "acc.warnings.manage"];
 const MAINT_CAPS = ["maint.view", "maint.work", "maint.inspect"];
-const DESK_DEMO_CAPS = { owner: ["desk.inbox", "desk.leads.act", "desk.ai_call", "chat.use", "desk.ask", ...ACC_TEAM, "acc.settings", "stock.intake", "bank.tag", ...MAINT_CAPS, "maint.verify"], manager: ["desk.inbox", "desk.leads.act", "desk.ai_call", "chat.use", "desk.ask", ...ACC_TEAM, "stock.intake", ...MAINT_CAPS, "maint.verify"], salesman: ["desk.inbox", "desk.leads.act", "desk.ai_call", "chat.use", "acc.own", "stock.intake"], maintenance: ["chat.use", ...MAINT_CAPS] };
+const DESK_DEMO_CAPS = { owner: ["desk.inbox", "desk.leads.act", "desk.ai_call", "chat.use", "desk.ask", ...ACC_TEAM, "acc.settings", "stock.intake", "bank.tag", ...MAINT_CAPS, "maint.verify", "calldesk.use", "calldesk.report"], manager: ["desk.inbox", "desk.leads.act", "desk.ai_call", "chat.use", "desk.ask", ...ACC_TEAM, "stock.intake", ...MAINT_CAPS, "maint.verify", "calldesk.use", "calldesk.report"], salesman: ["desk.inbox", "desk.leads.act", "desk.ai_call", "chat.use", "acc.own", "stock.intake"], maintenance: ["chat.use", ...MAINT_CAPS] };
 function applyMe(me) {
   if (DEMO) me.capabilities = [...new Set([...(me.capabilities || []), ...(DESK_DEMO_CAPS[me.user.role] || [])])];
   state.user = me.user;
@@ -448,7 +508,8 @@ function applyMe(me) {
   state.locked = me.capabilities_locked || [];
   state.mfa = me.mfa || {};
   state.perms = me.permissions || [];
-  state.idleMinutes = me.idle_timeout_minutes || 120;
+  state.idleMinutes = me.money_lock_minutes || me.idle_timeout_minutes || 120;
+  state.noMoneyLock = me.money_lock_minutes == null;
   state.settings = me.settings_public || state.settings;
   state.capSig = JSON.stringify([me.user.role, me.capabilities, me.capabilities_locked]);
 }
@@ -515,6 +576,8 @@ async function bootDemo() {
   state.months = meta.months;
   setClockShift(meta.recorded_ms - Date.now());
   demoInfo = { ...meta, current: await api.demoRole() };
+  // the sample customers' numbers are made up: the demo never opens the dialer or WhatsApp with one
+  document.addEventListener("click", (e) => { const a = e.target.closest?.('a[href^="tel:"], a[href^="https://wa.me/"]'); if (a) { e.preventDefault(); toast("Demo: here the phone would ring the customer.", "demo"); } }, true);
   const me = await api.get("me");
   initPeriod(null);
   applyMe(me);
@@ -554,6 +617,7 @@ boot().catch((e) => {
   const offline = (e instanceof ApiError && e.status === 0) || !navigator.onLine;
   document.body.classList.add("offline-page");
   app.innerHTML = `<main class="offline-card">
+    ${langBtn("lang-login")}
     <span class="plate"><img src="img/logo.svg" alt="Classic Auto, since 1974" width="840" height="496"></span>
     <h1>${offline ? "You are offline" : "CA Desk could not start"}</h1>
     <p>${esc(offline ? "Leads and chat need a connection. Check your mobile data or Wi-Fi, then try again." : e.message || "Something went wrong. Try again in a minute.")}</p>
@@ -568,7 +632,7 @@ boot().catch((e) => {
 /** Label every table cell with its column title, so the phone layout (one card per row) can show what each figure is. */
 function labelTables() {
   document.querySelectorAll("table.tbl:not([data-labelled])").forEach((t) => {
-    const heads = [...t.querySelectorAll("thead th")].map((h) => h.textContent.trim());
+    const heads = [...t.querySelectorAll("thead th")].map((h) => srcText(h).trim());
     if (!heads.length) return;
     t.querySelectorAll("tbody tr, tfoot tr").forEach((tr) => [...tr.children].forEach((td, i) => { if (!td.dataset.label && heads[i]) td.dataset.label = heads[i]; if (!td.textContent.trim() && !td.querySelector("svg,img,button,input")) td.classList.add("blank"); }));
     t.dataset.labelled = "1";

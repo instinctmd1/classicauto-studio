@@ -1,11 +1,11 @@
 // Classic Auto Desk service worker. Scope "./" so the same file works at / (live) and inside the demo folder.
 // Caches only the app shell (styles, scripts, fonts, icons). Never caches /api, the demo's data/ answers, non-GET or
 // cross-origin requests, and never serves a cached index.html: a sign-in redirect (Cloudflare Access) must reach the browser.
-const VERSION = "desk-2026-11-12.2";   // .1: the maintenance pages and their styles; .2: inspection footer wraps at 375 px
+const VERSION = "desk-2026-11-14.5";   // 14 Nov: .1 cash Excel; .2 expenses split, reminder settings; .3 stay signed in 30 days, money locks by code; .4 call desk; .5 Hindi / Hinglish / English switch
 const CACHE = `ca-desk-${VERSION}`;
 const SHELL = [
-  "offline.html", "js/theme-init.js", "js/offline.js", "icons/icon-192.png", "icons/badge-96.png",
-  "css/tokens.css", "css/app.css", "css/pages.css", "css/desk.css", "css/maint.css",
+  "offline.html", "js/theme-init.js", "js/offline.js", "js/i18n-boot.js", "js/i18n.js", "js/i18n-hi.js", "js/i18n-hing.js", "icons/icon-192.png", "icons/badge-96.png",
+  "css/tokens.css", "css/app.css", "css/pages.css", "css/desk.css", "css/maint.css", "css/calldesk.css",
   "fonts/bebas-neue-latin-400.woff2", "fonts/manrope-latin.woff2", "fonts/manrope-latin-ext.woff2",
   "img/logo.svg",
 ];
@@ -14,7 +14,8 @@ const ASSET_DIRS = /^(css|js|fonts|img|icons|vendor)\//;
 const scopePath = () => new URL(self.registration.scope).pathname;
 
 self.addEventListener("install", (e) => {
-  e.waitUntil(caches.open(CACHE).then((c) => c.addAll(SHELL)).then(() => self.skipWaiting()));
+  // cache "reload": a phone's own HTTP cache must not hand the new version a stale stylesheet or script
+  e.waitUntil(caches.open(CACHE).then((c) => c.addAll(SHELL.map((u) => new Request(u, { cache: "reload" })))).then(() => self.skipWaiting()));
 });
 
 self.addEventListener("activate", (e) => {
@@ -29,7 +30,7 @@ self.addEventListener("activate", (e) => {
 async function staleWhileRevalidate(req, event) {
   const cache = await caches.open(CACHE);
   const hit = await cache.match(req);
-  const fresh = fetch(req).then((res) => {
+  const fresh = fetch(req, { cache: "no-cache" }).then((res) => {      // revalidate (a 304 is cheap) instead of trusting the HTTP cache's guess
     if (res.ok && res.type === "basic") cache.put(req, res.clone());
     return res;
   });
@@ -39,7 +40,7 @@ async function staleWhileRevalidate(req, event) {
 
 async function networkFirstNavigation(req) {
   try {
-    return await fetch(req);
+    return await fetch(req, { cache: "no-cache" });      // index.html is always revalidated: a phone's HTTP cache must not keep an old page
   } catch {
     const off = await caches.match(new URL("offline.html", self.registration.scope).href);
     return off || new Response("You are offline.", { status: 503, headers: { "Content-Type": "text/plain; charset=utf-8" } });

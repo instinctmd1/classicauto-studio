@@ -2,7 +2,7 @@
 // Tooltips are plain class-based markup (no inline style attributes: the CSP forbids them).
 import { esc, lakh, num, reducedMotion } from "./util.js";
 
-const FONT = '"Manrope", system-ui, sans-serif';
+const FONT = '"Manrope", system-ui, "Noto Sans Devanagari", "Kohinoor Devanagari", "Nirmala UI", sans-serif';
 const registry = new Set();
 
 export function disposeCharts() { registry.forEach((c) => c.dispose()); registry.clear(); }
@@ -36,13 +36,14 @@ export function mountChart(node, build, label) {
     opt.animation = !reducedMotion();
     opt.animationDuration = 900; opt.animationEasing = "cubicOut"; opt.animationDelay = (i) => i * 22;
     opt.textStyle = { fontFamily: FONT, ...(opt.textStyle || {}) };
-    chart.setOption(opt, true);
+    chart.setOption(window.caI18n ? window.caI18n.deep(opt) : opt, true);   // the words in Hindi while Hindi is on
   };
   apply();
   const ro = new ResizeObserver(() => { chart.resize(); const n = node.clientWidth < 520; if (n !== narrow) { narrow = n; apply(); } });
   ro.observe(node);
   if (label) { node.setAttribute("role", "img"); node.setAttribute("aria-label", label); }
-  registry.add({ dispose() { ro.disconnect(); chart.dispose(); } });
+  window.addEventListener("ca:lang", apply);                               // the switch redraws the chart in the other language
+  registry.add({ dispose() { window.removeEventListener("ca:lang", apply); ro.disconnect(); chart.dispose(); } });
   return chart;
 }
 

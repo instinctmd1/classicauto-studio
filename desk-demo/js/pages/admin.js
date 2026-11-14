@@ -6,7 +6,8 @@ import { ago, badge, dateFmt, esc, icon, mount, num, sentence } from "../util.js
 import { bindTabs, confirmDialog, formDrawer, pageHead, save, tabsHtml, toast } from "../ui.js";
 import { card } from "./_shared.js";
 
-const ROLES = [["salesman", "Salesman"], ["manager", "Manager"], ["owner", "Owner"], ["rto_agent", "RTO agent"], ["driver", "Driver"], ["office", "Office"]];
+const ROLES = [["salesman", "Salesman"], ["manager", "Manager"], ["owner", "Owner"], ["rto_agent", "RTO agent"], ["maintenance", "Maintenance"], ["driver", "Driver"], ["office", "Office"]];
+const roleLabel = (k) => (ROLES.find((r) => r[0] === k) || [0, sentence(k)])[1];
 
 // [key, label, kind, hint] kind: int | pct | money | bool
 const RULES = [
@@ -14,6 +15,7 @@ const RULES = [
     ["lead_sla_minutes", "Claim a lead within (minutes)", "int", "Leads unclaimed for longer count as missed."], ["cold_lead_days", "A lead goes cold after (days)", "int"],
     ["aged_threshold_days", "Stock is aged after (days)", "int"], ["rto_sla_days", "RTO transfer should finish within (days)", "int"], ["upgrade_cycle_years", "Upgrade offer after (years)", "int"], ["ig_follower_goal", "Instagram follower goal", "int"],
   ]],
+  ["Reminders", [["rto_not_started_days", "RTO: remind when papers are not started after (days)", "int", "A case still collecting papers this many days after it was opened."], ["rto_stuck_days", "RTO: remind when a case has not moved for (days)", "int", "An open case with no stage change for this many days."], ["rto_digest_hour", "Morning reminder hour", "int", "0 to 23, India time. The RTO and maintenance counts go out once a day from this hour."]]],
   ["Alerts", [["alert_insurance_days", "Insurance expiry warning (days)", "int"], ["alert_puc_days", "PUC expiry warning (days)", "int"], ["alert_consignment_days", "Park-N-Sell agreement warning (days)", "int"], ["alert_dealer_auth_days", "Dealer papers warning (days)", "int"]]],
   ["Tax and money", [
     ["gst_margin_rate", "GST on margin (%)", "pct", "Confirm with your CA."], ["gst_service_rate", "GST on commission (%)", "pct"], ["tcs_rate", "TCS rate (%)", "pct"], ["tcs_rate_no_pan", "TCS rate without PAN (%)", "pct"],
@@ -25,6 +27,7 @@ const RULES = [
 export async function render(ctx) {
   const tab = ctx.query.get("tab") || "staff";
   const tabs = [{ id: "staff", label: "Staff" }, { id: "rules", label: "Rules and rates" }, { id: "engine", label: "Lead engine" }, { id: "sessions", label: "Signed-in now" }];
+  if (can("users.manage")) tabs.splice(1, 0, { id: "team", label: "Team structure" });
   if (isSuper()) tabs.push({ id: "ask", label: "Ask Claude answers" });          // SPEC-ASK-CLAUDE-CHAT 5.3: the super-admin only
   mount(ctx.root, pageHead({ title: "Settings", sub: "Staff, the rules the dashboard uses, and the link to the lead engine." }) + `<section class="card flush rise">${tabsHtml(tabs, tab, "Settings sections")}<div id="pane"></div></section>`);
   const pane = ctx.root.querySelector("#pane");
@@ -32,6 +35,7 @@ export async function render(ctx) {
     pane.innerHTML = `<div class="skel card"></div>`;
     try {
       if (t === "staff") await staffPane(pane, ctx);
+      else if (t === "team") await teamPane(pane);
       else if (t === "rules") await rulesPane(pane, ctx);
       else if (t === "engine") await enginePane(pane, ctx);
       else if (t === "ask") await askPane(pane, ctx);
@@ -44,16 +48,33 @@ export async function render(ctx) {
 
 async function staffPane(pane, ctx) {
   const s = await get("admin/staff");
+  const byId = Object.fromEntries(s.data.map((x) => [x.id, x]));
   const manage = can("users.manage");
   pane.innerHTML = `<div class="pad-box pill-row">${manage ? `<button class="btn" type="button" id="add-s">${icon("plus")}Add staff</button>` : ""}<span class="muted">The engine name must match the name the lead engine uses, letter for letter.</span></div>
-    <div class="scroll-x"><table class="tbl left"><thead><tr><th>Name</th><th>Role</th><th>Engine name</th><th>Rotation</th><th>Status</th></tr></thead><tbody>${s.data.map((x) => `<tr class="row-btn" tabindex="0" data-s="${x.id}"><td>${esc(x.name)}</td><td>${esc((ROLES.find((r) => r[0] === x.role) || [0, sentence(x.role)])[1])}</td><td class="mono">${esc(x.engine_name || "—")}</td><td>${x.in_rotation ? badge("In rotation", "pos") : badge("Not in rotation", "warn")}</td><td>${x.active ? badge("Active", "pos") : badge("Left")}</td></tr>`).join("")}</tbody></table></div>`;
+    <div class="scroll-x"><table class="tbl left"><thead><tr><th>Name</th><th>Role</th><th>Reports to</th><th>Engine name</th><th>Rotation</th><th>Status</th></tr></thead><tbody>${s.data.map((x) => `<tr class="row-btn" tabindex="0" data-s="${x.id}"><td>${esc(x.name)}${x.job ? `<span class="sub">${esc(x.job)}</span>` : ""}</td><td>${esc(roleLabel(x.role))}</td><td>${esc(byId[x.reports_to_staff_id]?.name || "—")}</td><td class="mono">${esc(x.engine_name || "—")}</td><td>${x.in_rotation ? badge("In rotation", "pos") : badge("Not in rotation", "warn")}</td><td>${x.active ? badge("Active", "pos") : badge("Left")}</td></tr>`).join("")}</tbody></table></div>`;
   const form = (x) => formDrawer({ title: x ? "Edit staff" : "Add staff", submit: x ? "Save changes" : "Add", ok: "Saved",
     fields: [{ name: "name", label: "Name", type: "text", required: true, value: x?.name }, { name: "role", label: "Role", type: "select", required: true, value: x?.role || "salesman", options: ROLES }, { name: "engine_name", label: "Engine name", type: "text", value: x?.engine_name || "", hint: "Exactly as the lead engine spells it." },
+      { name: "job", label: "Job", type: "text", value: x?.job || "", hint: "A few words on what they do, e.g. Sells the luxury cars." },
+      { name: "reports_to_staff_id", label: "Reports to", type: "select", allowEmpty: true, value: x?.reports_to_staff_id ?? "", options: s.data.filter((o) => o.id !== x?.id && (o.active || o.id === x?.reports_to_staff_id)).map((o) => [o.id, o.name]) },
       { name: "engine_person", label: "Engine person (shared seat only)", type: "text", value: x?.engine_person || "", hint: "Only when two people share one engine seat (the partners): this person's own name in the engine's staff list. The Desk app acts as this name. Leave empty otherwise." },
       { name: "rotation_weight", label: "Rotation weight", type: "number", step: 1, min: 0, value: x?.rotation_weight ?? 1 }, { name: "in_rotation", label: "Receives routed leads", type: "checkbox", value: x ? x.in_rotation : 1 }, { name: "active", label: "Still works here", type: "checkbox", value: x ? x.active : 1 }],
-    onSubmit: async (v) => { const b = { ...v }; if (!b.engine_name) delete b.engine_name; if (!b.engine_person) { if (x?.engine_person) b.engine_person = null; else delete b.engine_person; } if (x) await api.patch(`admin/staff/${x.id}`, b); else await api.post("admin/staff", b); ctx.refresh(); } });
+    onSubmit: async (v) => { const b = { ...v, reports_to_staff_id: v.reports_to_staff_id ? +v.reports_to_staff_id : null }; if (!b.engine_name) delete b.engine_name; if (!b.engine_person) { if (x?.engine_person) b.engine_person = null; else delete b.engine_person; } if (x) await api.patch(`admin/staff/${x.id}`, b); else await api.post("admin/staff", b); ctx.refresh(); } });
   pane.querySelector("#add-s")?.addEventListener("click", () => form(null));
   if (manage) pane.addEventListener("click", (e) => { const r = e.target.closest("[data-s]"); if (r) form(s.data.find((x) => x.id === +r.dataset.s)); });
+}
+
+// Read-only: everyone under the owner, indented by who they report to (the staff rows' "Reports to").
+async function teamPane(pane) {
+  const s = await get("admin/staff");
+  const live = s.data.filter((x) => x.active);
+  const ids = new Set(live.map((x) => x.id));
+  const kids = {};
+  for (const x of live) { const k = ids.has(x.reports_to_staff_id) ? x.reports_to_staff_id : 0; (kids[k] ||= []).push(x); }
+  const order = (a, b) => (a.role === "owner" ? 0 : 1) - (b.role === "owner" ? 0 : 1) || a.name.localeCompare(b.name);
+  const seen = new Set();
+  const tree = (k) => (kids[k] || []).filter((x) => !seen.has(x.id) && seen.add(x.id)).sort(order).map((x) => `<li><b>${esc(x.name)}</b> <span class="muted">${esc(roleLabel(x.role))}${x.job ? " · " + esc(x.job) : ""}</span>${kids[x.id] ? `<ul>${tree(x.id)}</ul>` : ""}</li>`).join("");
+  pane.innerHTML = live.length ? `<div class="pad-box"><p class="muted">Who reports to whom. Change it in the Staff tab (Reports to).</p><ul class="team-tree">${tree(0)}</ul></div>`
+    : `<div class="empty">${icon("users", "")}<b>No staff yet</b></div>`;
 }
 
 async function rulesPane(pane, ctx) {

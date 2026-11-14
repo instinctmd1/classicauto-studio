@@ -45,7 +45,7 @@ function act(btn, fn, opts) {
   return save(btn, async () => { try { return await fn(); } catch (e) { if (e instanceof ApiError && e.code === "demo") toast(e.message, "demo"); throw e; } }, opts);
 }
 async function busy(btn, fn) {
-  const html = btn.innerHTML; btn.disabled = true; btn.innerHTML = `<span class="spin"></span> ${esc(btn.textContent.trim())}`;
+  const html = window.caI18n ? window.caI18n.html(btn) : btn.innerHTML; btn.disabled = true; btn.innerHTML = `<span class="spin"></span> ${esc(btn.textContent.trim())}`;
   try { return await fn(); } finally { if (btn.isConnected) { btn.disabled = false; btn.innerHTML = html; } }
 }
 const clearUndoToasts = () => document.querySelectorAll("#toasts .toast").forEach((t) => { if (t.querySelector(".toast-act")) t.remove(); });
