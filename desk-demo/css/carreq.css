@@ -1,0 +1,82 @@
+/* Get a car ready (app/carreq.py, pages/carreq.js): the request cards, the request page with its thread, the form.
+   Built from the Desk tokens only (tokens.css), like calldesk.css, whose form pieces (.cd-step, .cd-chip, .cd-car, .cd-bar)
+   the form reuses. One hand, on a phone: 52 px and bigger buttons; state is always a word as well as a colour. */
+
+.cr { max-width: 900px; margin: 0 auto; }
+.cr.one { max-width: 720px; display: grid; gap: 16px; }
+.cr .sec-h h2, .cr-sec .sec-h h2 { font: 400 20px/1 var(--font-display); letter-spacing: 0.06em; text-transform: uppercase; }
+.cr-new { width: 100%; min-height: 60px; font-size: 17px; border-radius: 14px; margin: 0 0 16px; }
+.cr-new svg { width: 20px; height: 20px; }
+@media (min-width: 720px) { .cr-new { width: auto; padding: 0 28px; } }
+.cr-views { margin: 0 0 14px; }
+.cr-list { display: grid; gap: 12px; grid-template-columns: minmax(0, 1fr); }
+@media (min-width: 900px) { .cr .cr-list { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.cr-none { display: flex; align-items: center; gap: 8px; font-size: 13.5px; font-weight: 600; }
+.cr-none svg { width: 16px; height: 16px; color: var(--pos); flex: none; }
+.cr-more { width: 100%; margin-top: 10px; }
+.cr-sec .sec-h { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.cr-sec .sec-h .act { margin-left: auto; }
+
+/* one card */
+.cr-card, .cr-head { background: var(--card); border: 1px solid var(--line); border-radius: var(--r-lg); padding: 14px 16px 14px 20px; min-width: 0;
+  box-shadow: inset 4px 0 0 var(--line-strong); display: grid; gap: 8px; }
+.cr-card.s-open, .cr-head.s-open { box-shadow: inset 4px 0 0 var(--warn); }
+.cr-card.s-accepted, .cr-card.s-moving, .cr-card.s-arrived, .cr-head.s-accepted, .cr-head.s-moving, .cr-head.s-arrived { box-shadow: inset 4px 0 0 var(--info); }
+.cr-card.s-ready, .cr-head.s-ready { box-shadow: inset 4px 0 0 var(--pos); }
+.cr-card.late, .cr-card.s-cannot, .cr-head.late, .cr-head.s-cannot { box-shadow: inset 4px 0 0 var(--neg); }
+.cr-top { display: flex; align-items: flex-start; gap: 8px 12px; flex-wrap: wrap; }
+.cr-top .badge { margin-left: auto; }
+.cr-head .cr-top .badge { margin-left: 0; }
+.cr-title { flex: 1 1 200px; min-width: 0; display: flex; flex-direction: column; gap: 2px; color: inherit; text-decoration: none; min-height: 44px; }
+.cr-title b { font-size: 17px; line-height: 1.25; overflow-wrap: anywhere; }
+.cr-title:hover b { color: var(--red-text); }
+.cr-meta { font-size: 12.5px; color: var(--muted); }
+.cr-times { display: flex; flex-wrap: wrap; gap: 6px 14px; align-items: center; }
+.cr-clock, .cr-cust { display: inline-flex; align-items: center; gap: 6px; font-size: 14px; font-weight: 700; }
+.cr-clock svg, .cr-cust svg, .cr-where svg, .cr-why svg, .cr-hint svg, .cr-preview svg { width: 16px; height: 16px; flex: none; }
+.cr-clock.late { color: var(--neg); }
+.cr-clock.ok { color: var(--pos); }
+.cr-cust { color: var(--muted); font-weight: 600; }
+.cr-times.big .cr-clock { font-size: 18px; }
+.cr-late-t { font-size: 14px; }
+.cr-jobs { list-style: none; padding: 0; display: flex; flex-wrap: wrap; gap: 6px; }
+.cr-jobs li { font-size: 12.5px; font-weight: 700; padding: 4px 10px; border-radius: 99px; background: var(--card-3); }
+.cr-where, .cr-why { display: flex; align-items: flex-start; gap: 6px; font-size: 13.5px; margin: 0; }
+.cr-where svg { margin-top: 2px; color: var(--muted); }
+.cr-why { color: var(--neg); font-weight: 700; }
+.cr-why svg { margin-top: 2px; }
+.cr-who { margin: 0; }
+.cr-acts { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 4px; }
+.cr-act { min-height: 52px; font-size: 15px; flex: 1 1 150px; }
+.cr-act.big { min-height: 60px; font-size: 16.5px; flex-basis: 220px; }
+.cr-act.cr-quiet { flex: 0 1 auto; }
+.cr-dl { grid-template-columns: repeat(2, minmax(0, 1fr)); margin-top: 6px; }
+.cr-dl .cr-jobs { margin-top: 2px; }
+
+/* the thread */
+.cr-thread { list-style: none; padding: 0; display: grid; gap: 10px; margin: 0 0 12px; }
+.cr-ev { display: flex; align-items: flex-start; gap: 10px; font-size: 13.5px; color: var(--muted); }
+.cr-ev b { color: var(--text); }
+.cr-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--line-strong); flex: none; margin-top: 5px; }
+.cr-ev.s-ready .cr-dot { background: var(--pos); }
+.cr-ev.s-cannot .cr-dot { background: var(--neg); }
+.cr-why-t { display: block; color: var(--neg); font-weight: 700; margin-top: 2px; overflow-wrap: anywhere; }
+.cr-msg { max-width: 86%; justify-self: start; background: var(--card-2); border: 1px solid var(--line); border-radius: 14px 14px 14px 4px; padding: 8px 12px; }
+.cr-msg.mine { justify-self: end; background: var(--info-bg); border-radius: 14px 14px 4px 14px; }
+.cr-msg p { white-space: pre-line; overflow-wrap: anywhere; font-size: 15px; }
+.cr-by { display: block; font-size: 12px; font-weight: 700; color: var(--muted); margin-bottom: 2px; }
+.cr-say { display: flex; gap: 8px; align-items: flex-end; }
+.cr-say .textarea { flex: 1; min-height: 52px; }
+.cr-say .btn { min-height: 52px; }
+
+/* the form */
+.cr-form .cd-ask { font-size: 18px; font-weight: 800; }
+.cr-hint, .cr-preview { display: flex; align-items: flex-start; gap: 8px; font-size: 13px; color: var(--muted); margin: 10px 0 0; }
+.cr-preview { font-size: 14.5px; color: var(--text); }
+.cr-preview:empty { display: none; }
+.cr-job:disabled { opacity: 1; cursor: default; }
+.cr-time-in { max-width: 200px; }
+/* the form's send bar (.cd-bar, sticky at the bottom) sat under the phone's tab bar: a tap on Send landed on Inbox, Chat, Home or More.
+   As on the call desk, the form and the request page are full-page screens with their own Back link. */
+body[data-view="carreq"][data-sub="1"] .bottom { display: none; }
+body[data-view="carreq"][data-sub="1"] .page { padding-bottom: 20px; }

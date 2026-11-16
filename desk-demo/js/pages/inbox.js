@@ -76,7 +76,12 @@ export async function render(ctx) {
     if (!quiet && !append) list.setAttribute("aria-busy", "true");
     let r;
     try {
-      r = await desk.get("desk/inbox", { view: st.view, tier: st.tier, q: st.q, page: st.page }, quiet ? { background: true } : {});
+      const ask = (page) => desk.get("desk/inbox", { view: st.view, tier: st.tier, q: st.q, page }, quiet ? { background: true } : {});
+      r = await ask(st.page);
+      if (quiet && !append && st.page > 1) {          // a refresh after "Show more": read every page on screen, or the list shrinks to the last page and the cards jump under the finger
+        const earlier = await Promise.all(Array.from({ length: st.page - 1 }, (_, i) => ask(i + 1)));
+        r = { ...r, data: earlier.flatMap((x) => x.data || []).concat(r.data || []) };
+      }
     } catch (e) {
       if (!ctx.alive()) return;
       list.removeAttribute("aria-busy");

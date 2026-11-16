@@ -71,15 +71,41 @@ function outcome(it) {
   return `<p class="fu-out">${icon("info", "")}Excused${d.until ? ` until ${esc(day(d.until, false))}` : ""}${d.by ? ` · by ${esc(d.by)}` : ""}${d.note ? `<small>${esc(d.note)}</small>` : ""}</p>`;
 }
 
+/** The follow-up calls the briefs planned (owner, 15 Nov 2026): after a call's screenshot and brief the lead waits here
+ *  for its next call. Overdue first, then today, then later; a team viewer sees every salesman's. */
+function callsHtml(r, team) {
+  const items = (r && r.items) || [];
+  if (!items.length) return team ? "" : `<section class="fu-sec"><h2 class="eyebrow">Follow-up calls</h2><p class="muted small-note">${icon("check", "")}No follow-up call planned. Each brief asks when you will call next.</p></section>`;
+  const today = new Date(deskNow() + 5.5 * 36e5).toISOString().slice(0, 10), now = deskNow();
+  const groups = [["Overdue", items.filter((x) => istMs(x.due_at) <= now)], ["Today", items.filter((x) => istMs(x.due_at) > now && String(x.due_at).slice(0, 10) === today)],
+    ["Later", items.filter((x) => istMs(x.due_at) > now && String(x.due_at).slice(0, 10) > today)]].filter(([, g]) => g.length);
+  const card = (x) => `<article class="fu-card rise"><div class="fu-top"><a class="fu-id" href="#/lead/${+x.lead_id}" aria-label="Open lead ${+x.lead_id}">#${+x.lead_id}</a>
+      <span class="fu-name">${esc(x.customer || "Customer")}</span>${team ? `<span class="badge">${esc(x.seat)}</span>` : ""}${x.state === "missed" ? `<span class="badge neg">Manager told</span>` : istMs(x.due_at) <= now ? `<span class="badge warn">Not followed up</span>` : ""}</div>
+    ${x.car ? `<p class="fu-car muted">${esc(x.car)}</p>` : ""}
+    <p class="fu-out">${icon("clock", "")}${esc(day(x.due_at))}${x.next_step ? `<small>${esc(x.next_step)}</small>` : ""}</p>
+    ${team ? "" : `<div class="fu-acts"><a class="btn primary" href="#/lead/${+x.lead_id}">${icon("phone")}Call now</a></div>`}</article>`;
+  return `<section class="fu-sec" aria-label="Follow-up calls"><h2 class="eyebrow">Follow-up calls · ${items.length}</h2>
+    ${groups.map(([label, g]) => `<h3 class="eyebrow fu-sub">${esc(label)}</h3><div class="fu-items">${g.map(card).join("")}</div>`).join("")}
+    <p class="muted small-note fu-help">${icon("info", "")}${team ? "From each brief's next call time. The salesman is reminded until he calls; the sales manager is told if he does not." : "Each call asks for its screenshot and a brief, and the brief sets the next call. The app reminds you until you call."}</p></section>`;
+}
+
 export async function render(ctx) {
   const approverCaps = can("acc.followup") || can("acc.team");
   let tab = ctx.query.get("tab") === "past" && approverCaps ? "past" : "now";
   ctx.root.innerHTML = `<div class="fu-page">${pageHead({ title: approverCaps ? "Follow-up list" : "My follow-ups", sub: approverCaps
       ? "Leads whose salesman did not prove he called the customer back. Move each one to another salesman, keep it with a new deadline, or excuse it. Nothing moves until you approve."
-      : "Leads that go on the follow-up list unless you follow up. A call counts once its brief is filled." })}
+      : "Your follow-up calls, and the leads that go on the follow-up list unless you follow up. A call counts once its brief is filled." })}
+    <div id="fu-calls"></div>
     ${approverCaps && accOn() ? tabsHtml([{ id: "now", label: "To decide", icon: "flag" }, { id: "past", label: "Past lists", icon: "history" }], tab, "Follow-up list") : ""}<div id="fu"></div></div>`;
   const host = ctx.root.querySelector("#fu");
   if (!accOn()) { host.innerHTML = `<div class="empty">${icon("flag", "")}<b>Call accountability is off</b><p>The follow-up list starts once the owners switch it on.</p></div>`; return; }
+  const callsHost = ctx.root.querySelector("#fu-calls");
+  async function loadCalls() {
+    let r;
+    try { r = await desk.get("acc/callbacks", null, { background: true }); } catch { return; }      // fail closed: the section stays hidden
+    if (ctx.alive() && r && r.enabled) { setServerNow(r.server_now); callsHost.innerHTML = callsHtml(r, can("acc.team")); }
+  }
+  loadCalls();
 
   let res = null, choice = {}, viewing = null, busy = false;
   bindTabs(ctx.root, (t) => { tab = t; viewing = null; history.replaceState(null, "", `#/followups${t === "past" ? "?tab=past" : ""}`); t === "past" ? loadPast() : load(); });
@@ -273,6 +299,7 @@ export async function render(ctx) {
     if (c) { c.sel = e.target.checked; refreshBar(); }
   });
   onFeed((row) => {
+    if (row.kind === "lead.changed" && /^(call_attempt|brief_|followup_)/.test(row.why || "")) loadCalls();
     if (busy || tab !== "now" || viewing) return;
     if ((row.kind === "acc.changed" && /^followup_/.test(row.why || "")) || (row.kind === "lead.changed" && /^(followup_|pass|brief_|proof_|replied)/.test(row.why || ""))) {
       if (!host.querySelector(":focus") || !host.querySelector(".fu-bar")) load(true);

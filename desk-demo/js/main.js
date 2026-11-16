@@ -38,6 +38,9 @@ const NAV = [
     // the office call desk (CALLDESK-SPEC.md): the calls and the phone inquiry form; it is the home of the calldesk role
     { id: "calldesk", label: "Call desk", icon: "phone", any: ["calldesk.use"], onlyIf: () => homeKind() !== "calldesk" },
     { id: "calldesk-report", label: "Call desk today", icon: "reports", any: ["calldesk.report"] },
+    // get a car ready (app/carreq.py): the salesman's form, and the list of requests (the driver's home is his own list)
+    { id: "carreq/new", label: "Get car ready", icon: "plus", any: ["carreq.create"], onlyIf: () => !DEMO },
+    { id: "carreq", label: "Car requests", icon: "car", any: ["carreq.create", "carreq.work", "carreq.all", "maint.verify"], onlyIf: () => !DEMO && homeKind() !== "driver" },
     { id: "install", label: "Install the app", icon: "download", any: [], onlyIf: () => !isStandalone() } ] },
   { group: null, items: [
     { id: "home", label: "Home", icon: "overview", any: [], period: true },
@@ -59,6 +62,8 @@ const NAV = [
     // maintenance (MAINT-SPEC): where each car is, checklists and issues with photo proof, inspections; the check queue is a tab of the same page
     { id: "maint", label: "Maintenance", icon: "wrench", any: ["maint.view"], onlyIf: () => homeKind() !== "maintenance" },
     { id: "maint?tab=queue", label: "Waiting for check", icon: "shieldcheck", any: ["maint.verify"] },
+    // market stock (app/market.py): our cars and the partner and nearby dealers' cars, to find a car for a customer (live app only)
+    { id: "market", label: "Market stock", icon: "globe", any: ["market.view"], onlyIf: () => !DEMO },
     { id: "fi", label: "Finance and insurance", icon: "shield", any: ["deals.manage"] } ] },
   { group: "People", items: [
     { id: "leads", label: "Inquiries", icon: "leads", any: ["leads.view"], period: true },
@@ -76,6 +81,8 @@ const NAV = [
 const EXTRA = { intake: { label: "Car intake", any: ["stock.intake", "stock.manage"] }, lead: { label: "Lead", any: ["desk.inbox"] }, overview: { label: "Profit overview", any: ["money.view"], all: ["records.all"], period: true }, security: { label: "Security", any: [] }, "maint-inspect": { label: "Inspection", any: ["maint.view"] }, "maint-report": { label: "Inspection report", any: ["maint.view"] }, mine: { label: "Home", any: [] }, manager: { label: "Home", any: [] } };
 const ALL = Object.fromEntries([...NAV.flatMap((g) => g.items).map((p) => [p.id, p]), ...Object.entries(EXTRA).map(([k, v]) => [k, { id: k, ...v }])]);
 const app = document.getElementById("app");
+// "Skip to content" points at #main, which the router reads as an unknown page and answers with Home: focus the page instead
+document.querySelector(".skip")?.addEventListener("click", (e) => { e.preventDefault(); document.getElementById("main")?.focus(); });
 
 let renderToken = 0;
 let route = { page: "home", query: new URLSearchParams() };
@@ -438,7 +445,7 @@ function parseHash() {
 }
 export function go(hash) { location.hash = hash; }
 
-const HOME_MODULE = { owner: "overview", manager: "manager", salesman: "mine", accountant: "accountant", maintenance: "maint", rto: "rto", calldesk: "calldesk" };
+const HOME_MODULE = { owner: "overview", manager: "manager", salesman: "mine", accountant: "accountant", maintenance: "maint", rto: "rto", calldesk: "calldesk", driver: "carreq" };
 
 async function render(keepScroll = false, restoreY = 0) {
   const meta = ALL[route.page] || ALL.home;
@@ -454,7 +461,7 @@ async function render(keepScroll = false, restoreY = 0) {
   $$("[data-page]").forEach((a) => { if (a.dataset.page === tabPage) a.setAttribute("aria-current", "page"); else a.removeAttribute("aria-current"); });
   document.title = `${meta.label} · Classic Auto`;
   $("#crumb").textContent = meta.label;
-  $("#period").hidden = !meta.period || (route.page === "home" && ["maintenance", "rto", "calldesk"].includes(homeKind()));
+  $("#period").hidden = !meta.period || (route.page === "home" && ["maintenance", "rto", "calldesk", "driver"].includes(homeKind()));
   updatePeriodUi();
   if (!keepScroll) window.scrollTo(0, 0);
   main.innerHTML = `<div class="g"><div class="skel card c12"></div></div><div class="kpis"><div class="skel kpi"></div><div class="skel kpi"></div><div class="skel kpi"></div></div>`;
@@ -577,7 +584,7 @@ async function bootDemo() {
   setClockShift(meta.recorded_ms - Date.now());
   demoInfo = { ...meta, current: await api.demoRole() };
   // the sample customers' numbers are made up: the demo never opens the dialer or WhatsApp with one
-  document.addEventListener("click", (e) => { const a = e.target.closest?.('a[href^="tel:"], a[href^="https://wa.me/"]'); if (a) { e.preventDefault(); toast("Demo: here the phone would ring the customer.", "demo"); } }, true);
+  document.addEventListener("click", (e) => { const a = e.target.closest?.('a[href^="tel:"], a[href*="wa.me/"]'); if (a) { e.preventDefault(); toast("Demo: here the phone would ring the customer.", "demo"); } }, true);
   const me = await api.get("me");
   initPeriod(null);
   applyMe(me);

@@ -59,7 +59,7 @@ function flagsHtml(flags) {
   if (!flags.length) return "";
   const by = new Map();
   for (const f of flags) { if (!by.has(f.kind)) by.set(f.kind, []); by.get(f.kind).push(f); }
-  const link = (f) => (f.deal_id ? `<a href="#/deals?deal=${f.deal_id}">Deal ${f.deal_id}</a>` : f.car_id ? `<a href="#/inventory?car=${f.car_id}">${esc(String(f.message || "").split(":")[0] || "Car " + f.car_id)}</a>` : "");
+  const link = (f) => (f.deal_id ? (can("deals.view") ? `<a href="#/deals?deal=${f.deal_id}">Deal ${f.deal_id}</a>` : "") : f.car_id ? (can("stock.view") ? `<a href="#/inventory?car=${f.car_id}">${esc(String(f.message || "").split(":")[0] || "Car " + f.car_id)}</a>` : "") : "");
   return `<div class="pad-box"><div class="mini-h">Compliance flags</div><ul class="list">${[...by].map(([k, items]) => `<li>${icon("alert", "")}<span class="grow"><div class="t">${esc(FLAG_NAME[k] || k.replace(/_/g, " "))}: ${items.length} ${items.length === 1 ? "record" : "records"}</div><div class="s flag-links">${items.slice(0, 14).map(link).filter(Boolean).join(" · ") || esc(items[0].message)}${items.length > 14 ? ` · and ${items.length - 14} more` : ""}</div></span></li>`).join("")}</ul></div>`;
 }
 
@@ -134,7 +134,7 @@ function cashPreviewHtml(r) {
 async function owedHtml() {
   const [rc, py] = await Promise.all([get("accounts/receivables"), get("accounts/payables")]);
   const cust = rc.customers || [];
-  const a = `<div class="scroll-x"><table class="tbl left"><thead><tr><th>Buyer</th><th>Car</th><th class="r">Invoiced</th><th class="r">Paid</th><th class="r">Due</th><th class="r">Days</th></tr></thead><tbody>${cust.length ? cust.map((r) => `<tr class="row-btn" tabindex="0" data-deal="${r.deal_id}"><td>${esc(r.buyer)}</td><td>${esc(r.stock_no)}<span class="sub">${esc(sentence(r.status))}</span></td><td class="r">${inr(r.invoiced)}</td><td class="r">${inr(r.paid)}</td><td class="r"><b>${inr(r.due)}</b></td><td class="r">${num(r.days)}</td></tr>`).join("") : `<tr><td colspan="6">Nobody owes the firm anything.</td></tr>`}</tbody></table></div>`;
+  const a = `<div class="scroll-x"><table class="tbl left"><thead><tr><th>Buyer</th><th>Car</th><th class="r">Invoiced</th><th class="r">Paid</th><th class="r">Due</th><th class="r">Days</th></tr></thead><tbody>${cust.length ? cust.map((r) => `<tr${can("deals.view") ? ` class="row-btn" tabindex="0" data-deal="${r.deal_id}"` : ""}><td>${esc(r.buyer)}</td><td>${esc(r.stock_no)}<span class="sub">${esc(sentence(r.status))}</span></td><td class="r">${inr(r.invoiced)}</td><td class="r">${inr(r.paid)}</td><td class="r"><b>${inr(r.due)}</b></td><td class="r">${num(r.days)}</td></tr>`).join("") : `<tr><td colspan="6">Nobody owes the firm anything.</td></tr>`}</tbody></table></div>`;
   const dsa = (rc.dsa_payouts || []).slice(0, 8).map((r) => `<li><span class="grow"><div class="t">${esc(r.lender)}</div><div class="s">Deal ${r.deal_id} · since ${dateFmt(r.since, false)}</div></span><b>${inr(r.due)}</b></li>`).join("");
   const ins = (rc.insurance_commission || []).slice(0, 8).map((r) => `<li><span class="grow"><div class="t">${esc(r.insurer)}</div><div class="s">Deal ${r.deal_id} · since ${dateFmt(r.since, false)}</div></span><b>${inr(r.due)}</b></li>`).join("");
   const T = rc.totals || {}, PT = py.totals || {};
@@ -170,7 +170,7 @@ async function reconHtml() {
 }
 function bindRecon(pane, banks, ctx) {
   pane.querySelector("#imp")?.addEventListener("click", () => importForm(banks, ctx));
-  pane.addEventListener("click", (e) => { const r = e.target.closest("[data-st]"); if (r) openStatement(+r.dataset.st, ctx); const d = e.target.closest("[data-deal]"); if (d) location.hash = `#/deals?deal=${d.dataset.deal}`; });
+  pane.addEventListener("click", (e) => { const r = e.target.closest("[data-st]"); if (r) openStatement(+r.dataset.st, ctx); const d = e.target.closest("[data-deal]"); if (d && can("deals.view")) location.hash = `#/deals?deal=${d.dataset.deal}`; });
   pane.addEventListener("keydown", (e) => { if (e.key === "Enter") e.target.closest("[data-st],[data-deal]")?.click(); });
 }
 function importForm(banks, ctx) {

@@ -11,14 +11,17 @@ const CONFIG = {
     { key: "car", ask: "Which car are you interested in?", say: "Kaunsi gaadi dekh rahe hain?", hint: "Search our stock, or type what they said (model, year)." },
     { key: "budget", ask: "What budget do you have in mind?", say: "Budget kitna socha hai?", hint: "In lakh. Leave it empty if they would not say." },
     { key: "visit", ask: "When can you come to the showroom?", say: "Showroom kab aa sakte hain? Kaunsa din, kitne baje?", hint: "Prabhu Plaza, S.V. Road, Malad West. Open 10 am to 9 pm." },
+    { key: "interest", ask: "How interested is the customer?", say: "Gaadi kab tak leni hai?", hint: "Your feel from the call. The salesman sees it on his lead." },
     { key: "name", ask: "May I have your name, please?", say: "Aapka naam?", hint: "" },
     { key: "phone", ask: "Is this the best number to call you back on?", say: "Isi number pe call karein? WhatsApp bhi yahi hai?", hint: "10-digit mobile." },
     { key: "heard_from", ask: "How did you hear about us?", say: "Humare baare mein kahan se pata chala?", hint: "" },
     { key: "notes", ask: "Anything else the salesman should know?", say: "Aur kuch? Hamare salesman aapko thodi der mein call karenge.", hint: "Exchange car, finance, colour, urgency." },
   ],
-  sell_script: { car: { ask: "Which car do you want to sell? Model and year?", say: "Kaunsi gaadi bechni hai? Model aur saal?", hint: "Type the model and year, and the km if they say it." } },
+  sell_script: { car: { ask: "Which car do you want to sell? Model and year?", say: "Kaunsi gaadi bechni hai? Model aur saal?", hint: "Type the model and year, and the km if they say it." },
+    interest: { ask: "How interested is the customer?", say: "Gaadi kab tak bechni hai?", hint: "Your feel from the call. The salesman sees it on his lead." } },
   heard_from: [{ key: "instagram", label: "Instagram" }, { key: "whatsapp", label: "WhatsApp" }, { key: "olx", label: "OLX" }, { key: "cartrade", label: "CarTrade" }, { key: "website", label: "Website" }, { key: "other", label: "Other" }],
   close_reasons: [{ key: "wrong_number", label: "Wrong number" }, { key: "spam", label: "Spam or sales call" }, { key: "staff", label: "Staff or a supplier" }, { key: "no_need", label: "No call back needed" }, { key: "other", label: "Other" }],
+  callback_outcomes: [{ key: "reached", label: "Reached" }, { key: "no_answer", label: "No answer" }, { key: "wrong_number", label: "Wrong number" }, { key: "call_later", label: "Call later" }],
 };
 const TIER = { core: "Core under 20L", premium: "Premium 20-50L", luxury: "Luxury 50L+" };
 const SEATS = [
@@ -30,8 +33,10 @@ const SEATS = [
 const SELL_DESK = "rohan";
 const LIVE = ["incoming", "refurb", "available", "booked"];
 const STOCK_LABEL = { incoming: "Coming in", refurb: "Getting ready", available: "Available", booked: "Booked" };
+const INTEREST = { hot: "Hot", warm: "Warm", cold: "Cold" };
 const HEARD = Object.fromEntries(CONFIG.heard_from.map((h) => [h.key, h.label]));
 const CLOSE = Object.fromEntries(CONFIG.close_reasons.map((r) => [r.key, r.label]));
+const OUTCOMES = Object.fromEntries(CONFIG.callback_outcomes.map((r) => [r.key, r.label]));
 const clone = (x) => (x == null ? x : JSON.parse(JSON.stringify(x)));
 const ist = (ms) => new Date(ms + 5.5 * 36e5).toISOString().slice(0, 19).replace("T", " ");
 const ago = (min) => ist(nowMs() - min * 60000);
@@ -74,31 +79,32 @@ export function createCalldeskStore({ myName, load }) {
   function seed() {
     if (calls) return;
     const I = (o) => ({ client_id: `demo-${o.id}`, created_by_name: me, mine: true, call_sid: null, sent_at: null, name: "", car_id: null, car_title: null,
-      stock_no: null, car_text: "", budget: null, visit_day: null, visit_time: null, heard_from: null, notes: "", pick_seat: null, suggested_seat: null,
-      salesman_seat: null, lead_id: null, state: "sent", error: null, error_code: null, attempts: 1, lead_status: "new", claimed_at: null, ...o });
+      stock_no: null, car_text: "", budget: null, visit_day: null, visit_time: null, interest: null, heard_from: null, notes: "", pick_seat: null,
+      suggested_seat: null, salesman_seat: null, lead_id: null, state: "sent", error: null, error_code: null, attempts: 1, lead_status: "new", claimed_at: null, ...o });
     const today = ist(nowMs()).slice(0, 10), tmr = ist(nowMs() + 864e5).slice(0, 10);
     inqs = [
       I({ id: 504, call_sid: "demo-call-4", call_at: ago(82), created_at: ago(78), sent_at: ago(78), name: "Demo Caller 04", phone: num(104), intent: "buy",
-        car_text: "Honda City 2021 automatic", budget: 1100000, visit_day: tmr, visit_time: "11:00", heard_from: "instagram", notes: "Wants white or grey. Has a 2015 Swift for exchange.",
+        car_text: "Honda City 2021 automatic", budget: 1100000, visit_day: tmr, visit_time: "11:00", interest: "hot", heard_from: "instagram", notes: "Wants white or grey. Has a 2015 Swift for exchange.",
         salesman_seat: "kabir", suggested_seat: "kabir", lead_id: 1047, lead_status: "claimed", claimed_at: ago(74) }),
       I({ id: 503, call_sid: "demo-call-5", call_at: ago(128), created_at: ago(124), sent_at: ago(124), name: "Demo Caller 05", phone: num(105), intent: "buy",
-        car_text: "Hyundai Creta 2022", budget: 1400000, heard_from: "website", notes: "Called again about the Creta he saw on Sunday.",
+        car_text: "Hyundai Creta 2022", budget: 1400000, interest: "warm", heard_from: "website", notes: "Called again about the Creta he saw on Sunday.",
         salesman_seat: "kabir", lead_id: 1037, state: "added", lead_status: "contacted" }),
       I({ id: 502, call_at: ago(170), created_at: ago(166), name: "Demo Caller 06", phone: num(106), intent: "sell", car_text: "Maruti Suzuki Ciaz 2018, 52,000 km",
-        heard_from: "olx", notes: "Wants a price this week.", state: "not_sent", attempts: 2, error: "The lead engine is not answering.", error_code: "bridge_down", lead_status: null }),
+        interest: "cold", heard_from: "olx", notes: "Wants a price this week.", state: "not_sent", attempts: 2, error: "The lead engine is not answering.", error_code: "bridge_down", lead_status: null }),
       I({ id: 501, call_at: ago(26 * 60), created_at: ago(26 * 60 - 3), sent_at: ago(26 * 60 - 3), name: "Demo Caller 07", phone: num(107), intent: "buy",
-        car_text: "Mercedes-Benz GLC", budget: 5500000, visit_day: today, visit_time: "16:00", heard_from: "whatsapp", salesman_seat: "zoya", suggested_seat: "zoya",
+        car_text: "Mercedes-Benz GLC", budget: 5500000, visit_day: today, visit_time: "16:00", interest: "hot", heard_from: "whatsapp", salesman_seat: "zoya", suggested_seat: "zoya",
         lead_id: 1043, lead_status: "contacted", claimed_at: ago(26 * 60 - 9) }),
     ];
-    const C = (o) => ({ answered_by: null, duration_s: null, needs_callback: false, callback_at: null, callback_by_name: null, closed_reason: null, closed_label: null, inquiry_id: null, known: null, ...o });
+    const C = (o) => ({ answered_by: null, duration_s: null, needs_callback: false, callback_at: null, callback_by_name: null, closed_reason: null, closed_label: null, inquiry_id: null, known: null, tries: [], ...o });
+    const T = (outcome, min, note = null, intent = null) => ({ outcome, label: OUTCOMES[outcome], intent, note, at: ago(min), dialed_at: ago(min + 1), by_name: me });
     calls = [
       C({ call_sid: "demo-call-1", phone: num(101), at: ago(1), state: "live" }),
       C({ call_sid: "demo-call-2", phone: num(102), at: ago(18), state: "missed", needs_callback: true }),
-      C({ call_sid: "demo-call-3", phone: num(103), at: ago(44), state: "missed", needs_callback: true, known: { kind: "lead", inquiry_id: null, lead_id: 1044, channel: "instagram",
+      C({ call_sid: "demo-call-3", phone: num(103), at: ago(44), state: "missed", needs_callback: true, tries: [T("no_answer", 30)], known: { kind: "lead", inquiry_id: null, lead_id: 1044, channel: "instagram",
         channel_label: "Instagram", since: ago(60).slice(0, 10), salesman_label: "Rohan (demo)", status: "new", status_label: "Waiting for Rohan (demo) to claim it", adds_to: 1044 } }),
       C({ call_sid: "demo-call-4", phone: num(104), at: ago(82), state: "answered", answered_by: me, duration_s: 214, inquiry_id: 504 }),
       C({ call_sid: "demo-call-5", phone: num(105), at: ago(128), state: "answered", answered_by: me, duration_s: 151, inquiry_id: 503 }),
-      C({ call_sid: "demo-call-8", phone: num(108), at: ago(150), state: "missed", callback_at: ago(141), callback_by_name: me }),
+      C({ call_sid: "demo-call-8", phone: num(108), at: ago(150), state: "missed", callback_at: ago(141), callback_by_name: me, tries: [T("reached", 141, "Only asked the showroom timings.", "other")] }),
       C({ call_sid: "demo-call-9", phone: num(109), at: ago(205), state: "missed", closed_reason: "spam", closed_label: CLOSE.spam }),
       C({ call_sid: "demo-call-10", phone: num(110), at: ago(240), state: "answered", answered_by: "Demo Manager", duration_s: 48, closed_reason: "staff", closed_label: CLOSE.staff }),
     ];
@@ -112,7 +118,7 @@ export function createCalldeskStore({ myName, load }) {
     const lbl = label(i.salesman_seat);
     const st = i.state === "not_sent" ? (i.error_code && i.error_code !== "bridge_down" ? "Not sent. Press Send again" : "Waiting for the lead engine")
       : i.state === "added" ? `Added to lead #${i.lead_id} · ${statusLabel(i.lead_status, lbl)}` : statusLabel(i.lead_status, lbl);
-    return { ...clone(i), visit_label: visitLabel(i.visit_day, i.visit_time), heard_label: HEARD[i.heard_from] || null, pick_label: label(i.pick_seat), salesman_label: lbl,
+    return { ...clone(i), visit_label: visitLabel(i.visit_day, i.visit_time), heard_label: HEARD[i.heard_from] || null, interest_label: INTEREST[i.interest] || null, pick_label: label(i.pick_seat), salesman_label: lbl,
       added: i.state === "added", status_label: st };
   }
   function known(phone, except) {
@@ -152,9 +158,10 @@ export function createCalldeskStore({ myName, load }) {
     if (day !== today) {                                   // an earlier day: a made-up day of about the same size
       const k = (+day.slice(8, 10) % 5) + 9;
       return { day, calls: { received: k + 6, answered: k, missed: 6, called_back: 5, missed_open: 1, live: 0, typed_in: 2 },
-        inquiries: { total: k - 1, sent: k - 3, added: 2, not_sent: 0 },
+        inquiries: { total: k - 1, sent: k - 3, added: 2, not_sent: 0, hot: 3, warm: k - 6, cold: 2 },
         by_desk: [{ user_id: 41, name: me, inquiries: k - 1, sent: k - 3, added: 2, not_sent: 0, median_call_to_sent_min: 4 }],
         by_salesman: SEATS.map((s, n) => ({ seat: s.seat, label: s.label, inquiries: [4, 3, 2, 2][n], claimed: [4, 2, 2, 1][n], open: [0, 1, 0, 1][n], median_sent_to_claim_min: [3, 6, 4, 9][n] })),
+        callbacks: { reached: 5, no_answer: 2, wrong_number: 0, call_later: 1 },
         timing: { call_to_sent: { n: k - 1, median_min: 4, max_min: 11 }, sent_to_claim: { n: k - 3, median_min: 5, max_min: 14 }, callback: { n: 5, median_min: 12, max_min: 38 } }, rows: [] };
     }
     const cs = calls.filter((c) => c.at.slice(0, 10) === today), missed = cs.filter((c) => c.state === "missed");
@@ -168,13 +175,14 @@ export function createCalldeskStore({ myName, load }) {
         s.inquiries++;
         if (i.state === "sent") { if (i.claimed_at) s.claimed++; else s.open++; s.s2c.push(s2c); }
       }
-      return { id: i.id, at: i.call_at, desk: i.created_by_name, salesman_label: label(i.salesman_seat), intent: i.intent, state: i.state, typed_in: !i.call_sid,
+      return { id: i.id, at: i.call_at, desk: i.created_by_name, salesman_label: label(i.salesman_seat), intent: i.intent, interest: i.interest, state: i.state, typed_in: !i.call_sid,
         call_to_sent_min: mins(i.call_at, i.sent_at), sent_to_claim_min: s2c, status_label: out(i).status_label };
     });
     const n = (st) => rs.filter((i) => i.state === st).length;
-    return { day, calls: { received: cs.length, answered: cs.filter((c) => c.state === "answered").length, missed: missed.length, called_back: done.length,
+    const tried = calls.flatMap((c) => c.tries || []).filter((t) => t.at.slice(0, 10) === today);
+    return { day, callbacks: Object.fromEntries(Object.keys(OUTCOMES).map((k) => [k, tried.filter((t) => t.outcome === k).length])), calls: { received: cs.length, answered: cs.filter((c) => c.state === "answered").length, missed: missed.length, called_back: done.length,
         missed_open: missed.length - done.length, live: cs.filter((c) => c.state === "live").length, typed_in: rs.filter((i) => !i.call_sid).length },
-      inquiries: { total: rs.length, sent: n("sent"), added: n("added"), not_sent: n("not_sent") },
+      inquiries: { total: rs.length, sent: n("sent"), added: n("added"), not_sent: n("not_sent"), ...Object.fromEntries(Object.keys(INTEREST).map((k) => [k, rs.filter((i) => i.interest === k).length])) },
       by_desk: rs.length ? [{ user_id: 41, name: me, inquiries: rs.length, sent: n("sent"), added: n("added"), not_sent: n("not_sent"), median_call_to_sent_min: stat(rows.map((r) => r.call_to_sent_min)).median_min }] : [],
       by_salesman: Object.values(bySeat).map(({ s2c, ...s }) => ({ ...s, median_sent_to_claim_min: stat(s2c).median_min })),
       timing: { call_to_sent: stat(rows.map((r) => r.call_to_sent_min)), sent_to_claim: stat(rows.map((r) => r.sent_to_claim_min)),
@@ -222,8 +230,18 @@ export function createCalldeskStore({ myName, load }) {
       let m = path.match(/^calldesk\/calls\/([^/]+)\/(callback|close)$/);
       if (m) {
         const c = calls.find((x) => x.call_sid === decodeURIComponent(m[1])); if (!c) throw notFound();
-        if (m[2] === "callback") { c.callback_at = c.callback_at || ist(nowMs()); c.callback_by_name = c.callback_by_name || me; }
-        else { if (!CLOSE[body.reason]) throw new ApiError(400, "bad_request", "Pick a reason.", { reason: "one of " + Object.keys(CLOSE).join(", ") }); c.closed_reason = body.reason; c.closed_label = CLOSE[body.reason]; }
+        if (m[2] === "callback") {                       // how the call-back went (app/calldesk.py callback): only reached and wrong number clear it
+          if (!OUTCOMES[body.outcome]) throw new ApiError(400, "bad_request", "Tap how the call went.", { outcome: "one of " + Object.keys(OUTCOMES).join(", ") });
+          if (!c.tries.some((t) => t.key === body.client_id)) {
+            c.tries.unshift({ key: body.client_id, outcome: body.outcome, label: OUTCOMES[body.outcome], intent: body.outcome === "reached" ? body.intent || null : null,
+              note: String(body.note || "").trim().slice(0, 200) || null, at: ist(nowMs()), dialed_at: body.dialed_at || null, by_name: me });
+            if (body.outcome === "reached") { c.callback_at = c.callback_at || ist(nowMs()); c.callback_by_name = c.callback_by_name || me; c.needs_callback = false; }
+            if (body.outcome === "wrong_number") { c.closed_reason = "wrong_number"; c.closed_label = CLOSE.wrong_number; c.needs_callback = false; }
+          }
+          return { call: clone(c) };
+        }
+        if (!CLOSE[body.reason]) throw new ApiError(400, "bad_request", "Pick a reason.", { reason: "one of " + Object.keys(CLOSE).join(", ") });
+        c.closed_reason = body.reason; c.closed_label = CLOSE[body.reason];
         c.needs_callback = false;
         return { call: clone(c) };
       }
@@ -233,12 +251,13 @@ export function createCalldeskStore({ myName, load }) {
         const errs = {};
         if (!["buy", "sell"].includes(body.intent)) errs.intent = "Tap Buying or Selling.";
         if (last10(body.phone).length !== 10) errs.phone = "A 10-digit mobile number.";
+        if (!INTEREST[body.interest]) errs.interest = "tap Hot, Warm or Cold";
         if (Object.keys(errs).length) throw new ApiError(400, "bad_request", "Check the marked answers.", errs);
         const car = body.car_id ? (await cars()).find((c) => c.car_id === +body.car_id) : null;
         const i = { id: nextInq++, client_id: body.client_id, created_by_name: me, mine: true, call_sid: body.call_sid || null, call_at: body.call_at || ist(nowMs()), created_at: ist(nowMs()),
           sent_at: null, name: String(body.name || "").trim().slice(0, 60), phone: "+91" + last10(body.phone), intent: body.intent, car_id: car ? car.car_id : null,
           car_title: car ? car.title : null, stock_no: car ? car.stock_no : null, car_text: car ? null : String(body.car_text || "").trim(), budget: body.intent === "buy" ? body.budget || null : null,
-          visit_day: body.visit_day || null, visit_time: body.visit_time || null, heard_from: body.heard_from || null, notes: String(body.notes || "").trim(),
+          visit_day: body.visit_day || null, visit_time: body.visit_time || null, interest: body.interest, heard_from: body.heard_from || null, notes: String(body.notes || "").trim(),
           pick_seat: body.salesman || null, suggested_seat: null, salesman_seat: null, lead_id: null, state: "not_sent", error: null, error_code: null, attempts: 0, lead_status: null, claimed_at: null };
         if (i.call_sid) { const c = calls.find((x) => x.call_sid === i.call_sid); if (c) { c.inquiry_id = i.id; c.needs_callback = false; } }
         for (const c of calls) if (c.needs_callback && last10(c.phone) === last10(i.phone)) c.needs_callback = false;

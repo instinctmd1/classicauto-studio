@@ -58,6 +58,10 @@ export const CAP_TEXT = {
   "maint.verify": ["Check finished work", "Approve ticked-off jobs or send them back with a reason."],
   "calldesk.use": ["Answer calls and send phone inquiries", "Fill the call script and send the inquiry to a salesman. No money, no lead conversations."],
   "calldesk.report": ["See the call desk's day", "Calls, missed calls, inquiries per person and salesman, and how long each took."],
+  "carreq.create": ["Ask for a car to be made ready", "Customer coming at a time: maintenance brings the car down and cleans it."],
+  "carreq.work": ["Work car requests", "Accept, send a driver, bring the car, mark it ready or say why it cannot come."],
+  "carreq.all": ["See every car request", "All open requests and their messages, late ones first."],
+  "market.view": ["See market stock", "Our cars and nearby dealers' cars with photos and asking prices, to find a car for a customer. No costs."],
 };
 
 /** What opening a guarded capability means in practice, in the words the owner reads when he is asked to confirm. */
@@ -82,7 +86,7 @@ export const CAP_OPENS = {
 
 /** Columns of the access matrix. tone: ops | sensitive | money | admin. */
 export const GROUPS = [
-  { id: "stock", label: "Stock", short: "Stock", opens: ["stock.view"], tone: "ops", about: "Can see and edit cars", caps: ["stock.view", "stock.manage", "stock.intake"], tag: "Cars and prices" },
+  { id: "stock", label: "Stock", short: "Stock", opens: ["stock.view"], tone: "ops", about: "Can see and edit cars", caps: ["stock.view", "stock.manage", "stock.intake", "market.view"], tag: "Cars and prices" },
   { id: "deals", label: "Deals", short: "Deals", opens: ["deals.view"], tone: "ops", about: "Can book, edit and deliver deals", caps: ["deals.view", "deals.create", "deals.manage", "approvals.request", "approvals.manage"], tag: "Book and deliver" },
   { id: "leads", label: "Leads and team", short: "Leads", opens: ["leads.view", "team.view"], tone: "ops", about: "Can see everyone's leads and the leaderboard", caps: ["leads.view", "team.view", "records.all"], tag: "All leads" },
   { id: "people", label: "Customers", short: "People", opens: ["customers.view"], tone: "ops", about: "Can see and edit the people register", caps: ["customers.view", "customers.manage"], tag: "People register" },
@@ -90,6 +94,7 @@ export const GROUPS = [
   { id: "work", label: "Marketing and sheets", short: "Tools", opens: ["marketing.view", "sheets.view", "today.view", "activity.use"], tone: "ops", about: "Can see marketing figures and use sheets", caps: ["marketing.view", "marketing.manage", "sheets.view", "sheets.manage", "today.view", "activity.use", "feedback.manage", "exports.ops"], tag: "Day-to-day tools" },
   { id: "maint", label: "Maintenance", short: "Maint.", opens: ["maint.view"], tone: "ops", about: "Can update where cars are, tick off work with photos and run inspections", caps: ["maint.view", "maint.work", "maint.inspect", "maint.verify"], tag: "Locations, checklists" },
   { id: "calldesk", label: "Call desk", short: "Phones", opens: ["calldesk.use", "calldesk.report"], tone: "ops", about: "Can answer the showroom number, send phone inquiries to salesmen and see the call desk's day", caps: ["calldesk.use", "calldesk.report"], tag: "Phone inquiries" },
+  { id: "carreq", label: "Car requests", short: "Cars ready", opens: ["carreq.create", "carreq.work", "carreq.all"], tone: "ops", about: "Can ask for a car to be made ready for a customer, or bring and clean it", caps: ["carreq.create", "carreq.work", "carreq.all"], tag: "Get car ready" },
   { id: "calls", label: "Calls and warnings", short: "Calls", opens: ["acc.own", "acc.team"], tone: "ops", about: "Call to-dos, briefs, screenshots, warnings and the call rules", caps: ["acc.own", "acc.team", "acc.review", "acc.reassign", "acc.warnings.manage", "acc.settings"], tag: "Briefs, proof, warnings" },
   { id: "pii", label: "Personal data", short: "Personal", opens: ["documents.sensitive", "customers.pii", "exports.pii"], tone: "sensitive", about: "Can see PAN, Aadhaar and phone exports", caps: ["documents.sensitive", "customers.pii", "exports.pii"], tag: "PAN, KYC, phones" },
   { id: "profit", label: "Profit", short: "Profit", opens: ["money.view", "deals.profit.view"], tone: "money", about: "Can see profit, margins and purchase prices", caps: ["money.view", "deals.profit.view", "exports.money"], tag: "Margins, P&L" },
@@ -117,6 +122,7 @@ export const ROLE_PLAIN = {
   maintenance: "Looks after the cars on the lot: says where each one is, ticks off work with photos, runs inspections. No prices, money or customers.",
   rto: "Runs RTO transfers and car papers. No money and no leads.",
   calldesk: "Answers the showroom number, fills the call script and sends each inquiry to a salesman. No money, no lead conversations, no customer register.",
+  driver: "Brings cars to the showroom when maintenance asks, and talks to maintenance on each job. No prices, money or customers.",
 };
 
 /** What the audit log's action codes mean to a person. */
@@ -132,7 +138,7 @@ export const ACTION_TEXT = {
   "pii.reveal_pan": "Revealed a full PAN", "pii.reveal_pan_limit": "Hit the hourly limit on PAN reveals", "session.revoke": "Ended someone's session", "settings.update": "Changed settings",
   "acc.settings.update": "Changed the call rules", "acc.brief": "Filled a call brief", "acc.proof_upload": "Sent a call screenshot", "acc.proof_view": "Opened a call screenshot",
   "acc.proof_review": "Checked a call screenshot", "acc.reassign": "Moved a lead by hand", "acc.warning_add": "Added a warning", "acc.warning_excuse": "Excused a warning",
-  "acc.warning_explain": "Explained a warning", "acc.off_add": "Marked leave", "calldesk.inquiry": "Took a phone inquiry", "calldesk.sent": "Sent a phone inquiry to a salesman", "calldesk.added": "Added a phone call to an existing lead", "calldesk.callback": "Called a missed caller back", "calldesk.close": "Closed a call with no call back", "acc.off_delete": "Removed leave", "acc.recording_play": "Played a call recording", "desk.call_attempt": "Pressed Call",
+  "acc.warning_explain": "Explained a warning", "acc.off_add": "Marked leave", "calldesk.inquiry": "Took a phone inquiry", "carreq.create": "Asked for a car to be made ready", "carreq.accept": "Took a car request", "carreq.assign": "Sent a driver for a car", "carreq.step": "Moved a car for a request", "carreq.ready": "Marked a car down and ready", "carreq.cannot": "Said a car cannot come", "carreq.cancel": "Cancelled a car request", "carreq.comment": "Wrote on a car request", "calldesk.sent": "Sent a phone inquiry to a salesman", "calldesk.added": "Added a phone call to an existing lead", "calldesk.callback": "Called a missed caller back", "calldesk.close": "Closed a call with no call back", "acc.off_delete": "Removed leave", "acc.recording_play": "Played a call recording", "desk.call_attempt": "Pressed Call",
   "sync.error": "Lead engine sync failed", "user.create": "Created a user", "user.reset_password": "Reset a password", "user.reset_totp": "Reset two-factor", "user.update": "Changed a user",
 };
 export function actionText(a) {

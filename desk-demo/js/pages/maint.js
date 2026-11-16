@@ -1,6 +1,6 @@
 // Maintenance: where every stock car is today, the checklist and issues on each, the proof, and the manager's check queue.
 // #/maint (all cars), #/maint?tab=queue (waiting for check), #/maint/<car id> (one car).
-import { ApiError } from "../api.js";
+import { ApiError, DEMO } from "../api.js";
 import { state, can, hasMoney } from "../state.js";
 import { applyDyn, badge, dateFmt, esc, icon, inr, mount, num, statusBadge } from "../util.js";
 import { bindTabs, formDrawer, pageHead, tabsHtml } from "../ui.js";
@@ -26,6 +26,7 @@ async function home(ctx) {
   if (!ctx.alive()) return;
   const tabs = [{ id: "cars", label: "Cars", n: sum.in_stock }, { id: "queue", label: "Waiting for check", n: sum.waiting_check }];
   mount(ctx.root, pageHead({ title: "Maintenance", sub: "Say where each car is before you leave. Tick off work with a photo as proof." })
+    + (can("carreq.work") && !DEMO ? `<div id="cr-home"></div>` : "")
     + `<div id="tiles">${tilesHtml(sum)}</div>`
     + (verify ? `<section class="card flush rise sec-gap mt-shell">${tabsHtml(tabs, tab, "Maintenance sections")}<div id="pane" class="mt-pane"></div></section>` : `<div id="pane" class="sec"></div>`));
   const pane = ctx.root.querySelector("#pane");
@@ -39,6 +40,8 @@ async function home(ctx) {
   if (verify) bindTabs(ctx.root, (t) => { history.replaceState(null, "", t === "queue" ? "#/maint?tab=queue" : "#/maint"); show(t); });
   bindZoom(ctx.root);
   show(tab);
+  const crHost = ctx.root.querySelector("#cr-home");       // get a car ready: the salesmen's requests, soonest first
+  if (crHost) import("./carreq.js").then((m) => m.section(crHost, ctx, { title: "Car requests" })).catch(() => { crHost.innerHTML = ""; });
 }
 
 function tilesHtml(s) {
@@ -203,7 +206,9 @@ async function carView(ctx, id) {
       + `<section class="card rise mt-now" id="now"><p class="mt-carline"><b>${esc(car.title)}</b>${car.reg_tail ? `<span class="mt-reg">${esc(car.reg_tail)}</span>` : ""}${statusBadge(car.status)}${ready ? badge("Ready for sale", "pos") : ""}</p><p class="mt-where big">${icon("pin", "")}<span class="mt-w"><b>${esc(c.location ? placeText(c.location, c.place_detail) : "Not set yet")}</b>${here ? `<em>${saidToday ? "said today, " + esc(hm(here.at)) + (here.by ? " by " + esc(here.by) : "") : "last said " + esc(when(here.date, false))}</em>` : ""}</span></p>
         ${work ? whereStrip(c) : ""}
         <dl class="dl mt-specs">${car.kms_at_intake != null ? `<div><dt>Kms</dt><dd>${num(car.kms_at_intake)}</dd></div>` : ""}${car.fuel ? `<div><dt>Fuel</dt><dd>${esc(cap(car.fuel))}</dd></div>` : ""}${car.transmission ? `<div><dt>Gearbox</dt><dd>${esc(cap(car.transmission))}</dd></div>` : ""}${car.colour ? `<div><dt>Colour</dt><dd>${esc(car.colour)}</dd></div>` : ""}</dl></section>`
+      + reportHtml(check)
       + `<section class="card flush rise sec-gap mt-shell">${tabsHtml(tabs, cur, "Car sections")}<div id="pane" class="mt-pane"></div></section>`);
+    ctx.root.querySelector("[data-rep-start]")?.addEventListener("click", () => startInspection(id, check.length && check.every((t) => t.status !== "open") ? "pre_sale" : "purchase"));
     const pane = ctx.root.querySelector("#pane");
     const show = (t) => {
       pane.innerHTML = t === "checklist" ? tasksHtml(check, "checklist") : t === "issues" ? issuesHtml(issues) : t === "inspections" ? inspectionsHtml() : spendHtml();
@@ -222,6 +227,23 @@ async function carView(ctx, id) {
       if (u) after(); else q.disabled = false;
     });
     pane.addEventListener("click", (e) => paneClick(e, cur));
+  };
+
+  // the Classic Auto inspection report, on top where maintenance sees it (owner, 15 Nov 2026: "once the entire thing is done,
+  // they should have an option to make the report"): made from here, continued while it is a draft, opened once final
+  const reportHtml = (check) => {
+    const draft = d.inspections.find((i) => i.status === "draft"), last = d.inspections.find((i) => i.status === "final");
+    if (!inspect && !last) return "";
+    const ticked = check.length > 0 && check.every((t) => t.status !== "open");
+    const make = ticked && !draft && !last;            // the checklist is done and there is no report yet: that is the next step
+    const go = draft && inspect ? `<a class="btn primary mt-big" href="#/maint-inspect/${draft.id}">${icon("edit")}Continue the inspection report</a>`
+      : inspect ? `<button type="button" class="btn ${make ? "primary" : ""} mt-big" data-rep-start>${icon("docs")}Make the inspection report</button>` : "";
+    const view = last ? `<a class="btn ${draft ? "" : "primary"} mt-big" href="#/maint-report/${last.id}">${icon("print")}View, print or share the report</a>` : "";
+    const say = draft && inspect ? "The inspection report is started. Finish it to get the score and the report you can print."
+      : last ? `Last report: ${TYPE_WORD[last.type] || last.type}, ${dateFmt(last.date)}.`
+      : ticked && inspect ? "Every checklist item is ticked. Now make the Classic Auto inspection report of the whole car."
+      : "When the work is done, make the Classic Auto inspection report: the whole car checked, a score out of 10 and a report you can print.";
+    return `<section class="card rise sec-gap mt-rep${make && inspect ? " on" : ""}" aria-label="Inspection report"><div class="mt-rep-h">${icon("docs", "")}<p>${esc(say)}</p>${last ? scoreTag(last) : ""}</div><div class="mt-rep-btns">${last && !draft ? view + go : go + view}</div></section>`;
   };
 
   const tasksHtml = (list, kind) => `<div class="mt-pad">${kind === "checklist" ? `<div class="mt-prog wide"><span class="mt-segs" role="img" aria-label="${list.filter((t) => t.status === "verified").length} of ${list.length} items checked">${list.map((t) => `<i class="${t.status === "verified" ? "on" : t.status === "done" ? "mid" : ""}"></i>`).join("")}</span><b>${list.filter((t) => t.status !== "open").length}/${list.length} ticked</b></div>` : ""}
@@ -284,8 +306,8 @@ function addIssue(carId, done) {
       await io.post(`maint/cars/${carId}/tasks`, { title: v.title, ...(v.note ? { note: v.note } : {}) }); okToast("Issue added"); done(); } }).el.classList.add("sheet");
 }
 
-function startInspection(carId) {
-  let type = "purchase";
+function startInspection(carId, first = "purchase") {
+  let type = first;
   const d = openSheet({ title: "Start an inspection", sub: "You can stop at any time. Your answers are saved as you go.",
     body: `<div class="mt-types" role="group" aria-label="Kind of inspection">${INSPECTION_TYPES.map(([k, l, h]) => `<button type="button" class="mt-type" aria-pressed="${k === type}" data-t="${k}"><b>${esc(l)}</b><span>${esc(h)}</span></button>`).join("")}</div><div class="err" id="si-e" role="alert" hidden></div>`,
     foot: `<button class="btn" type="button" data-x>Cancel</button><button class="btn primary" type="button" id="si-go">Start</button>` });

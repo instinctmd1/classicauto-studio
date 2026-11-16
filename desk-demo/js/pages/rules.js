@@ -10,7 +10,8 @@ import { leaveListHtml, openLeaveAdd } from "./_acc.js";
 const EVENTS = [["pass", "A lead is passed on", "No claim, no call, off duty, or moved by hand"], ["missed_brief", "A brief is missed", "Past its time"],
   ["missing_proof", "No call screenshot", "Past its time"], ["warning", "A new warning", "Any warning"], ["escalated", "A lead went round the team", "It reached the pool"],
   ["proof_review", "A screenshot waits for a check", "Only people who check screenshots"], ["review_flag", "5 warnings in 30 days", "Time for a talk"],
-  ["followup_approve", "The follow-up list", "Who approves it (owners can always open it)"]];
+  ["followup_approve", "The follow-up list", "Who approves it (owners can always open it)"],
+  ["followup_missed", "A follow-up call is missed", "Not called by the time the brief planned"]];
 const ROLES = [["sales_manager", "Sales manager"], ["manager", "Manager"], ["owner", "Owner"]];
 const DAYS = [["", "No weekly off"], ["mon", "Monday"], ["tue", "Tuesday"], ["wed", "Wednesday"], ["thu", "Thursday"], ["fri", "Friday"], ["sat", "Saturday"], ["sun", "Sunday"]];
 const LABEL = { enabled: "Accountability switch", exotel: "Exotel", office_hours: "Office hours", claim_sla_min: "Claim time", claim_sla_by_tier: "Claim time per band",
@@ -18,7 +19,8 @@ const LABEL = { enabled: "Accountability switch", exotel: "Exotel", office_hours
   after_max_rounds: "After the rounds", recipients: "Who is told", sales_manager: "Sales manager", block_claim_on_overdue_brief: "Overdue brief blocks claims",
   review_sample_pct: "Screenshots checked", night_distribution: "Night queue", release_wave_size: "Wave size", release_wave_every_min: "Wave gap", weekly_off: "Weekly off",
   ai_proof_check: "Read screenshots with AI", ai_proof_daily_cap: "Paid backup reads per day", proof_reader: "Who reads screenshots",
-  followup: "Follow-up list" };
+  followup: "Follow-up list", proof_min_call_sec: "Shortest call a screenshot may show", followup_remind_every_min: "Follow-up reminders",
+  followup_warn_after_min: "Follow-up call missed after" };
 // the follow-up list (SPEC-FOLLOWUP-RESHUFFLE 5): the engine's ranges, repeated here so a mistake shows before the save
 const FU_RANGES = { cycle_days: [1, 14], grace_days: [0, 7], max_days_without_contact: [1, 14], customer_wait_hours: [1, 48], approve_hours: [4, 72] };
 const mins = (hm) => { const [h, m] = String(hm || "").split(":").map(Number); return h * 60 + m; };
@@ -47,6 +49,9 @@ function validate(s) {
   const mc = s.exotel?.min_connected_sec;
   if (mc !== undefined && (!Number.isInteger(mc) || mc < 5 || mc > 120)) e.min_connected_sec = "A whole number from 5 to 120";
   if (s.ai_proof_daily_cap !== undefined && (!Number.isInteger(s.ai_proof_daily_cap) || s.ai_proof_daily_cap < 0 || s.ai_proof_daily_cap > 1000)) e.ai_proof_daily_cap = "A whole number from 0 to 1000";
+  if (s.proof_min_call_sec !== undefined) n("proof_min_call_sec", 10, 600);
+  if (s.followup_remind_every_min !== undefined) n("followup_remind_every_min", 10, 240);
+  if (s.followup_warn_after_min !== undefined) n("followup_warn_after_min", 15, 600);
   if (!e.proof_due_min && !e.call_sla_min && !e.brief_prompt_min && s.proof_due_min < s.call_sla_min + s.brief_prompt_min + 5) {
     e.proof_due_min = `At least ${s.call_sla_min + s.brief_prompt_min + 5} (call + brief prompt + 5)`;
   }
@@ -108,7 +113,7 @@ export async function render(ctx) {
       </section>
       <section class="card rise rl-sec"><div class="card-h"><div><h2>Timers</h2><div class="card-sub">Showroom minutes. A lead not claimed or not called in time moves to the next salesman.</div></div></div>
         <div class="rl-grid">${num("claim_sla_min", 5, 60, "min to claim", "From the moment a lead is his")}${num("call_sla_min", 5, 60, "min to call", "From the claim to the first Call press")}${num("brief_prompt_min", 2, 10, "min after Call", "Ask how the call went after 2-10 minutes (showroom minutes: the clock pauses at closing)")}${num("proof_due_min", 15, 120, "min after claim", "Screenshot and first brief due")}
-          <div class="field" data-field="min_connected_sec"><label for="r-mcs">${esc(SPOKE_LABEL)}</label><div class="rl-num"><input class="input" type="number" inputmode="numeric" id="r-mcs" data-k="exotel.min_connected_sec" min="5" max="120" step="1" value="${esc(s.exotel?.min_connected_sec ?? 20)}"><span>seconds</span></div><div class="hint">For an Exotel call record and for the app's reading of a screenshot alike</div><div class="err" data-err="min_connected_sec" hidden></div></div></div>
+          <div class="field" data-field="min_connected_sec"><label for="r-mcs">${esc(SPOKE_LABEL)}</label><div class="rl-num"><input class="input" type="number" inputmode="numeric" id="r-mcs" data-k="exotel.min_connected_sec" min="5" max="120" step="1" value="${esc(s.exotel?.min_connected_sec ?? 20)}"><span>seconds</span></div><div class="hint">${s.proof_min_call_sec !== undefined ? "For an Exotel call record" : "For an Exotel call record and for the app's reading of a screenshot alike"}</div><div class="err" data-err="min_connected_sec" hidden></div></div></div>
         <details class="rl-fold"${Object.values(s.claim_sla_by_tier || {}).some((v) => v !== null && v !== undefined) ? " open" : ""}><summary>Different claim time per price band</summary>
           <div class="rl-grid" data-field="claim_sla_by_tier">${tiers.map((t) => `<div class="field"><label for="r-t-${esc(t.key)}">${esc(t.name)}</label><div class="rl-num"><input class="input" type="number" inputmode="numeric" min="5" max="60" id="r-t-${esc(t.key)}" data-tier="${esc(t.key)}" value="${esc((s.claim_sla_by_tier || {})[t.key] ?? "")}" placeholder="${esc(s.claim_sla_min)}"><span>min</span></div></div>`).join("") || `<p class="muted">The engine has not listed the bands.</p>`}<div class="err" data-err="claim_sla_by_tier" hidden></div></div>
           <p class="hint">Empty means the claim time above. Luxury and Premium ran on 10 minutes before this.</p></details>
@@ -127,7 +132,7 @@ export async function render(ctx) {
         <div class="field rl-sm"><label for="r-sm">Who is the sales manager?</label><select class="select" id="r-sm" data-k="sales_manager"><option value="">Nobody yet</option>${staff().filter((x) => x.role === "sales" || x.role === "manager").map((x) => `<option${x.name === s.sales_manager ? " selected" : ""}>${esc(x.name)}</option>`).join("")}</select></div>
       </section>
       <section class="card rise rl-sec"><div class="card-h"><div><h2>Screenshots</h2><div class="card-sub">Until Exotel is on, a call-history screenshot is the proof that a call happened.</div></div></div>
-        <div class="rl-grid">${num("review_sample_pct", 10, 100, "% checked by a person", "The rest of the clean ones are approved by themselves. 100 = check every one.")}</div>
+        <div class="rl-grid">${num("review_sample_pct", 10, 100, "% checked by a person", "The rest of the clean ones are approved by themselves. 100 = check every one.")}${s.proof_min_call_sec !== undefined ? num("proof_min_call_sec", 10, 600, "seconds", "A shorter call shows “Too short” to the sales manager. 60 = one minute.") : ""}</div>
         ${s.proof_reader !== undefined ? `<fieldset class="rl-radio"><legend>${esc(LABEL.proof_reader)} (the number, time and duration; a tick for the reviewers. A mismatch only moves it to the top, it never warns anyone)</legend>
           ${READERS.map(([v, l, sub]) => `<label class="check"><input type="radio" name="prd" data-k="proof_reader" value="${v}"${s.proof_reader === v ? " checked" : ""}> <span><b>${esc(l)}.</b> ${esc(sub)}</span></label>`).join("")}</fieldset>
         ${s.proof_reader === "claude" ? `<div class="rl-grid">${num("ai_proof_daily_cap", 0, 1000, "a day", "0 = none. Past it, a screenshot the app could not read shows \u201c? Couldn't read - check by eye\u201d.")}</div>` : ""}
@@ -139,6 +144,9 @@ export async function render(ctx) {
         <div class="rl-grid">${num("release_wave_size", 1, 20, "leads per wave")}${num("release_wave_every_min", 5, 60, "min between waves")}</div>
         ${preview ? `<p class="rl-prev">${icon("leads", "")}<span>${Object.entries(preview).map(([tier, ss]) => `${Object.values(ss).reduce((a, b) => a + b, 0)} ${esc(tier.split(" ")[0])} leads → ${Object.entries(ss).map(([n, k]) => `${esc(n)} ${k}`).join(", ")}`).join("; ")}</span></p>` : ""}
       </section>
+      ${s.followup_remind_every_min !== undefined ? `<section class="card rise rl-sec"><div class="card-h"><div><h2>Follow-up calls</h2><div class="card-sub">Every brief asks when the salesman will call next. From that time the app reminds him until he presses Call; each call asks again for its screenshot and brief. Showroom minutes; nothing on his day off.</div></div></div>
+        <div class="rl-grid">${num("followup_remind_every_min", 10, 240, "min between reminders")}${num("followup_warn_after_min", 15, 600, "min after the planned time", "Then the people ticked for “A follow-up call is missed” are told, and a warning is added")}</div>
+      </section>` : ""}
       ${s.followup ? fuCard(s, sw) : ""}
       <section class="card rise rl-sec"><div class="card-h"><div><h2>Team availability</h2><div class="card-sub">Someone off gets no new leads and no warnings that day.</div></div></div>
         <div class="rl-grid">${seats().map((n) => `<div class="field"><label>${esc(n)}</label><select class="select" data-off="${esc(n)}">${DAYS.map(([v, l]) => `<option value="${v}"${(s.weekly_off || {})[n] === v || (!v && !(s.weekly_off || {})[n]) ? " selected" : ""}>${l}</option>`).join("")}</select></div>`).join("") || `<p class="muted">The engine has not listed the salesmen.</p>`}</div>

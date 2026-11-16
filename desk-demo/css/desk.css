@@ -512,6 +512,15 @@ a.atd-review { text-decoration: none; color: inherit; }
 .bf-int .int-cold input:checked + span { border-color: var(--info); background: var(--info-bg); box-shadow: inset 0 0 0 1px var(--info); }
 .bf-when { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); gap: 10px; }
 .bf-when .err { grid-column: 1 / -1; }
+/* "When will you call them next?": Now, in 2 hours, this evening, tomorrow, or a date and time */
+.bf-next { display: grid; gap: 10px; }
+.bf-next .hint { margin: 0; }
+.bf-quick { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+button.bf-chip { padding: 0; border: 0; background: none; font: inherit; color: inherit; cursor: pointer; }
+button.bf-chip > span { align-items: center; text-align: center; min-height: 44px; padding: 6px 4px; }
+button.bf-chip.on > span { border-color: var(--red); background: color-mix(in srgb, var(--red) 16%, var(--card-2)); box-shadow: inset 0 0 0 1px var(--red); }
+button.bf-chip:focus-visible > span { outline: 2px solid var(--navy-bright); outline-offset: 2px; }
+@media (max-width: 520px) { .bf-quick { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 .bf .textarea { min-height: 76px; }
 .bf .notice { border-radius: var(--r-md); padding: 10px 12px; border: 1px solid color-mix(in srgb, var(--warn) 40%, transparent); }
 @media (max-width: 340px) { .bf-chips { grid-template-columns: minmax(0, 1fr); } }
@@ -532,6 +541,9 @@ a.atd-review { text-decoration: none; color: inherit; }
 .duty.skel { min-height: 64px; border-radius: var(--r-lg); }
 .duty-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding: 12px; border-radius: var(--r-lg); background: var(--card); border: 1px solid var(--line-strong); border-left: 4px solid var(--warn); }
 .duty-row.k-call { border-left-color: var(--pos); }
+.duty-row.k-callback { border-left-color: var(--info); }
+.duty-row.k-callback.missed { border-left-color: var(--neg); }
+.duty-row.later { border-left-color: var(--line-strong); }
 .duty-row.missed { border-left-color: var(--neg); background: linear-gradient(160deg, color-mix(in srgb, var(--neg) 10%, var(--card)), var(--card)); }
 .duty-ic { width: 36px; height: 36px; border-radius: 10px; display: grid; place-items: center; flex: none; background: color-mix(in srgb, var(--text) 7%, transparent); }
 .duty-ic svg { width: 18px; height: 18px; }
@@ -849,6 +861,22 @@ a.atd-review { text-decoration: none; color: inherit; }
 .note-card.warn { border-color: var(--warn); background: var(--warn-bg); }
 .note-card.warn > svg { color: var(--warn); }
 .site-line { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin: 0; }
+/* a car's photos to send a customer (pages/_photos.js): a strip of thumbnails, tap one to leave it out */
+.ph-strip { display: flex; gap: 8px; overflow-x: auto; list-style: none; margin: 0; padding: 2px 2px 8px; scroll-snap-type: x proximity; overscroll-behavior-x: contain; }
+.ph-strip li { flex: none; scroll-snap-align: start; }
+.ph-t { position: relative; display: block; padding: 0; border: 0; border-radius: 10px; background: var(--card-2); cursor: pointer; overflow: hidden; }
+.ph-t img { display: block; width: 120px; height: 90px; object-fit: cover; }
+.ph-t[aria-pressed="false"] img { opacity: .35; filter: grayscale(1); }
+.ph-tick { position: absolute; top: 6px; right: 6px; display: grid; place-items: center; width: 24px; height: 24px; border-radius: 50%; background: var(--pos); color: #fff; box-shadow: 0 0 0 2px rgba(0, 0, 0, .25); }
+.ph-tick svg { width: 14px; height: 14px; }
+.ph-t[aria-pressed="false"] .ph-tick { background: rgba(0, 0, 0, .45); color: transparent; }
+.ph-t:focus-visible { outline: 2px solid var(--navy-bright); outline-offset: 2px; }
+.ph-count { margin: 4px 0 10px; font-size: 13px; }
+.ph-btns { display: flex; flex-wrap: wrap; gap: 10px; }
+.ph-btns .btn { min-height: 48px; flex: 1 1 200px; justify-content: center; }
+.ph-status { margin: 8px 0 0; font-size: 13px; min-height: 1em; }
+.ph-status:empty { display: none; }
+.cell-ph { margin-left: 6px; vertical-align: middle; }
 .ask-acts { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
 .ask-local .ask-q p { font-weight: 800; letter-spacing: .02em; }
 .intake-list > li { align-items: center; gap: 8px; flex-wrap: wrap; }

@@ -81,14 +81,19 @@ export const accOn = () => !!state.deskFlags?.acc;
 export const exotelOn = () => !!state.deskFlags?.acc_exotel;
 
 // ------------------------------------------------------------------ due times and the To do strip
-const KIND_TEXT = { claim: "Claim lead", call: "Call lead", brief: "Brief for lead", proof: "Screenshot for lead", followup: "Follow up lead" };
-const KIND_ICON = { claim: "check", call: "phone", brief: "edit", proof: "camera", followup: "flag" };
+const KIND_TEXT = { claim: "Claim lead", call: "Call lead", brief: "Brief for lead", proof: "Screenshot for lead", followup: "Follow up lead",
+  callback: "Follow-up call to lead" };
+const KIND_ICON = { claim: "check", call: "phone", brief: "edit", proof: "camera", followup: "flag", callback: "phone" };
 // the follow-up list (SPEC-FOLLOWUP-RESHUFFLE 11.3): the reason codes in plain words
 export const FU_REASON = { no_proof: "No proof of the first call", next_step_overdue: "Next step overdue", no_contact: "No follow-up for days",
   customer_waiting: "Customer waiting for a reply", keep_missed: "Kept, deadline passed" };
 
 /** A countdown for claim and call clocks, "due 11:48" for briefs and screenshots, red "overdue" when missed. */
 export function dueChip(it) {
+  if (it.kind === "callback") {               // the follow-up call a brief planned: its time, red once it has passed
+    return it.due_at && istMs(it.due_at) <= deskNow() ? `<span class="due-chip over">${icon("alert", "")}<span>since ${esc(deskTime(it.due_at))}</span></span>`
+      : `<span class="due-chip">${icon("clock", "")}<span>at ${esc(deskTime(it.due_at))}</span></span>`;
+  }
   if (it.kind === "followup") {
     return it.state === "listed" ? `<span class="due-chip over">${icon("flag", "")}<span>On the list</span></span>`
       : `<span class="due-chip">${icon("clock", "")}<span>before ${esc(deskTime(it.due_at))}</span></span>`;
@@ -124,8 +129,9 @@ export function todoStrip(t, { max = 5, seatLabel = "" } = {}) {
 export function rowChip(a) {
   if (!a || !a.next) return "";
   const n = a.next, miss = n.state === "missed";
-  const word = { call: "Call due", brief: "Brief due", proof: "Screenshot due", claim: "Claim", followup: n.state === "listed" ? "On the follow-up list" : "Follow up" }[n.kind] || "To do";
-  return `<span class="badge ${miss ? "neg" : "warn"} acc-chip">${icon(KIND_ICON[n.kind] || "clock", "")}${esc(miss ? word.replace(" due", "") + " overdue" : word)}${a.count > 1 ? ` +${a.count - 1}` : ""}</span>`;
+  const word = { call: "Call due", brief: "Brief due", proof: "Screenshot due", claim: "Claim", followup: n.state === "listed" ? "On the follow-up list" : "Follow up",
+    callback: n.state === "planned" ? "Follow-up call planned" : "Follow-up call due" }[n.kind] || "To do";
+  return `<span class="badge ${miss ? "neg" : n.state === "planned" ? "info" : "warn"} acc-chip">${icon(KIND_ICON[n.kind] || "clock", "")}${esc(miss ? word.replace(" due", "") + " overdue" : word)}${a.count > 1 ? ` +${a.count - 1}` : ""}</span>`;
 }
 
 // ------------------------------------------------------------------ the brief (3.1): a bottom sheet
@@ -133,6 +139,7 @@ export function rowChip(a) {
  * opts: leadId, briefId (null = an unprompted brief), outcomes (engine list), late (true when past due),
  * onDone(result) after a save. Only the person of the brief's seat can save it; the server says so if not.
  */
+const QUICK = [["now", "Now"], ["2h", "In 2 hours"], ["evening", "This evening"], ["tomorrow", "Tomorrow 11:00"]];
 export function openBrief({ leadId, briefId = null, outcomes = OUTCOMES, late = false, onDone } = {}) {
   const id = "bf" + uid();
   const list = outcomes && outcomes.length ? outcomes : OUTCOMES;
@@ -152,12 +159,16 @@ export function openBrief({ leadId, briefId = null, outcomes = OUTCOMES, late = 
     <div class="field" data-when="plan" hidden><label for="${id}-plan">Plan of action <span class="req" aria-hidden="true">*</span></label>
       <textarea class="textarea" id="${id}-plan" name="plan" maxlength="500" rows="2" placeholder="e.g. Keep the car ready, check the exchange value"></textarea>${err("plan")}</div>
     <div class="field" data-when="next" hidden><label for="${id}-next" data-next-label>Next step <span class="req" aria-hidden="true">*</span></label>
-      <input class="input" id="${id}-next" name="next_step" maxlength="200" placeholder="e.g. Confirm the visit on Saturday">${err("next_step")}</div>
-    <div class="bf-when" data-when="next" hidden>
-      <div class="field"><label for="${id}-d" data-when-label>Date</label><input class="input" type="date" id="${id}-d" name="ns_date" min="${today}" max="${maxDay}"></div>
-      <div class="field"><label for="${id}-t">Time</label><input class="input" type="time" id="${id}-t" name="ns_time"></div>
+      <input class="input" id="${id}-next" name="next_step" maxlength="200" placeholder="e.g. Show the car, confirm the visit on Saturday">${err("next_step")}</div>
+    <fieldset class="field bf-next" data-when="next" hidden><legend>When will you call them next? <span class="req" aria-hidden="true">*</span></legend>
+      <div class="bf-chips bf-quick">${QUICK.map(([k, l]) => `<button class="bf-chip" type="button" data-quick="${k}"><span>${esc(l)}</span></button>`).join("")}</div>
+      <div class="bf-when">
+        <div class="field"><label for="${id}-d" data-when-label>Date</label><input class="input" type="date" id="${id}-d" name="ns_date" min="${today}" max="${maxDay}"></div>
+        <div class="field"><label for="${id}-t">Time</label><input class="input" type="time" id="${id}-t" name="ns_time"></div>
+      </div>
+      <p class="hint">The lead goes on your follow-up list for this time. The app reminds you until you call.</p>
       ${err("next_step_at")}
-    </div>
+    </fieldset>
     <fieldset class="field bf-int-f" data-when="spoke" hidden><legend>Customer interest <span class="req" aria-hidden="true">*</span></legend>
       <div class="bf-int">${INTEREST.map(([k, l, s]) => `<label class="bf-chip int-${k}"><input type="radio" name="interest" value="${k}"><span><b>${esc(l)}</b><small>${esc(s)}</small></span></label>`).join("")}</div>
       ${err("interest")}</fieldset>
@@ -184,6 +195,16 @@ export function openBrief({ leadId, briefId = null, outcomes = OUTCOMES, late = 
     }
   };
   form.addEventListener("change", (e) => { if (e.target.name === "outcome") show(); });
+  form.addEventListener("click", (e) => {                  // Now, in 2 hours, this evening, tomorrow: fills the date and time
+    const q = e.target.closest("[data-quick]"); if (!q) return;
+    const ist = new Date(deskNow() + 5.5 * 36e5), day = (ms) => new Date(ms).toISOString().slice(0, 10);
+    let d = day(+ist), t = ist.toISOString().slice(11, 16);
+    if (q.dataset.quick === "2h") { const x = new Date(+ist + 2 * 36e5); d = day(+x); t = x.toISOString().slice(11, 16); }
+    else if (q.dataset.quick === "evening") t = t < "18:00" ? "18:00" : t;
+    else if (q.dataset.quick === "tomorrow") { d = day(+ist + 864e5); t = "11:00"; }
+    form.querySelector('[name="ns_date"]').value = d; form.querySelector('[name="ns_time"]').value = t;
+    form.querySelectorAll("[data-quick]").forEach((b) => b.classList.toggle("on", b === q));
+  });
   const setErr = (fields, message) => {
     form.querySelectorAll("[data-err]").forEach((n) => { n.hidden = true; n.textContent = ""; });
     form.querySelector(".form-err")?.remove();
@@ -236,10 +257,10 @@ export function openBrief({ leadId, briefId = null, outcomes = OUTCOMES, late = 
 }
 
 // ------------------------------------------------------------------ the call-history screenshot (4.2)
-export function openProof({ leadId, firstCallAt = null, onDone } = {}) {
+export function openProof({ leadId, firstCallAt = null, followup = false, onDone } = {}) {
   const id = "pf" + uid();
   const body = `<form id="${id}" class="pf" novalidate>
-    <p class="pf-help">${icon("info", "")}<span>Open your phone's call history, take a screenshot that shows this customer's number, the time and the duration, and add it here.</span></p>
+    <p class="pf-help">${icon("info", "")}<span>Open your phone's call history, take a screenshot that shows this customer's number, the time and the duration, and add it here. The app reads the number and the call length, and the sales manager sees the result.</span></p>
     <label class="pf-drop"><input type="file" name="file" accept="image/*" class="sr">
       <span class="pf-ph">${icon("camera", "")}<b>Choose the screenshot</b><small>PNG or JPEG from your gallery</small></span>
       <img class="pf-img" alt="The chosen screenshot" hidden></label>
@@ -249,7 +270,7 @@ export function openProof({ leadId, firstCallAt = null, onDone } = {}) {
       <div class="field"><label for="${id}-d">Duration shown <span class="req" aria-hidden="true">*</span></label><input class="input" id="${id}-d" name="duration" inputmode="numeric" placeholder="2:14" autocomplete="off"><div class="hint">Minutes:seconds. 0:00 if nobody picked up.</div><div class="err" data-err="duration" role="alert" hidden></div></div>
     </div>
   </form>`;
-  const d = openSheet({ title: "Call screenshot", sub: `Lead #${+leadId}. A manager checks it.`, body,
+  const d = openSheet({ title: followup ? "Follow-up call screenshot" : "Call screenshot", sub: `Lead #${+leadId}. A manager checks it.`, body,
     foot: `<button class="btn" type="button" data-x>Cancel</button><button class="btn primary" type="submit" form="${id}">${icon("upload")}Send screenshot</button>` });
   const form = d.el.querySelector("#" + id), input = form.querySelector('[name="file"]'), img = form.querySelector(".pf-img");
   d.el.querySelector("[data-x]").addEventListener("click", () => d.close());

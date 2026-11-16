@@ -25,10 +25,11 @@ const KIND = {
   proof_ai: ["Screenshot read", "image"],
   pass: ["Passed on", "repeat"], released: ["Released", "clock"], reassigned_manual: ["Moved by hand", "repeat"], warning: ["Warning", "flag"],
   warning_excused: ["Warning excused", "check"], followup_due: ["Follow-up due", "bell"], lost_override: ["Closed by a manager", "x"],
+  followup_reminder: ["Follow-up reminder", "bell"], followup_missed: ["Follow-up call missed", "clock"],
 };
 const ACC_KINDS = new Set(["call_attempt", "call_result", "brief_prompt", "brief_reminder", "brief_submitted", "brief_late", "brief_missed", "proof_submitted",
   "proof_approved", "proof_rejected", "proof_waived", "proof_missed", "proof_verified", "proof_ai", "pass", "released", "reassigned_manual", "escalated", "warning",
-  "warning_excused", "followup_due"]);
+  "warning_excused", "followup_due", "followup_reminder", "followup_missed"]);
 const TO_SEAT = new Set(["pass", "reassigned", "reassigned_manual", "escalated"]);
 const PURPOSES = [["callback", "Call back the customer"], ["post_visit_followup", "Follow up after a visit"], ["feedback", "Ask for feedback"]];
 const AI_CHANNELS = [["call", "Call"], ["whatsapp", "WhatsApp"]];
@@ -105,6 +106,8 @@ export async function render(ctx) {
     const accOn = "call_attempt" in a;
     const stage = l.status === "lost" ? "lost" : l.status === "escalated" ? "escalated" : l.stage || l.status;
     const y = window.scrollY;
+    const typing = wrap.querySelector("#ld-reply");   // a feed event repaints the page: keep the reply being typed, and the cursor
+    const keep = typing && typing.value ? { v: typing.value, focus: document.activeElement === typing, at: typing.selectionStart } : null;
     wrap.innerHTML = `<div class="lead-page">
       <div class="lead-crumbs"><a class="back-link" href="#/inbox">${icon("left", "")}Inbox</a></div>
       <section class="lead-head tier-${esc(l.tier_key || "none")}">
@@ -126,6 +129,8 @@ export async function render(ctx) {
       </div>
     </div>`;
     if (Math.abs(window.scrollY - y) > 2) window.scrollTo(0, y);
+    const again = keep && wrap.querySelector("#ld-reply");
+    if (again) { again.value = keep.v; if (keep.focus) { again.focus({ preventScroll: true }); again.setSelectionRange(keep.at, keep.at); } }
   }
 
   wrap.addEventListener("click", async (e) => {
@@ -172,6 +177,7 @@ export async function render(ctx) {
     btn.innerHTML = `<span class="spin"></span> ${via === "exotel" ? "Connecting" : "Calling"}`;
     try {
       const r = await desk.post(`desk/leads/${id}/call-attempt`, { via });
+      justCalled(r);
       if (r.mode === "tel" && r.tel_url) location.href = r.tel_url;
       else if (r.mode === "exotel") toast(r.message || "Ringing your phone now. Pick up, then the customer is connected.", "ok");
       else if (DEMO) toast(`Demo: the call is recorded and no phone dials. The app asks for the brief at ${r.brief_prompt_at ? deskTime(r.brief_prompt_at) : "10 minutes from now"}.`, "demo");
@@ -189,6 +195,19 @@ export async function render(ctx) {
     btn.disabled = false; btn.innerHTML = label;
   }
 
+  /** The screenshot and brief rows show the moment Call is pressed (owner, 15 Nov 2026); the reload a moment later fills
+   *  in the real due times. */
+  function justCalled(r) {
+    if (!acc || !r) return;
+    const me = state.user?.engine_name || null, now = new Date(deskNow() + 5.5 * 36e5).toISOString().replace("T", " ").slice(0, 19);
+    if (r.brief_id && !(acc.briefs || []).some((b) => b.id === r.brief_id)) acc.briefs = [...(acc.briefs || []), { id: r.brief_id, seat: me, state: "pending", due_at: null }];
+    if (r.mode === "tel") acc.state = { ...(acc.state || {}), first_call_at: acc.state?.first_call_at || now };   // an Exotel call counts once it connects
+    const p = acc.proof;
+    if (d.allowed?.proof_upload && r.mode === "tel" && (!p || !["due", "missed", "rejected"].includes(p.state))) acc.proof = { state: "due", due_at: null, followup: true };
+    acc.callback = null;
+    paintAcc();
+  }
+
   function fillBrief(briefId) {
     const mine = briefToFill(acc, state.user?.engine_name || null);
     const b = briefId ? (acc?.briefs || []).find((x) => x.id === briefId) || { id: briefId } : mine;
@@ -200,7 +219,9 @@ export async function render(ctx) {
       } });
   }
   function addProof() {
-    return openProof({ leadId: id, firstCallAt: acc?.state?.first_call_at || (acc?.attempts || [])[0]?.ts || null, onDone: () => load(true) });
+    const p = acc?.proof, last = (acc?.attempts || []).slice(-1)[0];
+    return openProof({ leadId: id, followup: !!p?.followup, firstCallAt: p?.followup ? last?.ts || null : acc?.state?.first_call_at || (acc?.attempts || [])[0]?.ts || null,
+      onDone: () => load(true) });
   }
 
   async function claim(btn) {
@@ -304,6 +325,12 @@ function dutyPanel(d, acc, accErr) {
   if (st.call_due_at && !st.first_call_at && l.status === "claimed") {
     rows.push(`<div class="duty-row k-call"><span class="duty-ic">${icon("phone", "")}</span><span class="duty-t"><b>Call the customer</b><small>Press Call below. If nobody calls in time, the lead moves on.</small></span>${clockHtml({ deadline_at: st.call_due_at })}</div>`);
   }
+  const cb = acc.callback;
+  if (cb) {
+    // the follow-up call the last brief planned: Call, then the screenshot and the brief (owner, 15 Nov 2026)
+    const later = cb.state === "planned";
+    rows.push(`<div class="duty-row k-callback${cb.state === "missed" ? " missed" : later ? " later" : ""}"><span class="duty-ic">${icon("phone", "")}</span><span class="duty-t"><b>${later ? "Follow-up call planned" : "Follow-up call due: call now"}</b><small>${cb.next_step ? `${esc(cb.next_step)} · ` : ""}${cb.seat === me ? "Press Call; the screenshot and the brief come next." : `${esc(cb.seat)} calls.`}</small></span>${dueChip({ kind: "callback", due_at: cb.due_at })}</div>`);
+  }
   const b = briefToFill(acc, null);
   if (b) {
     const mine = b.seat === me;
@@ -311,7 +338,10 @@ function dutyPanel(d, acc, accErr) {
   }
   const p = acc.proof;
   if (p && ["due", "missed", "rejected"].includes(p.state)) {
-    rows.push(`<div class="duty-row k-proof${p.state !== "due" ? " missed" : ""}"><span class="duty-ic">${icon("camera", "")}</span><span class="duty-t"><b>${p.state === "rejected" ? "Screenshot rejected: send a clearer one" : "Call-history screenshot"}</b><small>${p.state === "rejected" && p.review_note ? esc(p.review_note) : "It shows the customer's number, the time and the duration."}</small></span>${p.state === "rejected" ? "" : dueChip({ kind: "proof", due_at: p.due_at, state: p.state })}${a.proof_upload ? `<button class="btn primary sm" type="button" data-act="proof">Add screenshot</button>` : ""}</div>`);
+    // the claim's screenshot can be sent once Call was pressed; a follow-up call's is asked for by that press itself
+    const called = !!p.followup || !!st.first_call_at;
+    const title = p.state === "rejected" ? "Screenshot rejected: send a clearer one" : !called ? "Call-history screenshot, after the call" : p.followup ? "Screenshot of this follow-up call" : "Call-history screenshot";
+    rows.push(`<div class="duty-row k-proof${p.state !== "due" ? " missed" : ""}"><span class="duty-ic">${icon("camera", "")}</span><span class="duty-t"><b>${title}</b><small>${p.state === "rejected" && p.review_note ? esc(p.review_note) : "It shows the customer's number, the time and the duration."}</small></span>${p.state === "rejected" || !p.due_at ? "" : dueChip({ kind: "proof", due_at: p.due_at, state: p.state })}${a.proof_upload && called ? `<button class="btn primary sm" type="button" data-act="proof">Add screenshot</button>` : ""}</div>`);
   }
   if (!rows.length) {
     return a.brief ? `<div class="duty quiet"><span>${icon("check", "")}Nothing due on this lead.</span><button class="btn sm ghost" type="button" data-act="brief">Add a brief</button></div>` : "";
@@ -443,6 +473,8 @@ function accNote(kind, note) {
   if (kind === "brief_reminder") return p[1] ? `Reminder ${p[1]}` : null;
   if (kind === "brief_submitted" || kind === "brief_late") return outcomeLabel(p[1]) || null;
   if (kind === "warning") return WARN[p[0]] || p[0] || null;
+  if (kind === "followup_reminder") return p[1] ? `Reminder ${p[1]}` : null;
+  if (kind === "followup_missed") return p[1] && p[1].length >= 16 ? `Planned ${deskTime(p[1])}` : null;
   if (kind === "proof_ai") return VERDICT_SHORT[p[1]] || null;          // the verdict's words, no time or duration
   return null;
 }

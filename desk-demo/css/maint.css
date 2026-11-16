@@ -109,6 +109,14 @@ a.mt-stock:hover { color: var(--red-text); }
 
 /* ====================================================== one car */
 .mt-now { margin-bottom: 0; }
+.mt-rep { display: grid; gap: 12px; }
+.mt-rep.on { border-color: var(--pos); box-shadow: inset 0 0 0 1px var(--pos); }
+.mt-rep-h { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 8px 10px; }
+.mt-rep-h > svg { width: 22px; height: 22px; flex: none; margin-top: 1px; color: var(--navy-bright); }
+.mt-rep.on .mt-rep-h > svg { color: var(--pos); }
+.mt-rep-h p { margin: 0; flex: 1 1 200px; font-size: 14.5px; }
+.mt-rep-btns { display: flex; flex-wrap: wrap; gap: 10px; }
+.rp-hint { flex-basis: 100%; margin: 0; font-size: 13px; color: var(--muted); }
 .mt-now .mt-quick { margin: 10px -20px 0; padding-left: 20px; padding-right: 20px; border-top: 1px solid var(--line); background: none; }
 .mt-specs { margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--line); grid-template-columns: repeat(2, minmax(0, 1fr)); }
 @media (min-width: 560px) { .mt-specs { grid-template-columns: repeat(4, minmax(0, 1fr)); } }

@@ -68,3 +68,4 @@
   .fu-card { padding: 12px 14px; }
   .fu-pn { flex-basis: 100%; order: 3; }
 }
+.fu-sec .fu-sub { margin: 14px 0 8px; color: var(--muted); }

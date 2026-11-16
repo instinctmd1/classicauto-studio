@@ -156,6 +156,6 @@ export function followupInfo(f) {
   const car = f.lead_car || (f.deal_make ? `${f.deal_make} ${f.deal_model}` : "");
   const title = who || car ? `${what} · ${[who, car].filter(Boolean).join(" · ")}` : `${what} by ${sentence(f.channel || "phone")}`;
   const bits = [who || car ? sentence(f.channel || "phone") : "", f.lead_phone || "", f.deal_stock || ""].filter(Boolean);
-  const href = f.deal_id ? `#/deals?deal=${f.deal_id}` : f.lead_id ? "#/leads" : "";
+  const href = f.deal_id ? (can("deals.view") ? `#/deals?deal=${f.deal_id}` : "") : f.lead_id ? (can("leads.view") ? "#/leads" : "") : "";   // no link to a page this person cannot open: the router would send the tap Home
   return { title, sub: bits.join(" · "), href };
 }

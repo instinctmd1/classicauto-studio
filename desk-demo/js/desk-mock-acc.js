@@ -200,6 +200,11 @@ export function createAccStore({ role, myName, src, leads, fire, stamp }) {
         const s = d.settings.settings;
         return { timers: { ...Object.fromEntries(TIMER_KEYS.map((k) => [k, s[k]])), followup: s.followup }, enabled: s.enabled, exotel: { enabled: !!s.exotel.enabled }, brief_outcomes: OUTCOMES, interest: ["hot", "warm", "cold", "none"] };
       }
+      if (path === "acc/callbacks") {           // the demo plans no follow-up calls
+        await data();
+        if (role === "staff") throw new ApiError(403, "forbidden", "You do not have access to this.");
+        return { server_now: now(), enabled: true, items: [] };
+      }
       if (path === "acc/todo") {
         await data();
         if (role === "staff") throw new ApiError(403, "forbidden", "You do not have access to this.");

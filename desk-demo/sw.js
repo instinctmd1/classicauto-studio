@@ -1,11 +1,11 @@
 // Classic Auto Desk service worker. Scope "./" so the same file works at / (live) and inside the demo folder.
 // Caches only the app shell (styles, scripts, fonts, icons). Never caches /api, the demo's data/ answers, non-GET or
 // cross-origin requests, and never serves a cached index.html: a sign-in redirect (Cloudflare Access) must reach the browser.
-const VERSION = "desk-2026-11-14.5";   // 14 Nov: .1 cash Excel; .2 expenses split, reminder settings; .3 stay signed in 30 days, money locks by code; .4 call desk; .5 Hindi / Hinglish / English switch
+const VERSION = "desk-2026-11-16.8";   // 16 Nov: .8 call desk call-backs say how the call went (reached / no answer / wrong number / call later), the call script in Hindi and Hinglish; .4 sales follow-up calls (brief + screenshot after every call, when will you call next, reminders); .3 market stock (css/market.css); .2 car photos send / download, inspection report from the maintenance car page. 15 Nov: .2 taps stay put; .1 call desk Hot / Warm / Cold. 14 Nov: .7 get car ready; .6 taps stay on the page; .5 Hindi / Hinglish / English switch
 const CACHE = `ca-desk-${VERSION}`;
 const SHELL = [
   "offline.html", "js/theme-init.js", "js/offline.js", "js/i18n-boot.js", "js/i18n.js", "js/i18n-hi.js", "js/i18n-hing.js", "icons/icon-192.png", "icons/badge-96.png",
-  "css/tokens.css", "css/app.css", "css/pages.css", "css/desk.css", "css/maint.css", "css/calldesk.css",
+  "css/tokens.css", "css/app.css", "css/pages.css", "css/desk.css", "css/maint.css", "css/calldesk.css", "css/carreq.css", "css/market.css",
   "fonts/bebas-neue-latin-400.woff2", "fonts/manrope-latin.woff2", "fonts/manrope-latin-ext.woff2",
   "img/logo.svg",
 ];

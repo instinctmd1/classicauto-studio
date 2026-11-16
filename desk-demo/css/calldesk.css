@@ -46,6 +46,23 @@ a.cd-known:hover { background: color-mix(in srgb, var(--info) 24%, transparent);
 .cd-acts:empty { display: none; }
 .cd-call.done .cd-acts { margin-top: 10px; }
 
+/* a call-back: what the last try was, and after Call back the card asks how the call went (calldesk.js outcomePanel) */
+.cd-try { display: flex; align-items: flex-start; gap: 8px; margin: 8px 0 0; font-size: 13px; color: var(--muted); line-height: 1.4; overflow-wrap: anywhere; }
+.cd-try svg { width: 15px; height: 15px; flex: none; margin-top: 2px; }
+.cd-try b { color: var(--text); }
+.cd-cb { display: grid; gap: 10px; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--line); }
+.cd-cb-q { font-size: 17px; font-weight: 800; line-height: 1.3; }
+.cd-cb-btns { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.cd-cb .cd-pick { min-height: 56px; font-size: 16px; }
+.cd-cb .cd-pick svg { width: 20px; height: 20px; }
+.cd-cb .cd-pick.wide { grid-column: 1 / -1; }
+.cd-cb .cd-pick[disabled] { opacity: 0.6; cursor: progress; }
+.cd-cb [data-cbout="reached"] svg { color: var(--pos); }
+.cd-cb [data-cbout="wrong_number"] svg { color: var(--neg); }
+.cd-cb-sub { font-size: 12.5px; color: var(--muted); margin-top: -4px; }
+.cd-cb-note { min-height: 48px; }
+.cd-cb-foot { display: flex; justify-content: flex-end; margin-top: -4px; }
+
 .cd-live { display: inline-flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 800; letter-spacing: 0.03em; padding: 3px 10px; border-radius: 99px; color: var(--pos); background: var(--pos-bg); white-space: nowrap; }
 .cd-live i { width: 8px; height: 8px; border-radius: 50%; background: currentColor; animation: cd-pulse 1.5s ease-out infinite; }
 @keyframes cd-pulse { from { box-shadow: 0 0 0 0 color-mix(in srgb, currentColor 55%, transparent); } to { box-shadow: 0 0 0 9px transparent; } }
@@ -113,6 +130,11 @@ a.cd-known:hover { background: color-mix(in srgb, var(--info) 24%, transparent);
 .cd-pick:hover, .cd-chip:hover, .cd-car:hover { background: var(--card-3); }
 .cd-pick:active, .cd-chip:active, .cd-car:active { transform: scale(0.97); }
 .cd-pick[aria-pressed="true"], .cd-chip[aria-pressed="true"] { background: var(--red); border-color: var(--red); color: #fff; }
+/* how interested: the call brief's Hot / Warm / Cold chips (desk.css .bf-int), three across and a little bigger for a live call */
+.cd-int { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.cd-int .bf-chip > span { min-height: 60px; font-size: 15px; }
+.cd-int .bf-chip > span small { font-size: 11.5px; line-height: 1.3; }
+.cd-inq-top .badge { margin-left: auto; }
 .cd-lakh { display: flex; align-items: center; gap: 10px; margin-top: 10px; max-width: 260px; }
 .cd-lakh span { font-size: 14px; font-weight: 700; color: var(--muted); }
 
@@ -157,8 +179,9 @@ body[data-view="calldesk"][data-sub="1"] .page { padding-bottom: 20px; }
 .cd-daylabel { font-weight: 700; margin: 0 0 18px; }
 .cd-tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
 @media (min-width: 900px) { .cd-tiles { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
-@media (min-width: 1100px) { .cd-tiles:not(.three) { grid-template-columns: repeat(6, minmax(0, 1fr)); } }
+@media (min-width: 1100px) { .cd-tiles:not(.three):not(.four) { grid-template-columns: repeat(6, minmax(0, 1fr)); } }
 @media (max-width: 899px) { .cd-tiles.three > :last-child { grid-column: 1 / -1; } }
+@media (min-width: 900px) { .cd-tiles.four { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
 .cd-tiles .kpi { min-height: 0; padding: 10px 12px; }
 .cd-tiles .kpi-val { font-size: clamp(32px, 7vw, 44px); margin-top: 2px; }
 .cd-tiles .kpi-sub { max-width: none; padding-top: 4px; }

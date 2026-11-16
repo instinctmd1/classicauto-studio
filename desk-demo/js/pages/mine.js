@@ -1,5 +1,5 @@
 // Salesman home: his own leads, tasks and month. The server scopes every call to him; nothing here asks for more.
-import { get } from "../api.js";
+import { DEMO, get } from "../api.js";
 import { state, can, periodLabel } from "../state.js";
 import { dateFmt, esc, icon, minutes, mount, num, pct, sentence, statusBadge, inr } from "../util.js";
 import { pageHead } from "../ui.js";
@@ -26,9 +26,12 @@ export async function render(ctx) {
   const dl = open.length ? `<ul class="list">${open.slice(0, 6).map((d) => `<li><a class="grow" href="#/deals?deal=${d.id}"><div class="t">${esc(d.car.make)} ${esc(d.car.model)} · ${esc(d.buyer)}</div><div class="s">Booked ${dateFmt(d.booked_on, false)}${d.balance_due != null ? " · balance " + inr(d.balance_due) : ""}</div></a>${statusBadge(d.rto_stage || d.status)}</li>`).join("")}</ul>` : `<div class="empty">${icon("tag", "")}<b>No open bookings</b></div>`;
   mount(ctx.root, pageHead({ title: "My day", sub: `${esc(greeting())}, ${esc(firstName())}. ${esc(dateFmt(state.today))}. Only your own leads and deals are shown.` })
     + b.tiles
+    + (can("carreq.create") && !DEMO ? `<div id="cr-home"></div>` : "")
     + `<div class="g sec-gap">${card({ title: "Today, in order", sub: "Your next item is highlighted.", cls: "c7", body: b.agendaHtml })}${card({ title: "Leads for me", sub: `Claim within ${state.settings?.lead_sla_minutes || 10} minutes.`, cls: "c5", body: b.leadsHtml })}</div>
     <div class="kpis four sec-gap">${tiles}</div>
     <div class="g sec-gap">${card({ title: "My open bookings", cls: "c6", body: dl })}${card({ title: "My recent leads", sub: esc(periodLabel(p)), cls: "c6", body: lead })}</div>
     <div class="g">${card({ title: "Papers to collect", cls: "h4", body: b.papersHtml })}${card({ title: "RTO on my deals", cls: "h4", body: b.rtoHtml })}${card({ title: "Deliveries", cls: "h4", body: b.delHtml })}</div>`);
   bindDay(ctx.root, ctx.refresh);
+  const crHost = ctx.root.querySelector("#cr-home");       // get a car ready for a customer: his own requests and the button
+  if (crHost) import("./carreq.js").then((m) => m.section(crHost, ctx, { title: "My car requests", create: true })).catch(() => { crHost.innerHTML = ""; });
 }

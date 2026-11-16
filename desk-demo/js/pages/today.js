@@ -10,6 +10,8 @@ const short = (n) => String(n || "").replace(/\s*\(demo\)/, "");
 const hhmm = (ts) => String(ts || "").slice(11, 16);
 const hourOf = (ts) => +String(ts).slice(11, 13) + +String(ts).slice(14, 16) / 60;
 const OUTCOMES = [["interested", "Interested"], ["negotiating", "Negotiating"], ["not_interested", "Not interested"], ["no_show", "Did not come"]];
+/** A link only when this person can open the page it points to (the router sends everyone else back Home, which reads as a tap that "went somewhere else"). */
+const lk = (ok, tag, cls, href, inner) => (ok ? `<a class="${cls}" href="${href}">${inner}</a>` : `<${tag} class="${cls}">${inner}</${tag}>`);
 
 export function dayBoard(T, { scoped = false } = {}) {
   const slaMin = state.settings?.lead_sla_minutes || 10;
@@ -17,6 +19,7 @@ export function dayBoard(T, { scoped = false } = {}) {
   const drives = T.test_drives || [], fu = (T.followups || []).slice().sort((a, b) => a.due_at.localeCompare(b.due_at));
   const dels = T.deliveries || [], rto = T.rto_tasks || [], papers = T.papers_pending || [];
   const nowIst = nowIstStr();
+  const canDeals = can("deals.view"), canLeads = can("leads.view"), canRto = can("rto.view") || can("documents.view");
 
   // the agenda: everything with a time, in order, with the next one marked
   const agenda = [
@@ -30,15 +33,15 @@ export function dayBoard(T, { scoped = false } = {}) {
 
   const leadsHtml = leads.length ? `<ul class="list">${leads.map((l) => `<li><span class="grow"><div class="t">${esc(l.name)} · ${esc(l.car || "No car named")}</div><div class="s">${esc(chan(l.channel))}${scoped ? "" : " · " + esc(short(l.salesman))} · arrived ${hhmm(l.first_seen_ts)}${l.band && l.band !== "unknown" ? " · " + esc(bandShort(l.band)) : ""}</div></span>${l.status === "new" && l.wait > slaMin ? `<span class="timer" title="Past the ${slaMin} minute target">${duration(l.wait)}</span>` : `<span class="pill ${l.status === "new" ? "warn" : "pos"}">${esc(sentence(l.status))}</span>`}</li>`).join("")}</ul>`
     : `<div class="empty">${icon("check", "")}<b>No new leads waiting</b><p>New leads that nobody has claimed yet show here with a timer.</p></div>`;
-  const delHtml = dels.length ? `<ul class="list">${dels.map((d) => `<li><a class="grow" href="#/deals?deal=${d.id}"><div class="t">${esc(d.make)} ${esc(d.model)} · ${esc(d.stock_no)}</div><div class="s">${esc(d.buyer)} · booked ${dateFmt(d.booked_on, false)}</div></a><span class="pill info">${esc(sentence(d.status))}</span></li>`).join("")}</ul>` : `<div class="empty">${icon("check", "")}<b>No deliveries waiting</b></div>`;
-  const rtoHtml = rto.length ? `<ul class="list">${rto.slice(0, 8).map((r) => `<li><a class="grow" href="#/rto?case=${r.id}"><div class="t">${esc(r.reg_no || r.stock_no)}</div><div class="s">${esc(sentence(r.stage))}${r.days_open != null ? ` · open ${num(r.days_open)} days` : ""}</div></a>${r.filing_due_in != null ? `<span class="clock ${r.filing_due_in < 0 ? "late" : "soon"}">${icon("clock", "")}${r.filing_due_in < 0 ? Math.abs(r.filing_due_in) + " d late" : r.filing_due_in + " d left"}</span>` : `<span class="pill">${r.days_open > 30 ? "Overdue" : "Open"}</span>`}</li>`).join("")}</ul>` : `<div class="empty">${icon("check", "")}<b>No RTO work due</b></div>`;
-  const papersHtml = papers.length ? `<ul class="list">${papers.slice(0, 8).map((p) => `<li><a class="grow" href="#/deals?deal=${p.deal_id}"><div class="t">${esc(p.stock_no)} · ${esc(p.buyer)}</div><div class="s">Missing: ${esc(p.missing.join(", "))}</div></a>${icon("right", "")}</li>`).join("")}</ul>` : `<div class="empty">${icon("check", "")}<b>All papers are in</b></div>`;
+  const delHtml = dels.length ? `<ul class="list">${dels.map((d) => `<li>${lk(canDeals, "span", "grow", `#/deals?deal=${d.id}`, `<div class="t">${esc(d.make)} ${esc(d.model)} · ${esc(d.stock_no)}</div><div class="s">${esc(d.buyer)} · booked ${dateFmt(d.booked_on, false)}</div>`)}<span class="pill info">${esc(sentence(d.status))}</span></li>`).join("")}</ul>` : `<div class="empty">${icon("check", "")}<b>No deliveries waiting</b></div>`;
+  const rtoHtml = rto.length ? `<ul class="list">${rto.slice(0, 8).map((r) => `<li>${lk(canRto, "span", "grow", `#/rto?case=${r.id}`, `<div class="t">${esc(r.reg_no || r.stock_no)}</div><div class="s">${esc(sentence(r.stage))}${r.days_open != null ? ` · open ${num(r.days_open)} days` : ""}</div>`)}${r.filing_due_in != null ? `<span class="clock ${r.filing_due_in < 0 ? "late" : "soon"}">${icon("clock", "")}${r.filing_due_in < 0 ? Math.abs(r.filing_due_in) + " d late" : r.filing_due_in + " d left"}</span>` : `<span class="pill">${r.days_open > 30 ? "Overdue" : "Open"}</span>`}</li>`).join("")}</ul>` : `<div class="empty">${icon("check", "")}<b>No RTO work due</b></div>`;
+  const papersHtml = papers.length ? `<ul class="list">${papers.slice(0, 8).map((p) => `<li>${lk(canDeals, "span", "grow", `#/deals?deal=${p.deal_id}`, `<div class="t">${esc(p.stock_no)} · ${esc(p.buyer)}</div><div class="s">Missing: ${esc(p.missing.join(", "))}</div>`)}${canDeals ? icon("right", "") : ""}</li>`).join("")}</ul>` : `<div class="empty">${icon("check", "")}<b>All papers are in</b></div>`;
 
   const tiles = `<div class="day-strip">
-    <a class="day-tile rise${leads.some((l) => l.wait > slaMin && l.status === "new") ? " hot" : ""}" href="#/leads">${icon("leads", "bg")}<span class="l">New leads</span><span class="n">${num(leads.length)}</span><span class="s">${leads.filter((l) => l.wait > slaMin && l.status === "new").length} past the ${slaMin} min target</span></a>
+    <${canLeads ? "a" : "div"} class="day-tile rise${leads.some((l) => l.wait > slaMin && l.status === "new") ? " hot" : ""}"${canLeads ? ' href="#/leads"' : ""}>${icon("leads", "bg")}<span class="l">New leads</span><span class="n">${num(leads.length)}</span><span class="s">${leads.filter((l) => l.wait > slaMin && l.status === "new").length} past the ${slaMin} min target</span></${canLeads ? "a" : "div"}>
     <a class="day-tile rise" href="#/today">${icon("car", "bg")}<span class="l">Test drives</span><span class="n">${num(drives.length)}</span><span class="s">${drives.filter((d) => !d.outcome).length} still to go</span></a>
     <a class="day-tile rise${fu.some((f) => f.due_at.slice(0, 10) < state.today) ? " hot" : ""}" href="#/today">${icon("clock", "bg")}<span class="l">Follow-ups</span><span class="n">${num(fu.length)}</span><span class="s">${fu.filter((f) => f.due_at.slice(0, 10) < state.today).length} overdue</span></a>
-    <a class="day-tile rise" href="#/deals">${icon("check", "bg")}<span class="l">Deliveries</span><span class="n">${num(dels.length)}</span><span class="s">${num(papers.length)} with papers missing</span></a></div>`;
+    <${canDeals ? "a" : "div"} class="day-tile rise"${canDeals ? ' href="#/deals"' : ""}>${icon("check", "bg")}<span class="l">Deliveries</span><span class="n">${num(dels.length)}</span><span class="s">${num(papers.length)} with papers missing</span></${canDeals ? "a" : "div"}></div>`;
   return { tiles, leadsHtml, agendaHtml, delHtml, rtoHtml, papersHtml, counts: { leads: leads.length, drives: drives.length, fu: fu.length, dels: dels.length } };
 }
 

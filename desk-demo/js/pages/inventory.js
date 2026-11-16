@@ -7,6 +7,7 @@ import { PAY_MODES, modeLabel } from "../lists.js";
 import { confirmDialog, formHtml, openDrawer, pageHead, readForm, save, showErrors, toast } from "../ui.js";
 import { col, cellMain, columnsButton, exportButtons, makeGrid } from "../grid.js";
 import { bindDocs, docsHtml, EXPECTED } from "./_docs.js";
+import { bindPhotos, openPhotos, photosHtml } from "./_photos.js";
 import { bankField, bankPick, commissionText, kpiTile, roleNote } from "./_shared.js";
 import { shrink } from "./intake.js";
 
@@ -62,7 +63,7 @@ export async function render(ctx) {
 
   const aging30 = (d) => `<span class="aging"><i data-c="${agingColor(agingBucketOf(d))}"></i>${num(d)} d</span>`;
   const cols = [
-    col.html("make", "Car", { frozen: true, minWidth: 210, formatter: (c) => { const r = c.getData(); return cellMain(`${r.make} ${r.model}`, `${r.stock_no} · ${r.variant || ""}`); }, sorter: "string" }),
+    col.html("make", "Car", { frozen: true, minWidth: 210, formatter: (c) => { const r = c.getData(); return cellMain(`${r.make} ${r.model}`, `${r.stock_no} · ${r.variant || ""}`) + (r.photo_count && !api.DEMO ? `<button type="button" class="icon-btn cell-ph" data-photos="${r.id}" aria-label="Photos of the ${esc(`${r.make} ${r.model}`)}: send or download" title="Send or download photos">${icon("image")}</button>` : ""); }, sorter: "string" }),
     col.html("ownership", "Segment", { width: 118, formatter: (c) => (c.getValue() ? badge(c.getValue() === "invested" ? "Invested" : "Park-N-Sell", c.getValue() === "invested" ? "ink" : "info") : badge("Not set", "warn")) }),
     col.html("status", "Status", { width: 112, formatter: (c) => statusBadge(c.getValue()) }),
     col.html("days_in_stock", "In stock", { width: 104, sorter: "number", formatter: (c) => { const h = document.createElement("span"); h.innerHTML = c.getValue() == null ? `<span class="aging" title="arrival date: Dad adds"><i></i>Dad adds</span>` : aging30(c.getValue()); const el = h.firstElementChild; el.querySelector("i").style.setProperty("--c", agingColor(agingBucketOf(c.getValue() ?? 0))); return el; } }),
@@ -101,6 +102,8 @@ export async function render(ctx) {
   };
   table.on("tableBuilt", apply);
   ctx.root.addEventListener("click", (e) => {
+    const ph = e.target.closest("[data-photos]");          // the row's photo button: send or download without opening the car file
+    if (ph) { const r = rows.find((x) => x.id === +ph.dataset.photos); if (r) openPhotos(r.id, `${r.mfg_year || ""} ${r.make} ${r.model}`.trim()); return; }
     const s = e.target.closest("[data-seg]"), st = e.target.closest("[data-state]");
     if (s) { view.seg = s.dataset.seg; drawSeg(); apply(); }
     if (st) { view.state = st.dataset.state; drawSeg(); apply(); }
@@ -156,15 +159,17 @@ export async function openCar(id, ctx, reload) {
     + ((c.papers_to_follow || []).length ? `<ul class="list">${c.papers_to_follow.map((p) => `<li><span class="grow"><div class="t">${esc(p.paper)}</div><div class="s">To follow by ${dateFmt(p.due, true)}</div></span>${p.due && p.due < state.today ? badge("Overdue", "neg") : badge("To follow", "warn")}</li>`).join("")}</ul>` : "");
   const moneyBanner = owner && c.ownership !== "park_n_sell" && c.purchase_price == null && !["delivered", "returned_to_owner", "written_off"].includes(c.status)
     ? `<div class="note-card warn">${icon("alert", "")}<p><b>${c.ownership ? "Add the buying price." : "Choose Bought or Park & Sell, then add the buying price."}</b> The website does not wait for it, but the car cannot be delivered without it.</p>${c.intake_id ? `<a class="btn sm primary" href="#/intake/${c.intake_id}?step=owner">Open the owner step</a>` : ""}</div>` : "";
-  d.setBody(`${(c.photos || []).length ? `<div class="sec demo-photos"><div class="sec-h"><h3>Photos</h3><span class="act muted">On the website</span></div><div class="rs-strip">${c.photos.map((p, i) => `<img src="${esc(p)}" alt="${esc(c.make + " " + c.model)} photo ${i + 1}" loading="lazy" decoding="async" width="200" height="150">`).join("")}</div></div>` : ""}${moneyBanner}${sec("Website", siteHtml, siteBtns)}${sec("Price", price, edit ? `<button class="btn sm" type="button" data-act="price">${icon("tag")}Change price</button>` : "")}${sec("Details", spec)}${sec("Consignment terms", cons)}
+  d.setBody(`${(c.photos || []).length ? `<div class="sec demo-photos"><div class="sec-h"><h3>Photos</h3><span class="act muted">On the website</span></div><div class="rs-strip">${c.photos.map((p, i) => `<img src="${esc(p)}" alt="${esc(c.make + " " + c.model)} photo ${i + 1}" loading="lazy" decoding="async" width="200" height="150">`).join("")}</div></div>` : ""}${moneyBanner}${sec("Photos", photosHtml())}${sec("Website", siteHtml, siteBtns)}${sec("Price", price, edit ? `<button class="btn sm" type="button" data-act="price">${icon("tag")}Change price</button>` : "")}${sec("Details", spec)}${sec("Consignment terms", cons)}
     <div class="sec"><div class="sec-h"><h3>Papers</h3><span class="badge ${c.papers_pct >= 90 ? "pos" : c.papers_pct >= 60 ? "warn" : "neg"}">${c.papers_pct}% complete</span></div><div id="docs">${data.documents ? docsHtml(data.documents, pns ? EXPECTED.park_n_sell : EXPECTED.invested) : '<p class="muted">Papers are managed by the office.</p>'}</div></div>
     ${owner ? sec("Cost ledger", costs || `<p class="muted">No costs recorded.</p>`, `<button class="btn sm" type="button" data-act="cost">${icon("plus")}Add cost</button>`) : ""}${sec("Workshop", edit ? refurb : "")}${sec("Deals", deals)}${sec("Where it has been", timeline, edit && !["delivered", "booked", "returned_to_owner", "written_off"].includes(c.status) ? `<button class="btn sm" type="button" data-act="status">Move to…</button>` : "")}${sec("Price history", prices)}`);
   const sold = can("stock.intake") && ["incoming", "refurb", "available", "booked"].includes(c.status) ? `<a class="btn" href="#/intake/new?kind=sold&car=${c.id}">${icon("tag")}Sold</a>` : "";
-  d.setFoot(edit || sold ? `${sold}${edit ? `<button class="btn" type="button" data-act="edit">${icon("edit")}Edit details</button>` : ""}` : null);
+  const ready = can("carreq.create") && !api.DEMO && ["incoming", "refurb", "available", "booked"].includes(c.status) ? `<a class="btn primary" href="#/carreq/new?for=${c.id}">${icon("car")}Get car ready</a>` : "";
+  d.setFoot(edit || sold || ready ? `${ready}${sold}${edit ? `<button class="btn" type="button" data-act="edit">${icon("edit")}Edit details</button>` : ""}` : null);
   const done = () => { d.close(); reload?.(); setTimeout(() => ctxRef && openCar(id, ctx, reload), 300); };
   const reopen = () => { reload?.(); openCar(id, ctx, reload); };
   const docs = d.el.querySelector("#docs");
   if (docs) bindDocs(docs, { entityType: "car", entityId: id, onDone: reopen });
+  bindPhotos(d.el.querySelector("[data-ph-host]"), id);
   d.el.querySelector("[data-add-photos]")?.addEventListener("change", async (e) => {
     const files = [...e.target.files]; if (!files.length) return;
     let ok = 0; const failed = [];
