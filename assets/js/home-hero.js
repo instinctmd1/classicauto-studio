@@ -1,5 +1,5 @@
-/* Home hero: a slideshow of real cars from the floor. Each picture is a cut-out of the car's own stock photo (background removed, nothing else
-   changed; see tools/make_hero_cutout.py). The list is window.CA_HERO (assets/js/hero-cars.js); a car that is sold or not in the stock is
+/* Home hero: a slideshow of real cars from the floor. Each picture is the car's own cover photo with its background (Nov 2026: the cut-outs
+   are gone), as big as the layout allows. The list is window.CA_HERO (assets/js/hero-cars.js); a car that is sold or not in the stock is
    skipped, so the hero never offers a car we no longer have. The first slide is in the page's HTML (it is the LCP image); the others are
    created and loaded only after the first has loaded, one ahead of the visitor.
    Moves by: swipe or drag, the arrows (wide screens), the dots, the Left and Right keys, or on its own about every 5.5 s. The slow autoplay
@@ -17,7 +17,7 @@
 
   var byId = {};
   CARS.forEach(function (c) { byId[c.id] = c; });
-  var items = window.CA_HERO.filter(function (h) { var c = byId[h.id]; return c && c.status !== "SOLD"; })
+  var items = window.CA_HERO.filter(function (h) { var c = byId[h.id]; return c && c.status !== "SOLD" && c.photos && c.photos.length; })
     .map(function (h) { return { h: h, c: byId[h.id] }; });
   var staticSlide = slidesEl.querySelector(".hero-slide");
   if (!items.length) { root.hidden = true; return; }
@@ -43,18 +43,33 @@
     return el;
   });
   if (staticSlide && slides.indexOf(staticSlide) < 0) staticSlide.remove();   // the first car is sold: its static slide goes
+  /* a photo that is not 4:3 is shown whole over a blurred copy of itself; a 4:3 photo fills the stage */
+  function fitSlide(im) {
+    var sl = im.parentNode;
+    if (!im.naturalWidth || !sl || !sl.classList) return;
+    var fit = Math.abs(im.naturalWidth / im.naturalHeight - 4 / 3) > 0.08;
+    sl.classList.toggle("is-fit", fit);
+    if (fit) sl.style.setProperty("--ph", 'url("' + im.currentSrc.replace(/"/g, "%22") + '")');
+  }
   function loaded(i) { return !!slides[i].querySelector("img"); }
   function load(i) {
     i = (i + slides.length) % slides.length;
     if (loaded(i)) return;
     var it = items[i], img = doc.createElement("img");
-    img.src = (window.CA && window.CA.root ? window.CA.root(it.h.src) : it.h.src);
-    img.width = it.h.w; img.height = it.h.h; img.alt = alt(it.c); img.decoding = "async"; img.draggable = false;
+    img.src = (window.CA && window.CA.root ? window.CA.root(it.c.photos[0]) : it.c.photos[0]);
+    img.width = 800; img.height = 600; img.alt = alt(it.c); img.decoding = "async"; img.draggable = false;
     img.addEventListener("error", function () { slides[i].setAttribute("data-broken", "1"); });
+    img.addEventListener("load", function () { fitSlide(img); });
     slides[i].appendChild(img);
   }
   var firstImg = slides[0].querySelector("img");
-  if (firstImg) firstImg.alt = alt(items[0].c);
+  if (firstImg) {
+    firstImg.addEventListener("load", function () { fitSlide(firstImg); });
+    if (firstImg.complete) fitSlide(firstImg);
+    firstImg.alt = alt(items[0].c);
+    var want = window.CA && window.CA.root ? window.CA.root(items[0].c.photos[0]) : items[0].c.photos[0];
+    if (firstImg.getAttribute("src") !== want) firstImg.src = want;     // the cover changed since the HTML was written
+  }
   else load(0);
 
   var idx = 0, auto = !reduced, userStopped = false, timer = null, hoverOrFocus = false, offscreen = false, dragging = false;

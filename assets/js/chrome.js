@@ -47,6 +47,7 @@
   var NAV = [
     ["index.html", "Home", "home"],
     ["stock.html", "Stock", "stock"],
+    ["request.html", "Request a car", "request", "nav-request"],
     ["studio.html", "Studio", "studio"],
     ["finder.html", "Find your car", "quiz"],
     ["sell.html", "Sell your car", "sell"],
@@ -65,7 +66,7 @@
 
   function navLinks(cls) {
     return NAV.map(function (n) {
-      return '<a href="' + n[0] + '" data-nav="' + n[2] + '"' + (page === n[2] ? ' aria-current="page"' : "") + '>' + n[1] + '</a>';
+      return '<a href="' + n[0] + '"' + (n[3] ? ' class="' + n[3] + '"' : "") + ' data-nav="' + n[2] + '"' + (page === n[2] ? ' aria-current="page"' : "") + '>' + n[1] + '</a>';
     }).join("");
   }
 

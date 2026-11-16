@@ -1,5 +1,5 @@
 /* Shop by brand (home grid) and the brand strip on stock.html. Only makes with at least one car on the floor are listed, each with its live
-   count, built from window.CARS, so a make appears or disappears with the stock. Logos are local one-colour SVGs in assets/brands/ (sources and
+   count, built from window.CARS, so a make appears or disappears with the stock. Logos are local full-colour WebP files in assets/brands/ (sources and
    licences: assets/brands/CREDITS.txt); a make without a logo file gets a plain wordmark tile. Every link is stock.html?brand=<slug>, which
    stock.js turns into the Make filter (and keeps in the address bar). */
 (function () {
@@ -20,7 +20,7 @@
 
   function logo(b, cls) {
     if (LOGOS.indexOf(b.slug) < 0) return '<span class="brand-word ' + cls + '" aria-hidden="true">' + esc(b.make) + '</span>';
-    return '<img class="' + cls + '" src="' + root("assets/brands/" + b.slug + ".svg") + '" alt="" width="64" height="40" loading="lazy" decoding="async">';
+    return '<img class="' + cls + '" src="' + root("assets/brands/" + b.slug + ".webp") + '" alt="" width="64" height="40" loading="lazy" decoding="async">';
   }
   function plural(n) { return n + (n === 1 ? " car" : " cars"); }
 
@@ -58,8 +58,10 @@
       }).join("");
       host.innerHTML = out || '<li class="brand-fallback"><a class="link-arrow" href="stock.html">Browse all stock</a></li>';
     }
-    var bodies = ["hatchback", "sedan", "suv", "mpv", "luxury-sedan", "luxury-suv"].map(function (v) { return { v: v, label: window.ClassicAuto.bodyLabel(v), test: function (c) { return c.body === v; } }; });
-    chips("bodyGrid", "body", bodies);
+    var bodies = window.ClassicAuto.TYPES.map(function (t) {
+      return { v: t.v, label: t.label, test: function (c) { return window.ClassicAuto.carTypes(c).indexOf(t.v) > -1; } };
+    });
+    chips("bodyGrid", "type", bodies);
     chips("budgetGrid", "band", [
       { v: "u20", label: "Under ₹20 L", test: function (c) { return c.band === "u20"; } },
       { v: "20to50", label: "₹20-50 L", test: function (c) { return c.band === "20to50"; } },

@@ -201,7 +201,7 @@ html.motion-off .car-card, html.reduce .car-card { opacity: 1; }
 .header-actions { display: none; align-items: center; gap: var(--s-3); }
 .header-actions .btn { min-height: 44px; padding-inline: 18px; }
 .nav-toggle { margin-left: auto; width: 48px; height: 48px; display: inline-flex; align-items: center; justify-content: center; background: transparent; border: 1px solid var(--line-3); border-radius: var(--r-2); cursor: pointer; }
-@media (min-width: 1080px) {
+@media (min-width: 1240px) {
   .nav-links, .header-social { display: flex; }
   .header-actions { display: flex; }
   .nav-toggle { display: none; }
@@ -338,12 +338,9 @@ body.nav-open .sticky-bar { transform: translateY(110%); }
 .car-card { position: relative; display: flex; flex-direction: column; background: var(--bg); border: 1px solid var(--line); border-radius: 20px; overflow: hidden; box-shadow: var(--shadow-1); transition: transform 320ms var(--ease-out), box-shadow 320ms var(--ease-out), border-color 320ms var(--ease-out); }
 @media (hover: hover) and (pointer: fine) { .car-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-2); border-color: var(--line-2); } .car-card:hover .car-media img { transform: scale(1.035); } }
 .car-card-link { display: flex; flex-direction: column; flex: 1; }
-/* the stage: a cover photo fills it; a cut-out car stands on a light floor with a soft shadow under it */
-.car-media { position: relative; aspect-ratio: 3 / 2; overflow: hidden; background: var(--bg-3); }
+/* the photo: the car's own listing photo with its background, edge to edge, in a fixed 4:3 frame */
+.car-media { position: relative; aspect-ratio: 4 / 3; overflow: hidden; background: var(--bg-3); }
 .car-media img { width: 100%; height: 100%; object-fit: cover; transition: transform 600ms var(--ease-out); }
-.car-media.has-cutout { background: radial-gradient(90% 70% at 50% 40%, #ffffff 0%, #f1f4fa 62%, #e6ebf5 100%); }
-.car-media.has-cutout::after { content: ""; position: absolute; left: 12%; right: 12%; bottom: 11%; height: 9%; border-radius: 50%; background: radial-gradient(closest-side, rgba(10, 22, 51, 0.30), rgba(10, 22, 51, 0)); z-index: 0; pointer-events: none; }
-.car-media.has-cutout img { position: relative; z-index: 1; object-fit: contain; object-position: 50% 62%; padding: 7% 7% 12%; transform-origin: 50% 80%; }
 .car-media.is-placeholder { display: flex; align-items: center; justify-content: center; text-align: center; padding: var(--s-5); background: radial-gradient(120% 140% at 20% 0%, rgba(43, 57, 144, 0.10), transparent 60%), var(--bg-3); }
 .ph-label { font-family: var(--font-display); font-size: 1.8rem; text-transform: uppercase; color: var(--ink-2); line-height: 1; display: block; }
 .ph-note { display: block; margin-top: 8px; font-size: var(--fs-label); letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-3); }
@@ -477,24 +474,14 @@ body.nav-open .sticky-bar { transform: translateY(110%); }
 .crumbs a { display: inline-flex; align-items: center; min-height: 44px; color: var(--ink-2); }
 .car-layout { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--s-7); }
 @media (min-width: 1000px) { .car-layout { grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); gap: var(--s-8); align-items: start; } }
-.car-gallery { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--s-3); }
-/* up to 15 photos a car: the rail scrolls inside itself (sideways on phones, down beside the photo on wider screens) and never widens the page */
-@media (min-width: 640px) { .car-gallery { grid-template-columns: 76px minmax(0, 1fr); } .car-gallery .thumb-rail { order: -1; flex-direction: column; height: 0; min-height: 100%; overflow-x: hidden; overflow-y: auto; } }
-@media (min-width: 1000px) { .car-gallery { position: sticky; top: calc(var(--header-h) + 24px); } }
+.car-gallery { margin-bottom: var(--s-6); }
 .thumb-rail { display: flex; gap: 8px; overflow-x: auto; overscroll-behavior-x: contain; scrollbar-width: thin; }
 .thumb-rail button { flex: 0 0 auto; }
 .thumb-rail button { width: 76px; height: 52px; padding: 0; border: 1px solid var(--line); border-radius: var(--r-2); overflow: hidden; background: var(--bg-2); cursor: pointer; opacity: 0.7; transition: opacity var(--dur-ui) var(--ease-out), border-color var(--dur-ui) var(--ease-out); }
 .thumb-rail button.is-active { opacity: 1; border-color: var(--red); }
 .thumb-rail img { width: 100%; height: 100%; object-fit: cover; }
-.car-hero { position: relative; border: 1px solid var(--line); border-radius: var(--r-3); overflow: hidden; background: var(--bg-2); }
-.car-hero img { width: 100%; aspect-ratio: 3 / 2; object-fit: cover; }
-.car-hero.is-portrait img { object-fit: contain; }
-.car-hero.is-placeholder { aspect-ratio: 3 / 2; display: flex; align-items: center; justify-content: center; text-align: center; }
-.car-gallery.is-solo { grid-template-columns: minmax(0, 1fr); }
-.car-gallery.is-solo .photo-note { grid-column: 1; }
 .studio-entry { display: flex; align-items: center; gap: var(--s-4); margin-top: var(--s-3); padding: 12px 16px; min-height: 56px; border: 1px solid var(--line-2); border-left: 3px solid var(--red); border-radius: var(--r-2); background: var(--bg-2); color: var(--ink); grid-column: 1 / -1; transition: background-color var(--dur-ui) var(--ease-out), border-color var(--dur-ui) var(--ease-out); }
 @media (min-width: 640px) { .studio-entry { grid-column: 2; } }
-.car-gallery.is-solo .studio-entry { grid-column: 1; }
 .studio-entry .icon { width: 24px; height: 24px; flex: 0 0 auto; color: var(--red-ink); }
 .studio-entry .studio-entry-go { margin-left: auto; width: 20px; height: 20px; color: var(--ink-2); transition: transform var(--dur-ui) var(--ease-out); }
 .studio-entry-text { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
@@ -1006,7 +993,6 @@ input[type="range"]::-moz-range-thumb { width: 24px; height: 24px; border-radius
 .cmp-save { color: var(--ok); font-weight: 700; }
 
 /* gallery: arrows and a counter once a car has more than one photo */
-.car-hero:focus-visible { outline: 2px solid var(--red-ink); outline-offset: -4px; }
 .gallery-nav { position: absolute; z-index: 2; top: 50%; width: 44px; height: 44px; margin-top: -22px; display: inline-flex; align-items: center; justify-content: center; background: rgba(255, 255, 255, 0.78); border: 1px solid var(--line-2); border-radius: 50%; color: var(--ink); cursor: pointer; transition: border-color var(--dur-ui) var(--ease-out), transform var(--dur-ui) var(--ease-out); }
 .gallery-nav:active { transform: scale(0.94); }
 .gallery-prev { left: 10px; }
@@ -1018,7 +1004,6 @@ input[type="range"]::-moz-range-thumb { width: 24px; height: 24px; border-radius
 /* walk-around video: a facade first, the player only after a tap */
 .video-slot { grid-column: 1 / -1; margin-top: var(--s-3); }
 @media (min-width: 640px) { .video-slot { grid-column: 2; } }
-.car-gallery.is-solo .video-slot { grid-column: 1; }
 .video-facade { display: flex; align-items: center; gap: var(--s-4); width: 100%; padding: 8px; background: var(--bg-2); border: 1px solid var(--line-2); border-radius: var(--r-2); color: var(--ink); text-align: left; cursor: pointer; transition: border-color var(--dur-ui) var(--ease-out), background-color var(--dur-ui) var(--ease-out); }
 @media (hover: hover) and (pointer: fine) { .video-facade:hover { border-color: var(--red); background: var(--bg-3); } }
 .video-thumb { position: relative; flex: 0 0 auto; width: 104px; aspect-ratio: 3 / 2; border-radius: var(--r-1); overflow: hidden; background: var(--bg-3); }
@@ -1265,7 +1250,7 @@ html.motion .hero-car { animation-name: car-in; animation-duration: 900ms; anima
 @media (max-width: 639px) {
   .grid-cars--rail { display: flex; gap: 14px; overflow-x: auto; scroll-snap-type: x mandatory; scroll-padding-inline: 16px; margin-inline: -16px; padding: 4px 16px 16px; overscroll-behavior-x: contain; scrollbar-width: none; }
   .grid-cars--rail::-webkit-scrollbar { display: none; }
-  .grid-cars--rail > .car-card { flex: 0 0 84%; scroll-snap-align: start; }
+  .grid-cars--rail > .car-card { flex: 0 0 90%; scroll-snap-align: start; }
 }
 .duo { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--s-4); }
 @media (min-width: 800px) { .duo { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--s-5); } }
@@ -1421,3 +1406,172 @@ html.reduce .hero-tag.is-swap .hero-tag-name, html.reduce .hero-tag.is-swap .her
 .sell-more { margin-top: var(--s-4); }
 .sell-more summary { min-height: 44px; display: flex; align-items: center; font-size: var(--fs-small); font-weight: 700; color: var(--ink); cursor: pointer; }
 .sell-actions { display: flex; flex-wrap: wrap; gap: var(--s-3); }
+
+
+/* =========================================================================
+   Nov 15 2026: big photo cards, the whole stock on one page, body type strip, full-colour brands, request at the top.
+   Reference for the cards: the large edge-to-edge photo of a Big Boy Toyz card; for the body type row: Wish Wheels' shop-by-body-type.
+   ========================================================================= */
+
+/* ---- cards: a big photo on top, the facts under it ---- */
+.container--wide { max-width: 1560px; padding-inline: 16px; }
+@media (min-width: 900px) { .container--wide { padding-inline: 32px; } }
+.grid-cars--stock { gap: 20px; }
+@media (min-width: 1000px) { .grid-cars--stock { gap: 28px; } }
+@media (min-width: 1900px) { .grid-cars--stock { grid-template-columns: repeat(4, 1fr); } }
+/* on a phone the card runs to both screen edges, so the photo is as wide as the screen */
+@media (max-width: 639px) {
+  .grid-cars--stock { margin-inline: -16px; gap: 14px; }
+  .grid-cars--stock .car-card { border-radius: 0; border-inline: 0; box-shadow: none; border-bottom: 1px solid var(--line); }
+}
+.car-card { border-radius: 22px; }
+.car-media img { display: block; }
+/* an upright phone photo is shown whole, over a blurred copy of itself */
+.car-media.is-upright { background: var(--bg-3); }
+.car-media.is-upright::before { content: ""; position: absolute; inset: -12%; background: var(--ph) center / cover no-repeat; filter: blur(22px) saturate(1.15); opacity: 0.9; }
+.car-media.is-upright img { position: relative; object-fit: contain; }
+.car-badge { left: 14px; bottom: 14px; }
+.car-photo-count { position: absolute; z-index: 2; right: 14px; bottom: 14px; display: inline-flex; align-items: center; gap: 6px; padding: 5px 11px 5px 9px; border-radius: var(--r-pill); background: rgba(10, 22, 51, 0.82); color: #ffffff; font-size: 0.6875rem; font-weight: 700; letter-spacing: 0.04em; font-variant-numeric: tabular-nums; }
+.car-photo-count .icon { width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.grid-cars--stock .car-body, .grid-cars--rail .car-body { padding: 18px 20px 22px; }
+.car-body h3 { font-size: clamp(2.2rem, 1.9rem + 0.8vw, 2.7rem); }
+.car-price, .price-xl { font-size: clamp(2.3rem, 2rem + 0.8vw, 2.8rem); }
+
+/* ---- stock page: heading row with Request a car at the top ---- */
+.stock-top { display: flex; flex-direction: column; align-items: flex-start; gap: var(--s-4); }
+.stock-top h1 { margin-bottom: 0; }
+.stock-request { align-self: stretch; justify-content: center; }
+@media (min-width: 700px) {
+  .stock-top { flex-direction: row; align-items: flex-end; justify-content: space-between; gap: var(--s-6); }
+  .stock-request { align-self: auto; flex: 0 0 auto; }
+}
+.page-head--stock .fd-strip { margin-top: var(--s-4); }
+.strip-label { margin: 0 0 8px; font-size: var(--fs-label); font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-3); }
+
+/* ---- brand strip: full-colour logos in one common frame ---- */
+.brand-chip { min-height: 56px; gap: 12px; padding: 0 20px 0 12px; }
+.brand-chip-img { width: 44px; height: 32px; object-fit: contain; flex: 0 0 auto; }
+.brand-img { width: 84px; height: 44px; object-fit: contain; }
+.brand-chip.is-zero { opacity: 0.45; }
+.brand-chip.is-zero[aria-current="true"] { opacity: 1; }
+
+/* ---- body type and range strip ---- */
+.type-strip-wrap { padding-bottom: var(--s-4); }
+.type-strip { display: flex; gap: 10px; overflow-x: auto; overscroll-behavior-x: contain; padding: 4px 2px 12px; scrollbar-width: thin; -webkit-overflow-scrolling: touch; }
+.type-tile { flex: 0 0 auto; display: flex; flex-direction: column; align-items: center; gap: 4px; width: 96px; min-height: 92px; padding: 10px 6px 8px; background: var(--bg); border: 1px solid var(--line-2); border-radius: 16px; color: var(--ink); font: inherit; cursor: pointer; transition: border-color var(--dur-ui) var(--ease-out), background-color var(--dur-ui) var(--ease-out), color var(--dur-ui) var(--ease-out), transform var(--dur-ui) var(--ease-out); }
+.type-tile[hidden] { display: none; }
+.type-tile:active { transform: scale(0.97); }
+.type-ico { display: block; width: 56px; height: 28px; color: var(--ink-2); }
+.type-ico svg { display: block; width: 100%; height: 100%; }
+.type-name { font-size: 0.8125rem; font-weight: 700; line-height: 1.15; }
+.type-count { font-size: 0.6875rem; font-weight: 700; color: var(--ink-3); font-variant-numeric: tabular-nums; }
+.type-tile[aria-pressed="true"] { background: var(--ink); border-color: var(--ink); color: #ffffff; }
+.type-tile[aria-pressed="true"] .type-ico, .type-tile[aria-pressed="true"] .type-count { color: #ffffff; }
+.type-tile.is-zero { opacity: 0.5; }
+@media (hover: hover) and (pointer: fine) { .type-tile:hover { border-color: var(--ink); } .type-tile[aria-pressed="true"]:hover { border-color: var(--ink); } }
+@media (min-width: 900px) { .type-strip { flex-wrap: wrap; overflow: visible; } .type-tile { width: 112px; } }
+@media (prefers-reduced-motion: reduce) { .type-tile { transition: none; } .type-tile:active { transform: none; } }
+
+/* ---- home hero: the cover photo with its background, as big as the layout allows ---- */
+.hero .container { max-width: 1480px; }
+.hero-stage { max-width: none; margin-inline: 0; aspect-ratio: 4 / 3; container-type: normal; isolation: isolate; }
+.hero-word, .hero-floor { display: none; }
+.hero-slides { inset: 0; }
+.hero-slide { border-radius: 22px; overflow: hidden; box-shadow: var(--shadow-2); background: var(--bg-3); }
+.hero-slide img { object-fit: cover; object-position: 50% 62%; }
+.hero-prev { left: 14px; } .hero-next { right: 14px; }
+.hero-tag { margin-top: var(--s-4); }
+@media (max-width: 639px) {
+  .hero-car { margin-inline: -16px; }
+  .hero-slide { border-radius: 0; box-shadow: none; }
+}
+@media (min-width: 900px) {
+  .hero-grid { grid-template-columns: minmax(0, 4fr) minmax(0, 8fr); }
+  .hero-tag { margin-inline: 0; }
+  .hero-ctrl { justify-content: flex-start; }
+}
+
+/* ---- Request a car: always one tap away in the header and the menu ---- */
+.nav-links a.nav-request { padding-inline: 14px; border: 1.5px solid var(--red); border-radius: var(--r-pill); color: var(--red-ink); font-weight: 800; }
+.nav-links a.nav-request::after { display: none; }
+@media (hover: hover) and (pointer: fine) { .nav-links a.nav-request:hover { background: var(--red); border-color: var(--red); color: var(--on-red); } }
+.nav-links a.nav-request[aria-current="page"] { background: var(--red); color: var(--on-red); }
+.mobile-nav > a.nav-request { color: var(--red-ink); }
+@media (min-width: 1080px) and (max-width: 1359px) { .nav-links a.nav-request { padding-inline: 10px; } }
+
+/* ---- stock page on a phone: cars start sooner ---- */
+@media (max-width: 639px) {
+  .page-head--stock { padding-top: calc(var(--header-h) + 20px); padding-bottom: var(--s-3); }
+  .page-head--stock h1 { font-size: 3rem; }
+  .page-head--stock .eyebrow { margin-bottom: var(--s-2); }
+  .stock-request { min-height: 52px; }
+  .page-head--stock .fd-strip { margin-top: var(--s-3); white-space: normal; padding: 8px 14px; min-height: 44px; font-size: 0.8125rem; }
+  .brand-strip-wrap, .type-strip-wrap { padding-bottom: var(--s-2); }
+  .type-tile { min-height: 84px; width: 88px; }
+}
+
+/* ---- car page gallery (Nov 2026, after Wish Wheels): one very large photo, its neighbours peeking in at both sides,
+   arrows, swipe (native scroll-snap), a counter and a thumbnail rail. Every slide is a fixed 4:3 frame, so nothing moves while photos load.
+   A photo that is not 4:3 (an upright phone shot, a square showroom cover) is shown whole over a blurred copy of itself. ---- */
+.gx { position: relative; --gx-w: 88vw; --gx-gap: 10px; }
+@media (min-width: 700px) { .gx { --gx-w: min(66vw, 1040px); --gx-gap: 16px; } }
+@media (min-width: 1500px) { .gx { --gx-w: 1100px; } }
+.gx-track { position: relative; display: flex; gap: var(--gx-gap); overflow-x: auto; overscroll-behavior-x: contain; scroll-snap-type: x mandatory; scrollbar-width: none; -webkit-overflow-scrolling: touch; padding-inline: calc((100% - var(--gx-w)) / 2); scroll-padding-inline: calc((100% - var(--gx-w)) / 2); }
+.gx-track::-webkit-scrollbar { display: none; }
+.gx-track:focus-visible { outline: 2px solid var(--red-ink); outline-offset: -4px; }
+.gx-slide { position: relative; flex: 0 0 var(--gx-w); margin: 0; aspect-ratio: 4 / 3; scroll-snap-align: center; overflow: hidden; border-radius: 18px; background: var(--bg-3); }
+@media (max-width: 699px) { .gx-slide { border-radius: 12px; } }
+.gx-slide img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.gx-slide.is-fit::before { content: ""; position: absolute; inset: -12%; background: var(--ph) center / cover no-repeat; filter: blur(24px) saturate(1.15); opacity: 0.9; }
+.gx-slide.is-fit img { position: relative; object-fit: contain; }
+.gx-slide:not(.is-active) { cursor: pointer; }
+.gx-slide:not(.is-active) img { opacity: 0.72; }
+.gx-slide img { transition: opacity 260ms var(--ease-out); }
+.gx.is-placeholder .gx-track { padding-inline: 16px; }
+.gx-ph { flex: 1 0 100%; aspect-ratio: 4 / 3; max-height: 60vh; display: flex; align-items: center; justify-content: center; text-align: center; border-radius: 18px; background: var(--bg-2); }
+.gallery-nav { position: absolute; z-index: 3; top: 50%; width: 48px; height: 48px; margin-top: -24px; display: inline-flex; align-items: center; justify-content: center; background: rgba(10, 22, 51, 0.72); border: 0; border-radius: 50%; color: #ffffff; cursor: pointer; transition: background-color var(--dur-ui) var(--ease-out), transform var(--dur-ui) var(--ease-out); }
+.gallery-nav .icon { width: 22px; height: 22px; stroke: currentColor; fill: none; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+.gallery-prev { left: 10px; } .gallery-next { right: 10px; }
+@media (max-width: 699px) { .gallery-nav { display: none; } }
+.gallery-nav[aria-disabled="true"] { opacity: 0.3; cursor: default; }
+.gallery-nav:active { transform: scale(0.94); }
+@media (hover: hover) and (pointer: fine) { .gallery-nav:hover { background: var(--red); } }
+.gallery-count { position: absolute; z-index: 3; left: 50%; right: auto; bottom: 14px; transform: translateX(-50%); padding: 5px 14px; background: rgba(10, 22, 51, 0.82); border-radius: var(--r-pill); font-size: 0.75rem; font-weight: 700; letter-spacing: 0.06em; color: #ffffff; font-variant-numeric: tabular-nums; pointer-events: none; }
+.car-gallery .thumb-rail { margin-top: var(--s-4); padding-bottom: 6px; }
+.car-gallery .thumb-rail button { width: 84px; height: 58px; }
+@media (min-width: 900px) { .car-gallery .thumb-rail { justify-content: safe center; } }
+html.reduce .gx-slide img { transition: none; }
+
+/* share the photos, or take them all */
+.photo-actions { display: flex; flex-wrap: wrap; gap: var(--s-3); margin-top: var(--s-4); }
+.photo-actions .btn { flex: 1 1 220px; min-height: 52px; justify-content: center; }
+.photo-actions .btn .icon { width: 20px; height: 20px; }
+.photo-actions .btn[aria-busy="true"] { opacity: 0.7; cursor: progress; }
+.photo-help .text-link { font-weight: 700; text-decoration: underline; }
+.photo-help { flex: 1 0 100%; max-width: none; margin: 0; font-size: var(--fs-small); line-height: 1.5; color: var(--ink-2); }
+@media (min-width: 900px) { .photo-actions { justify-content: center; } .photo-actions .btn { flex: 0 1 280px; } .photo-help { text-align: center; } }
+
+/* below the gallery: the car's facts on the left, the booking form on the right */
+.car-head { min-width: 0; }
+.car-head h1 { font-size: clamp(3rem, 2.2rem + 3.2vw, 5rem); margin-bottom: 8px; }
+.car-head .eyebrow { margin-bottom: var(--s-3); }
+.car-head .buy-head .eyebrow { margin-bottom: 0; }
+
+/* the header has one more link now: keep it on one row at every width */
+@media (min-width: 1080px) and (max-width: 1559px) { .nav-links { gap: 18px; } .header-social { display: none; } .header-actions .btn { padding-inline: 16px; } }
+
+/* wide screens: the headline lines up with the header, and the photo runs on to the right edge of the screen */
+@media (min-width: 900px) {
+  .hero .container { max-width: none; padding-left: max(32px, calc((100% - 1240px) / 2 + 32px)); padding-right: 0; }
+  .hero-slide { border-radius: 22px 0 0 22px; }
+  .hero-next { right: 24px; }
+}
+@media (max-width: 639px) { body[data-page="stock"] .section--tight { padding-top: var(--s-4); } }
+
+/* hero: a photo that is not 4:3 (an upright phone shot, a square showroom cover) is shown whole over a blurred copy of itself */
+.hero-slide.is-fit::before { content: ""; position: absolute; inset: -12%; background: var(--ph) center / cover no-repeat; filter: blur(24px) saturate(1.15); opacity: 0.9; }
+.hero-slide.is-fit img { position: relative; object-fit: contain; }
+/* hero: the headline fits its column from 900 px; the tag and the dots keep their room before the script fills them (no jump) */
+@media (min-width: 900px) { .hero h1 { font-size: clamp(3.4rem, 1.2rem + 4.4vw, 6.2rem); } }
+.hero-tag[hidden], .hero-ctrl[hidden] { display: flex; visibility: hidden; }
+.hero-ctrl { min-height: 44px; }

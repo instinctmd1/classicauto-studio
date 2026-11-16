@@ -25,12 +25,12 @@
 <link rel="preload" href="../../assets/fonts/bebas-neue-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="../../assets/fonts/manrope-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="../../assets/vendor/lenis/lenis.css">
-<link rel="stylesheet" href="../../assets/css/style.css">
+<link rel="stylesheet" href="../../assets/css/style.css?v=af529cce">
 <script>(function(){var d=document.documentElement,r=false;try{r=matchMedia("(prefers-reduced-motion: reduce)").matches}catch(e){}d.classList.add(r?"reduce":"motion");setTimeout(function(){if(!(window.CA_MOTION&&window.CA_MOTION.ready))d.classList.remove("motion")},5000)})();</script>
-<link rel="preload" as="image" href="../../assets/photos/cars/bmw-x3-2025/01.webp" fetchpriority="high">
+<link rel="preload" as="image" href="../../assets/photos/cars/bmw-x3-2025/studio.webp" fetchpriority="high">
 <script>window.CA_ROOT="../../";window.CA_CAR_ID="bmw-x3-2025";</script>
-<script src="../../assets/js/config.js"></script>
-<script src="../../assets/js/track.js" defer></script>
+<script src="../../assets/js/config.js?v=4355687c"></script>
+<script src="../../assets/js/track.js?v=0b8cd269" defer></script>
 <script type="application/ld+json" id="carJsonLd">
 {
   "@context": "https://schema.org",
@@ -79,6 +79,7 @@
       "numberOfPreviousOwners": 0,
       "image": [
         "https://classicauto1974.com/og/bmw-x3-2025.jpg",
+        "https://classicauto1974.com/assets/photos/cars/bmw-x3-2025/studio.webp",
         "https://classicauto1974.com/assets/photos/cars/bmw-x3-2025/01.webp",
         "https://classicauto1974.com/assets/photos/cars/bmw-x3-2025/02.webp",
         "https://classicauto1974.com/assets/photos/cars/bmw-x3-2025/03.webp",
@@ -134,7 +135,7 @@
 </script>
 </head>
 <body data-page="stock">
-<script src="../../assets/js/chrome.js"></script>
+<script src="../../assets/js/chrome.js?v=59696b70"></script>
 <div class="progress-rail" aria-hidden="true"><i></i></div>
 
 <main id="main">
@@ -153,23 +154,24 @@
     <section class="car-page-top">
       <div class="container">
         <nav class="crumbs" aria-label="Breadcrumb"><a href="../../stock.html">Stock</a><span aria-hidden="true">/</span><a href="../../stock.html" data-f="crumbMake"></a><span aria-hidden="true">/</span><span data-f="crumb" aria-current="page"></span></nav>
+      </div>
+
+      <div class="car-gallery" data-f="gallery">
+        <div class="gx" data-f="hero">
+          <div class="gx-track" data-f="track" role="group" aria-roledescription="carousel" aria-label="Photos of this car" tabindex="0" data-lenis-prevent-wheel>
+            <figure class="gx-slide"><img data-f="image" src="../../assets/photos/cars/bmw-x3-2025/studio.webp" alt="2025 BMW X3, white, front view" width="800" height="600" fetchpriority="high" decoding="async"></figure>
+          </div>
+        </div>
+        <div class="container">
+          <div class="thumb-rail" data-f="thumbs" aria-label="Photos"></div>
+          <div class="photo-actions" data-f="photoActions" hidden></div>
+        </div>
+      </div>
+
+      <div class="container">
         <div class="car-layout">
 
-          <div class="car-gallery">
-            <div class="thumb-rail" data-f="thumbs" aria-label="Photos"></div>
-            <figure class="car-hero" data-f="hero">
-              <img data-f="image" src="../../assets/photos/cars/bmw-x3-2025/01.webp" alt="2025 BMW X3, white, front view" width="1110" height="700" fetchpriority="high" decoding="async">
-            </figure>
-            <div class="video-slot" data-f="videoSlot" hidden></div>
-            <a class="studio-entry" id="studioLink" href="../../studio.html" data-cta="studio" data-at="car_page">
-              <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z"/><path d="M4 7.5l8 4.5 8-4.5M12 12v9"/></svg>
-              <span class="studio-entry-text"><b>See it in the Studio</b><small>Turn through this car's own photos, outside and in, full screen.</small></span>
-              <svg class="icon studio-entry-go" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
-            </a>
-            <p class="photo-note" data-f="photoNote">Photo from our Instagram listing. Ask us for a walk-around video.</p>
-          </div>
-
-          <div class="car-buy" id="buy">
+          <div class="car-head">
             <div class="buy-head">
               <p class="eyebrow" data-f="badge"></p>
               <button type="button" class="share-pill" data-f="shareBtn" data-share="" data-at="car_page"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="18" cy="5" r="2.5"/><circle cx="6" cy="12" r="2.5"/><circle cx="18" cy="19" r="2.5"/><path d="M8.2 10.8l7.6-4.4M8.2 13.2l7.6 4.4"/></svg><span>Share with family</span></button>
@@ -182,6 +184,16 @@
             <div class="chip-row" data-f="chips"></div>
             <p class="emi-line" data-f="emiLine"></p>
 
+            <div class="video-slot" data-f="videoSlot" hidden></div>
+            <a class="studio-entry" id="studioLink" href="../../studio.html" data-cta="studio" data-at="car_page">
+              <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z"/><path d="M4 7.5l8 4.5 8-4.5M12 12v9"/></svg>
+              <span class="studio-entry-text"><b>See it in the Studio</b><small>Turn through this car's own photos, outside and in, full screen.</small></span>
+              <svg class="icon studio-entry-go" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+            </a>
+            <p class="photo-note" data-f="photoNote">Photo from our Instagram listing. Ask us for a walk-around video.</p>
+          </div>
+
+          <div class="car-buy" id="buy">
             <form id="carForm" novalidate>
               <div class="step" id="stepPay">
                 <h2 class="step-title"><i>1.</i> How you'll pay</h2>
@@ -385,19 +397,19 @@
   </form>
 </dialog>
 
-<script src="../../assets/js/cars.js" defer></script>
-<script src="../../assets/js/cutouts.js" defer></script>
-<script src="../../assets/js/model-specs.js" defer></script>
-<script src="../../assets/js/car-info.js" defer></script>
-<script src="../../assets/js/main.js" defer></script>
-<script src="../../assets/js/forms.js" defer></script>
-<script src="../../assets/js/cards.js" defer></script>
-<script src="../../assets/js/compare-shortlist.js" defer></script>
-<script src="../../assets/js/car-page.js" defer></script>
+<script src="../../assets/js/cars.js?v=46a07006" defer></script>
+<script src="../../assets/js/model-specs.js?v=cd5c8657" defer></script>
+<script src="../../assets/js/car-info.js?v=3d419b91" defer></script>
+<script src="../../assets/js/main.js?v=f38fa76b" defer></script>
+<script src="../../assets/js/forms.js?v=bef1ce96" defer></script>
+<script src="../../assets/js/cards.js?v=8586f50c" defer></script>
+<script src="../../assets/js/compare-shortlist.js?v=3e8ba0fc" defer></script>
+<script src="../../assets/js/car-page.js?v=55788863" defer></script>
+<script src="../../assets/js/photo-share.js?v=a75af70e" defer></script>
 <script src="../../assets/vendor/gsap/gsap.min.js" defer></script>
 <script src="../../assets/vendor/gsap/ScrollTrigger.min.js" defer></script>
 <script src="../../assets/vendor/lenis/lenis.min.js" defer></script>
-<script src="../../assets/js/motion.js" defer></script>
-<script src="../../assets/js/anita.js" defer></script>
+<script src="../../assets/js/motion.js?v=ba83c9a8" defer></script>
+<script src="../../assets/js/anita.js?v=b1af6f83" defer></script>
 </body>
 </html>

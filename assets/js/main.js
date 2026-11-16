@@ -33,6 +33,31 @@
 
   var BODY = { hatchback: "Hatchback", sedan: "Sedan", suv: "SUV", mpv: "MPV", "luxury-sedan": "Luxury sedan", "luxury-suv": "Luxury SUV" };
   function bodyLabel(b) { return BODY[b] || b; }
+  /* Body type and model range, for the stock page and the home chips. Read from the car's own fields (body, fuel, model), never typed per
+     car, so a new row in the stock sheet is sorted by itself. A car can carry several: a Mercedes GLE Coupe is SUV and Coupe and Luxury.
+     Body types: suv sedan hatchback muv coupe convertible. Ranges: luxury (the sheet's luxury body types) and electric (fuel Electric). */
+  var TYPES = [
+    { v: "suv", label: "SUV", group: "body" }, { v: "sedan", label: "Sedan", group: "body" }, { v: "hatchback", label: "Hatchback", group: "body" },
+    { v: "muv", label: "MUV", group: "body" }, { v: "coupe", label: "Coupe", group: "body" }, { v: "convertible", label: "Convertible", group: "body" },
+    { v: "luxury", label: "Luxury", group: "range" }, { v: "electric", label: "Electric", group: "range" }
+  ];
+  var COUPE_RX = /\bcoupe\b|\bcla\b|\brs5\b|sportback/i, CONVERTIBLE_RX = /convertible|cabrio|roadster|spyder|spider/i;
+  function carTypes(c) {
+    var t = [], b = String(c.body || ""), m = String(c.model || "") + " " + String(c.variant || "");
+    if (CONVERTIBLE_RX.test(m)) t.push("convertible");
+    else if (b === "suv" || b === "luxury-suv") t.push("suv");
+    else if (b === "sedan" || b === "luxury-sedan") t.push("sedan");
+    else if (b === "hatchback") t.push("hatchback");
+    else if (b === "mpv") t.push("muv");
+    if (COUPE_RX.test(m) && t.indexOf("convertible") < 0) t.push("coupe");
+    if (b.indexOf("luxury") === 0) t.push("luxury");
+    if (c.fuel === "Electric") t.push("electric");
+    return t;
+  }
+  function typeLabel(v) { for (var i = 0; i < TYPES.length; i++) if (TYPES[i].v === v) return TYPES[i].label; return v; }
+  /* the deep links of the old home page (?body=luxury-suv) still work: they become a type, plus Luxury where the old value said so */
+  var LEGACY_BODY = { hatchback: ["hatchback"], sedan: ["sedan"], suv: ["suv"], mpv: ["muv"], "luxury-sedan": ["sedan", "luxury"], "luxury-suv": ["suv", "luxury"] };
+
   var BAND = { u20: "Under ₹20 L", "20to50": "₹20-50 L", "50plus": "₹50 L and above" };
   function bandLabel(b) { return BAND[b] || b; }
 
@@ -129,7 +154,7 @@
   window.ClassicAuto = {
     money: money, rupees: rupees, emi: emi, formatKm: formatKm,
     carLabel: carLabel, carFullLabel: carFullLabel, carLeadLabel: carLeadLabel,
-    bodyLabel: bodyLabel, bandLabel: bandLabel, insurance: insurance, fmtDate: fmtDate, transShort: transShort,
+    bodyLabel: bodyLabel, bandLabel: bandLabel, TYPES: TYPES, carTypes: carTypes, typeLabel: typeLabel, LEGACY_BODY: LEGACY_BODY, insurance: insurance, fmtDate: fmtDate, transShort: transShort,
     monthsSince: monthsSince, kmRate: kmRate, newPrice: newPrice, tcs: tcs, igPostUrl: igPostUrl, carTitle: carTitle,
     waLink: function (text) { return window.CA.waLink(text); }
   };

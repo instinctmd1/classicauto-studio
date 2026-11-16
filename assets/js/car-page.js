@@ -1,5 +1,5 @@
-/* Car page, laid out like a product page: gallery left; title, price, chips,
-   "1. How you'll pay", "2. Book" and ONE dominant button right. Renders from
+/* Car page, laid out like a product page: a big photo gallery across the top; then title, price, chips on the left and
+   "1. How you'll pay", "2. Book" and ONE dominant button on the right. Renders from
    window.CARS (?id=). Every submit goes through the shared lead contract with
    the intent encoded in the first line of `message` (see config.js). */
 (function () {
@@ -141,51 +141,93 @@
   if (onRequest) emiEl.hidden = true;
   else emiEl.innerHTML = 'EMI from <strong>' + fmt.rupees(fmt.emi(car.price)) + '</strong>/mo* <span>(20% down, 60 months, 11.5% a year assumed. Change it in step 1.)</span>';
 
-  /* ---- gallery ---- */
+  /* ---- gallery: one very large photo with its neighbours peeking in at both sides (Wish Wheels style). A native scroll-snap track, so a swipe,
+     a trackpad and the arrow keys all work with no library; the arrows, the counter and the thumbnails drive the same scroll. The first photo
+     is the car's cover (the importer puts the cover from covers.json first), so a new cover shows here as the first slide. ---- */
   var photos = car.photos && car.photos.length ? car.photos : null;
-  var img = f("image"), hero = f("hero"), current = 0;
-  /* many listing photos are upright phone shots: show those whole (letterboxed) instead of cropping the car to 3:2 */
-  img.addEventListener("load", function () { hero.classList.toggle("is-portrait", img.naturalHeight > img.naturalWidth * 1.02); });
-  function showPhoto(i) {
-    current = (i + photos.length) % photos.length;
-    if (current === 0) img.setAttribute("fetchpriority", "high");
-    img.src = window.CA.root(photos[current]); img.alt = fmt.carLabel(car) + ", " + car.colour.toLowerCase() + ", photo " + (current + 1) + " of " + photos.length;
-    var thumbsEl = f("thumbs");
-    thumbsEl.querySelectorAll("button").forEach(function (x, k) { x.classList.toggle("is-active", k === current); x.setAttribute("aria-current", k === current ? "true" : "false"); });
-    var cnt = hero.querySelector(".gallery-count"); if (cnt) cnt.textContent = (current + 1) + " / " + photos.length;
+  var hero = f("hero"), track = f("track"), thumbs = f("thumbs"), current = 0;
+  var reduceMotion = !!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+  function altFor(i) { return fmt.carLabel(car) + ", " + car.colour.toLowerCase() + ", photo " + (i + 1) + " of " + photos.length; }
+  /* a photo that is not 4:3 is shown whole over a blurred copy of itself; a 4:3 photo fills the frame */
+  function fitSlide(im) {
+    var sl = im.parentNode;
+    if (!im.naturalWidth || !sl || !sl.classList) return;
+    var ratio = im.naturalWidth / im.naturalHeight, fit = Math.abs(ratio - 4 / 3) > 0.08;
+    sl.classList.toggle("is-fit", fit);
+    if (fit) sl.style.setProperty("--ph", 'url("' + im.currentSrc.replace(/"/g, "%22") + '")');
+  }
+  function slides() { return track.querySelectorAll(".gx-slide"); }
+  function mark(i) {
+    current = i;
+    [].forEach.call(slides(), function (sl, k) { sl.classList.toggle("is-active", k === i); sl.setAttribute("aria-current", k === i ? "true" : "false"); });
+    thumbs.querySelectorAll("button").forEach(function (x, k) {
+      x.classList.toggle("is-active", k === i); x.setAttribute("aria-current", k === i ? "true" : "false");
+      if (k === i && thumbs.scrollWidth > thumbs.clientWidth) { var l = x.offsetLeft - (thumbs.clientWidth - x.offsetWidth) / 2; try { thumbs.scrollTo({ left: l, behavior: reduceMotion ? "auto" : "smooth" }); } catch (e) { thumbs.scrollLeft = l; } }
+    });
+    var cnt = hero.querySelector(".gallery-count"); if (cnt) cnt.textContent = (i + 1) + " / " + photos.length;
+    var pv = hero.querySelector(".gallery-prev"), nx = hero.querySelector(".gallery-next");   // aria-disabled, not disabled: a focused arrow keeps focus
+    if (pv) pv.setAttribute("aria-disabled", String(i === 0)); if (nx) nx.setAttribute("aria-disabled", String(i === photos.length - 1));
+  }
+  /* while an arrow or a thumbnail is scrolling the track, the scroll listener stays out of the way (it would otherwise report every slide
+     the scroll passes); it takes over again 140 ms after the scrolling stops */
+  var moving = false, settle = 0;
+  function settleSoon() { clearTimeout(settle); settle = setTimeout(function () { moving = false; var n = nearest(); if (n !== current) mark(n); }, 140); }
+  function goTo(i, instant) {
+    i = Math.max(0, Math.min(photos.length - 1, i));
+    var sl = slides()[i]; if (!sl) return;
+    var left = sl.offsetLeft - (track.clientWidth - sl.offsetWidth) / 2;
+    moving = true; settleSoon();
+    try { track.scrollTo({ left: left, behavior: instant || reduceMotion ? "auto" : "smooth" }); } catch (e) { track.scrollLeft = left; }
+    mark(i);
+  }
+  function nearest() {
+    var mid = track.scrollLeft + track.clientWidth / 2, best = 0, bd = Infinity;
+    [].forEach.call(slides(), function (sl, k) { var d = Math.abs(sl.offsetLeft + sl.offsetWidth / 2 - mid); if (d < bd) { bd = d; best = k; } });
+    return best;
   }
   if (photos) {
-    showPhoto(0);
-    img.style.viewTransitionName = "car-" + car.id;
-    var thumbs = f("thumbs");
+    var first = track.querySelector(".gx-slide");
+    track.innerHTML = photos.map(function (p, i) {
+      return '<figure class="gx-slide" data-i="' + i + '"><img src="' + cardsApi.esc(window.CA.root(p)) + '" alt="' + cardsApi.esc(altFor(i)) + '" width="800" height="600" ' +
+        (i === 0 ? 'fetchpriority="high" decoding="async"' : 'loading="lazy" decoding="async"') + (i === 0 ? ' style="view-transition-name: car-' + cardsApi.esc(car.id) + '"' : "") + '></figure>';
+    }).join("");
+    [].forEach.call(track.querySelectorAll("img"), function (im) {
+      im.addEventListener("load", function () { fitSlide(im); });
+      if (im.complete) fitSlide(im);
+    });
+    track.setAttribute("aria-label", "Photos of this car: swipe, or use the arrow keys");
     if (photos.length > 1) {
-      thumbs.innerHTML = photos.map(function (p, i) { return '<button type="button" class="' + (i === 0 ? "is-active" : "") + '" data-i="' + i + '" aria-label="Photo ' + (i + 1) + ' of ' + photos.length + '"><img src="' + window.CA.root(p) + '" alt="" width="76" height="52" loading="lazy" decoding="async"></button>'; }).join("");
-      thumbs.addEventListener("click", function (e) { var b = e.target.closest("button"); if (b) showPhoto(+b.getAttribute("data-i")); });
-      /* arrows, a "1 / 18" counter, swipe and the arrow keys: built for the 15+ photo walk-around sets (gap plan P1-1) */
+      thumbs.innerHTML = photos.map(function (p, i) { return '<button type="button" data-i="' + i + '" aria-label="Photo ' + (i + 1) + ' of ' + photos.length + '"><img src="' + window.CA.root(p) + '" alt="" width="84" height="58" loading="lazy" decoding="async"></button>'; }).join("");
+      thumbs.addEventListener("click", function (e) { var b = e.target.closest("button"); if (b) goTo(+b.getAttribute("data-i")); });
       hero.insertAdjacentHTML("beforeend",
         '<button type="button" class="gallery-nav gallery-prev" aria-label="Previous photo"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></button>' +
         '<button type="button" class="gallery-nav gallery-next" aria-label="Next photo"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg></button>' +
         '<span class="gallery-count" aria-live="polite">1 / ' + photos.length + '</span>');
-      hero.querySelector(".gallery-prev").addEventListener("click", function () { showPhoto(current - 1); });
-      hero.querySelector(".gallery-next").addEventListener("click", function () { showPhoto(current + 1); });
-      hero.setAttribute("tabindex", "0"); hero.setAttribute("aria-label", "Photos: use the arrow keys to move between them");
-      hero.addEventListener("keydown", function (e) {
-        if (e.key === "ArrowLeft") { e.preventDefault(); showPhoto(current - 1); }
-        if (e.key === "ArrowRight") { e.preventDefault(); showPhoto(current + 1); }
+      hero.querySelector(".gallery-prev").addEventListener("click", function () { if (current > 0) goTo(current - 1); });
+      hero.querySelector(".gallery-next").addEventListener("click", function () { if (current < photos.length - 1) goTo(current + 1); });
+      track.addEventListener("keydown", function (e) {
+        if (e.key === "ArrowLeft") { e.preventDefault(); goTo(current - 1); }
+        if (e.key === "ArrowRight") { e.preventDefault(); goTo(current + 1); }
       });
-      var sx = null, sy = null;   // a horizontal swipe changes the photo; a vertical one still scrolls the page (N8)
-      hero.addEventListener("touchstart", function (e) { var t = e.touches[0]; sx = t.clientX; sy = t.clientY; }, { passive: true });
-      hero.addEventListener("touchend", function (e) {
-        if (sx == null) return;
-        var t = e.changedTouches[0], dx = t.clientX - sx, dy = t.clientY - sy; sx = null;
-        if (Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy) * 1.5) showPhoto(current + (dx < 0 ? 1 : -1));
+      /* a tap on a neighbour that peeks in brings it to the middle */
+      track.addEventListener("click", function (e) {
+        var sl = e.target.closest && e.target.closest(".gx-slide");
+        if (sl && !sl.classList.contains("is-active")) goTo(+sl.getAttribute("data-i"));
+      });
+      var raf = 0;
+      track.addEventListener("scroll", function () {
+        if (moving) { settleSoon(); return; }
+        if (raf) return;
+        raf = requestAnimationFrame(function () { raf = 0; var n = nearest(); if (n !== current) mark(n); });
       }, { passive: true });
-    } else { thumbs.hidden = true; $(".car-gallery").classList.add("is-solo"); }
+    } else { thumbs.hidden = true; }
+    mark(0);
   } else {
     hero.classList.add("is-placeholder");
-    hero.innerHTML = '<div><span class="ph-label">' + cardsApi.esc(car.make) + '<br>' + cardsApi.esc(car.model) + '</span><span class="ph-note">Photos on request</span></div>';
-    f("thumbs").hidden = true; $(".car-gallery").classList.add("is-solo");
+    track.innerHTML = '<div class="gx-ph"><div><span class="ph-label">' + cardsApi.esc(car.make) + '<br>' + cardsApi.esc(car.model) + '</span><span class="ph-note">Photos on request</span></div></div>';
+    thumbs.hidden = true;
   }
+  window.CA_CAR_CURRENT = car;      // read by assets/js/photo-share.js (share and download the photos)
 
   /* ---- walk-around video (gap plan P1-2): a poster and a play button. The player loads only on tap, so a visit makes no
      third-party request (B1-A2). YouTube plays in place (privacy-enhanced domain, phone-shaped for Shorts); an Instagram reel

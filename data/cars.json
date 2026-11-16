@@ -24,6 +24,7 @@
       "insurance_status": "expired",
       "insurance_note": "",
       "photos": [
+        "assets/photos/cars/audi-a4-2013/studio.webp",
         "assets/photos/cars/audi-a4-2013/01.webp",
         "assets/photos/cars/audi-a4-2013/02.webp",
         "assets/photos/cars/audi-a4-2013/03.webp",
@@ -296,6 +297,7 @@
       "insurance_until": null,
       "insurance_note": "",
       "photos": [
+        "assets/photos/cars/audi-a6-2020/studio.webp",
         "assets/photos/cars/audi-a6-2020/01.webp",
         "assets/photos/cars/audi-a6-2020/02.webp",
         "assets/photos/cars/audi-a6-2020/03.webp",
@@ -562,6 +564,7 @@
       "insurance_until": "2027-05-01",
       "insurance_note": "Zero depreciation",
       "photos": [
+        "assets/photos/cars/audi-q3-2024/studio.webp",
         "assets/photos/cars/audi-q3-2024/01.webp",
         "assets/photos/cars/audi-q3-2024/02.webp",
         "assets/photos/cars/audi-q3-2024/03.webp",
@@ -847,6 +850,7 @@
       "insurance_status": "expired",
       "insurance_note": "",
       "photos": [
+        "assets/photos/cars/audi-q7-2013/studio.webp",
         "assets/photos/cars/audi-q7-2013/01.webp",
         "assets/photos/cars/audi-q7-2013/02.webp",
         "assets/photos/cars/audi-q7-2013/03.webp",
@@ -1129,6 +1133,7 @@
       "insurance_status": "expired",
       "insurance_note": "",
       "photos": [
+        "assets/photos/cars/audi-q7-2016/studio.webp",
         "assets/photos/cars/audi-q7-2016/01.webp",
         "assets/photos/cars/audi-q7-2016/02.webp",
         "assets/photos/cars/audi-q7-2016/03.webp",
@@ -1428,6 +1433,7 @@
       "insurance_until": null,
       "insurance_note": "",
       "photos": [
+        "assets/photos/cars/audi-rs5-2021/studio.webp",
         "assets/photos/cars/audi-rs5-2021/01.webp",
         "assets/photos/cars/audi-rs5-2021/02.webp",
         "assets/photos/cars/audi-rs5-2021/03.webp",
@@ -1574,6 +1580,7 @@
       "insurance_status": "expired",
       "insurance_note": "",
       "photos": [
+        "assets/photos/cars/bmw-5-series-2014/studio.webp",
         "assets/photos/cars/bmw-5-series-2014/01.webp",
         "assets/photos/cars/bmw-5-series-2014/02.webp",
         "assets/photos/cars/bmw-5-series-2014/03.webp",
@@ -1892,6 +1899,7 @@
       "insurance_until": null,
       "insurance_note": "",
       "photos": [
+        "assets/photos/cars/bmw-7-series-2024/studio.webp",
         "assets/photos/cars/bmw-7-series-2024/07.webp",
         "assets/photos/cars/bmw-7-series-2024/01.webp",
         "assets/photos/cars/bmw-7-series-2024/02.webp",
@@ -2176,6 +2184,7 @@
       "insurance_status": "expired",
       "insurance_note": "",
       "photos": [
+        "assets/photos/cars/bmw-x1-2018/studio.webp",
         "assets/photos/cars/bmw-x1-2018/01.webp",
         "assets/photos/cars/bmw-x1-2018/02.webp",
         "assets/photos/cars/bmw-x1-2018/03.webp",
@@ -2462,6 +2471,7 @@
       "insurance_until": null,
       "insurance_note": "Zero depreciation",
       "photos": [
+        "assets/photos/cars/bmw-x1-2026/studio.webp",
         "assets/photos/cars/bmw-x1-2026/01.webp",
         "assets/photos/cars/bmw-x1-2026/02.webp",
         "assets/photos/cars/bmw-x1-2026/03.webp",
@@ -2727,6 +2737,7 @@
       "insurance_until": "2028-11-05",
       "insurance_note": "",
       "photos": [
+        "assets/photos/cars/bmw-x3-2025/studio.webp",
         "assets/photos/cars/bmw-x3-2025/01.webp",
         "assets/photos/cars/bmw-x3-2025/02.webp",
         "assets/photos/cars/bmw-x3-2025/03.webp",
@@ -2959,6 +2970,7 @@
       "insurance_until": "2026-11-10",
       "insurance_note": "",
       "photos": [
+        "assets/photos/cars/ford-endeavour-2016-titanium-2-2-4x2-at/studio.webp",
         "assets/photos/cars/ford-endeavour-2016-titanium-2-2-4x2-at/01.webp",
         "assets/photos/cars/ford-endeavour-2016-titanium-2-2-4x2-at/02.webp",
         "assets/photos/cars/ford-endeavour-2016-titanium-2-2-4x2-at/03.webp",
@@ -3193,6 +3205,7 @@
       "insurance_status": "expired",
       "insurance_note": "",
       "photos": [
+        "assets/photos/cars/ford-endeavour-2016-titanium-3-2-4x4-at/studio.webp",
         "assets/photos/cars/ford-endeavour-2016-titanium-3-2-4x4-at/01.webp",
         "assets/photos/cars/ford-endeavour-2016-titanium-3-2-4x4-at/02.webp",
         "assets/photos/cars/ford-endeavour-2016-titanium-3-2-4x4-at/03.webp",
@@ -3478,6 +3491,7 @@
       "insurance_status": "expired",
       "insurance_note": "",
       "photos": [
+        "assets/photos/cars/ford-endeavour-2021/studio.webp",
         "assets/photos/cars/ford-endeavour-2021/01.webp",
         "assets/photos/cars/ford-endeavour-2021/02.webp",
         "assets/photos/cars/ford-endeavour-2021/03.webp",
@@ -3690,6 +3704,7 @@
       "insurance_until": "2027-04-06",
       "insurance_note": "",
       "photos": [
+        "assets/photos/cars/honda-city-2015-sv-1-5l-i-dtec/studio.webp",
         "assets/photos/cars/honda-city-2015-sv-1-5l-i-dtec/01.webp",
         "assets/photos/cars/honda-city-2015-sv-1-5l-i-dtec/02.webp",
         "assets/photos/cars/honda-city-2015-sv-1-5l-i-dtec/03.webp",
@@ -3926,6 +3941,7 @@
       "insurance_until": null,
       "insurance_note": "",
       "photos": [
+        "assets/photos/cars/honda-city-2015-vx-cvt-petrol/studio.webp",
         "assets/photos/cars/honda-city-2015-vx-cvt-petrol/01.webp",
         "assets/photos/cars/honda-city-2015-vx-cvt-petrol/02.webp",
         "assets/photos/cars/honda-city-2015-vx-cvt-petrol/03.webp",
@@ -4148,6 +4164,7 @@
       "insurance_until": null,
       "insurance_note": "",
       "photos": [
+        "assets/photos/cars/hyundai-creta-2016/studio.webp",
         "assets/photos/cars/hyundai-creta-2016/01.webp",
         "assets/photos/cars/hyundai-creta-2016/02.webp",
         "assets/photos/cars/hyundai-creta-2016/03.webp",
@@ -4566,6 +4583,7 @@
       "insurance_until": null,
       "insurance_note": "",
       "photos": [
+        "assets/photos/cars/hyundai-creta-2018/studio.webp",
         "assets/photos/cars/hyundai-creta-2018/01.webp",
         "assets/photos/cars/hyundai-creta-2018/02.webp",
         "assets/photos/cars/hyundai-creta-2018/03.webp",
@@ -4783,6 +4801,7 @@
       "insurance_until": null,
       "insurance_note": "",
       "photos": [
+        "assets/photos/cars/hyundai-creta-2022-sx-1-5-petrol-cvt/studio.webp",
         "assets/photos/cars/hyundai-creta-2022-sx-1-5-petrol-cvt/01.webp",
         "assets/photos/cars/hyundai-creta-2022-sx-1-5-petrol-cvt/02.webp",
         "assets/photos/cars/hyundai-creta-2022-sx-1-5-petrol-cvt/03.webp",
@@ -5046,6 +5065,7 @@
       "insurance_status": "expired",
       "insurance_note": "",
       "photos": [
+        "assets/photos/cars/hyundai-creta-2022-sx-o-1-4-turbo-7-dct/studio.webp",
         "assets/photos/cars/hyundai-creta-2022-sx-o-1-4-turbo-7-dct/01.webp",
         "assets/photos/cars/hyundai-creta-2022-sx-o-1-4-turbo-7-dct/02.webp",
         "assets/photos/cars/hyundai-creta-2022-sx-o-1-4-turbo-7-dct/03.webp",
@@ -5309,6 +5329,7 @@
       "insurance_status": "expired",
       "insurance_note": "",
       "photos": [
+        "assets/photos/cars/hyundai-creta-2023/studio.webp",
         "assets/photos/cars/hyundai-creta-2023/01.webp",
         "assets/photos/cars/hyundai-creta-2023/02.webp",
         "assets/photos/cars/hyundai-creta-2023/03.webp",
@@ -5516,6 +5537,7 @@
       "insurance_until": "2029-01-29",
       "insurance_note": "Zero depreciation",
       "photos": [
+        "assets/photos/cars/hyundai-creta-2026/studio.webp",
         "assets/photos/cars/hyundai-creta-2026/01.webp",
         "assets/photos/cars/hyundai-creta-2026/02.webp",
         "assets/photos/cars/hyundai-creta-2026/03.webp",
@@ -5971,6 +5993,7 @@
       "insurance_until": "2029-02-18",
       "insurance_note": "Zero depreciation",
       "photos": [
+        "assets/photos/cars/hyundai-i20-2026/studio.webp",
         "assets/photos/cars/hyundai-i20-2026/01.webp",
         "assets/photos/cars/hyundai-i20-2026/02.webp",
         "assets/photos/cars/hyundai-i20-2026/03.webp",
@@ -6208,6 +6231,7 @@
       "insurance_until": "2027-05-22",
       "insurance_note": "Zero depreciation",
       "photos": [
+        "assets/photos/cars/hyundai-ioniq-5-2023/studio.webp",
         "assets/photos/cars/hyundai-ioniq-5-2023/01.webp",
         "assets/photos/cars/hyundai-ioniq-5-2023/02.webp",
         "assets/photos/cars/hyundai-ioniq-5-2023/03.webp",
@@ -6422,6 +6446,7 @@
       "insurance_until": null,
       "insurance_note": "",
       "photos": [
+        "assets/photos/cars/hyundai-verna-2019/studio.webp",
         "assets/photos/cars/hyundai-verna-2019/07.webp",
         "assets/photos/cars/hyundai-verna-2019/01.webp",
         "assets/photos/cars/hyundai-verna-2019/02.webp",
@@ -6627,6 +6652,7 @@
       "insurance_status": "expired",
       "insurance_note": "",
       "photos": [
+        "assets/photos/cars/jaguar-xf-2013/studio.webp",
         "assets/photos/cars/jaguar-xf-2013/01.webp",
         "assets/photos/cars/jaguar-xf-2013/02.webp",
         "assets/photos/cars/jaguar-xf-2013/03.webp",
@@ -6978,6 +7004,7 @@
       "insurance_until": null,
       "insurance_note": "",
       "photos": [
+        "assets/photos/cars/jaguar-xj-2019/studio.webp",
         "assets/photos/cars/jaguar-xj-2019/01.webp",
         "assets/photos/cars/jaguar-xj-2019/02.webp",
         "assets/photos/cars/jaguar-xj-2019/03.webp",
@@ -7222,6 +7249,7 @@
       "insurance_until": null,
       "insurance_note": "",
       "photos": [
+        "assets/photos/cars/jeep-compass-2018/studio.webp",
         "assets/photos/cars/jeep-compass-2018/06.webp",
         "assets/photos/cars/jeep-compass-2018/01.webp",
         "assets/photos/cars/jeep-compass-2018/02.webp",
@@ -7533,6 +7561,7 @@
       "insurance_until": "2026-09-05",
       "insurance_note": "",
       "photos": [
+        "assets/photos/cars/kia-carens-2023/studio.webp",
         "assets/photos/cars/kia-carens-2023/01.webp",
         "assets/photos/cars/kia-carens-2023/02.webp",
         "assets/photos/cars/kia-carens-2023/03.webp",
@@ -7850,6 +7879,7 @@
       "insurance_until": "2027-10-07",
       "insurance_note": "Third party",
       "photos": [
+        "assets/photos/cars/kia-carens-2024/studio.webp",
         "assets/photos/cars/kia-carens-2024/01.webp",
         "assets/photos/cars/kia-carens-2024/02.webp",
         "assets/photos/cars/kia-carens-2024/03.webp",
@@ -8134,6 +8164,7 @@
       "insurance_until": null,
       "insurance_note": "",
       "photos": [
+        "assets/photos/cars/kia-carens-clavis-ev-2025/studio.webp",
         "assets/photos/cars/kia-carens-clavis-ev-2025/01.webp",
         "assets/photos/cars/kia-carens-clavis-ev-2025/02.webp",
         "assets/photos/cars/kia-carens-clavis-ev-2025/03.webp",
@@ -8339,6 +8370,7 @@
       "insurance_status": "expired",
       "insurance_note": "",
       "photos": [
+        "assets/photos/cars/kia-seltos-2021/studio.webp",
         "assets/photos/cars/kia-seltos-2021/01.webp",
         "assets/photos/cars/kia-seltos-2021/02.webp",
         "assets/photos/cars/kia-seltos-2021/03.webp",
@@ -8657,6 +8689,7 @@
       "insurance_until": "2027-01-07",
       "insurance_note": "Comprehensive",
       "photos": [
+        "assets/photos/cars/kia-seltos-2022/studio.webp",
         "assets/photos/cars/kia-seltos-2022/01.webp",
         "assets/photos/cars/kia-seltos-2022/02.webp",
         "assets/photos/cars/kia-seltos-2022/03.webp",
@@ -8967,6 +9000,7 @@
       "insurance_until": null,
       "insurance_note": "",
       "photos": [
+        "assets/photos/cars/kia-seltos-2022-htx-1-5-diesel-at/studio.webp",
         "assets/photos/cars/kia-seltos-2022-htx-1-5-diesel-at/01.webp",
         "assets/photos/cars/kia-seltos-2022-htx-1-5-diesel-at/02.webp",
         "assets/photos/cars/kia-seltos-2022-htx-1-5-diesel-at/03.webp",
@@ -9208,6 +9242,7 @@
       "insurance_until": "2027-07-11",
       "insurance_note": "Third party",
       "photos": [
+        "assets/photos/cars/kia-seltos-2024-htk-plus-1-5-petrol-cvt/studio.webp",
         "assets/photos/cars/kia-seltos-2024-htk-plus-1-5-petrol-cvt/01.webp",
         "assets/photos/cars/kia-seltos-2024-htk-plus-1-5-petrol-cvt/02.webp",
         "assets/photos/cars/kia-seltos-2024-htk-plus-1-5-petrol-cvt/03.webp",
@@ -9436,6 +9471,7 @@
       "insurance_until": "2027-01-23",
       "insurance_note": "Comprehensive",
       "photos": [
+        "assets/photos/cars/kia-seltos-2024-htx-1-5-petrol-cvt/studio.webp",
         "assets/photos/cars/kia-seltos-2024-htx-1-5-petrol-cvt/07.webp",
         "assets/photos/cars/kia-seltos-2024-htx-1-5-petrol-cvt/01.webp",
         "assets/photos/cars/kia-seltos-2024-htx-1-5-petrol-cvt/02.webp",
@@ -9700,6 +9736,7 @@
       "insurance_until": "2027-07-29",
       "insurance_note": "Zero depreciation",
       "photos": [
+        "assets/photos/cars/kia-seltos-2024-x-line-1-5-turbo-petrol-dct/studio.webp",
         "assets/photos/cars/kia-seltos-2024-x-line-1-5-turbo-petrol-dct/01.webp",
         "assets/photos/cars/kia-seltos-2024-x-line-1-5-turbo-petrol-dct/02.webp",
         "assets/photos/cars/kia-seltos-2024-x-line-1-5-turbo-petrol-dct/03.webp",
@@ -9973,6 +10010,7 @@
       "insurance_status": "expired",
       "insurance_note": "",
       "photos": [
+        "assets/photos/cars/land-rover-defender-2023/studio.webp",
         "assets/photos/cars/land-rover-defender-2023/01.webp",
         "assets/photos/cars/land-rover-defender-2023/02.webp",
         "assets/photos/cars/land-rover-defender-2023/03.webp",
@@ -10181,6 +10219,7 @@
       "insurance_until": null,
       "insurance_note": "",
       "photos": [
+        "assets/photos/cars/land-rover-range-rover-evoque-2017/studio.webp",
         "assets/photos/cars/land-rover-range-rover-evoque-2017/01.webp",
         "assets/photos/cars/land-rover-range-rover-evoque-2017/02.webp",
         "assets/photos/cars/land-rover-range-rover-evoque-2017/03.webp",
@@ -10429,6 +10468,7 @@
       "insurance_until": null,
       "insurance_note": "",
       "photos": [
+        "assets/photos/cars/land-rover-range-rover-velar-2021/studio.webp",
         "assets/photos/cars/land-rover-range-rover-velar-2021/01.webp",
         "assets/photos/cars/land-rover-range-rover-velar-2021/02.webp",
         "assets/photos/cars/land-rover-range-rover-velar-2021/03.webp",
@@ -10687,6 +10727,7 @@
       "insurance_until": "2026-11-18",
       "insurance_note": "Zero depreciation",
       "photos": [
+        "assets/photos/cars/land-rover-range-rover-velar-2024/studio.webp",
         "assets/photos/cars/land-rover-range-rover-velar-2024/01.webp",
         "assets/photos/cars/land-rover-range-rover-velar-2024/02.webp",
         "assets/photos/cars/land-rover-range-rover-velar-2024/03.webp",
@@ -10909,6 +10950,7 @@
       "insurance_until": "2029-01-08",
       "insurance_note": "Third party",
       "photos": [
+        "assets/photos/cars/mahindra-be-6-2026/studio.webp",
         "assets/photos/cars/mahindra-be-6-2026/01.webp",
         "assets/photos/cars/mahindra-be-6-2026/02.webp",
         "assets/photos/cars/mahindra-be-6-2026/03.webp",
@@ -11205,6 +11247,7 @@
       "insurance_until": "2028-08-03",
       "insurance_note": "Zero depreciation",
       "photos": [
+        "assets/photos/cars/mahindra-xev-9e-2025/studio.webp",
         "assets/photos/cars/mahindra-xev-9e-2025/01.webp",
         "assets/photos/cars/mahindra-xev-9e-2025/02.webp",
         "assets/photos/cars/mahindra-xev-9e-2025/03.webp",
@@ -11547,6 +11590,7 @@
       "insurance_until": null,
       "insurance_note": "",
       "photos": [
+        "assets/photos/cars/mahindra-xuv500-2014/studio.webp",
         "assets/photos/cars/mahindra-xuv500-2014/01.webp",
         "assets/photos/cars/mahindra-xuv500-2014/02.webp",
         "assets/photos/cars/mahindra-xuv500-2014/03.webp",
@@ -11791,6 +11835,7 @@
       "insurance_until": "2027-10-02",
       "insurance_note": "",
       "photos": [
+        "assets/photos/cars/mahindra-xuv700-2024/studio.webp",
         "assets/photos/cars/mahindra-xuv700-2024/08.webp",
         "assets/photos/cars/mahindra-xuv700-2024/01.webp",
         "assets/photos/cars/mahindra-xuv700-2024/02.webp",
@@ -12062,6 +12107,7 @@
       "insurance_status": "expired",
       "insurance_note": "",
       "photos": [
+        "assets/photos/cars/mahindra-xuv700-2025/studio.webp",
         "assets/photos/cars/mahindra-xuv700-2025/06.webp",
         "assets/photos/cars/mahindra-xuv700-2025/01.webp",
         "assets/photos/cars/mahindra-xuv700-2025/02.webp",
@@ -12308,6 +12354,7 @@
       "insurance_until": null,
       "insurance_note": "Comprehensive",
       "photos": [
+        "assets/photos/cars/maruti-suzuki-grand-vitara-2024/studio.webp",
         "assets/photos/cars/maruti-suzuki-grand-vitara-2024/01.webp",
         "assets/photos/cars/maruti-suzuki-grand-vitara-2024/02.webp",
         "assets/photos/cars/maruti-suzuki-grand-vitara-2024/03.webp",
@@ -12532,6 +12579,7 @@
       "insurance_until": null,
       "insurance_note": "",
       "photos": [
+        "assets/photos/cars/maserati-ghibli-2016/studio.webp",
         "assets/photos/cars/maserati-ghibli-2016/01.webp",
         "assets/photos/cars/maserati-ghibli-2016/02.webp",
         "assets/photos/cars/maserati-ghibli-2016/03.webp",
@@ -12638,6 +12686,7 @@
       "insurance_until": "2027-06-26",
       "insurance_note": "Comprehensive",
       "photos": [
+        "assets/photos/cars/mercedes-benz-a-class-limousine-2022/studio.webp",
         "assets/photos/cars/mercedes-benz-a-class-limousine-2022/01.webp",
         "assets/photos/cars/mercedes-benz-a-class-limousine-2022/02.webp",
         "assets/photos/cars/mercedes-benz-a-class-limousine-2022/03.webp",
@@ -12871,6 +12920,7 @@
       "insurance_until": null,
       "insurance_note": "",
       "photos": [
+        "assets/photos/cars/mercedes-benz-c-class-2015/studio.webp",
         "assets/photos/cars/mercedes-benz-c-class-2015/01.webp",
         "assets/photos/cars/mercedes-benz-c-class-2015/02.webp",
         "assets/photos/cars/mercedes-benz-c-class-2015/03.webp",
@@ -13117,6 +13167,7 @@
       "insurance_status": "expired",
       "insurance_note": "",
       "photos": [
+        "assets/photos/cars/mercedes-benz-c-class-2019/studio.webp",
         "assets/photos/cars/mercedes-benz-c-class-2019/01.webp",
         "assets/photos/cars/mercedes-benz-c-class-2019/02.webp",
         "assets/photos/cars/mercedes-benz-c-class-2019/03.webp",
@@ -13409,6 +13460,7 @@
       "insurance_until": null,
       "insurance_note": "",
       "photos": [
+        "assets/photos/cars/mercedes-benz-cla-2018/studio.webp",
         "assets/photos/cars/mercedes-benz-cla-2018/01.webp",
         "assets/photos/cars/mercedes-benz-cla-2018/02.webp",
         "assets/photos/cars/mercedes-benz-cla-2018/03.webp",
@@ -13642,6 +13694,7 @@
       "insurance_until": null,
       "insurance_note": "",
       "photos": [
+        "assets/photos/cars/mercedes-benz-cla-2019/studio.webp",
         "assets/photos/cars/mercedes-benz-cla-2019/01.webp",
         "assets/photos/cars/mercedes-benz-cla-2019/02.webp",
         "assets/photos/cars/mercedes-benz-cla-2019/03.webp",
@@ -13894,6 +13947,7 @@
       "insurance_status": "expired",
       "insurance_note": "",
       "photos": [
+        "assets/photos/cars/mercedes-benz-e-class-2012/studio.webp",
         "assets/photos/cars/mercedes-benz-e-class-2012/01.webp",
         "assets/photos/cars/mercedes-benz-e-class-2012/02.webp",
         "assets/photos/cars/mercedes-benz-e-class-2012/03.webp",
@@ -14130,6 +14184,7 @@
       "insurance_until": "2027-04-05",
       "insurance_note": "Comprehensive",
       "photos": [
+        "assets/photos/cars/mercedes-benz-e-class-2022-e-220d-exclusive/studio.webp",
         "assets/photos/cars/mercedes-benz-e-class-2022-e-220d-exclusive/06.webp",
         "assets/photos/cars/mercedes-benz-e-class-2022-e-220d-exclusive/01.webp",
         "assets/photos/cars/mercedes-benz-e-class-2022-e-220d-exclusive/02.webp",
@@ -14601,6 +14656,7 @@
       "insurance_until": "2027-04-06",
       "insurance_note": "",
       "photos": [
+        "assets/photos/cars/mercedes-benz-gla-2015/studio.webp",
         "assets/photos/cars/mercedes-benz-gla-2015/01.webp",
         "assets/photos/cars/mercedes-benz-gla-2015/02.webp",
         "assets/photos/cars/mercedes-benz-gla-2015/03.webp",
@@ -14851,6 +14907,7 @@
       "insurance_until": null,
       "insurance_note": "",
       "photos": [
+        "assets/photos/cars/mercedes-benz-gla-2025/studio.webp",
         "assets/photos/cars/mercedes-benz-gla-2025/01.webp",
         "assets/photos/cars/mercedes-benz-gla-2025/02.webp",
         "assets/photos/cars/mercedes-benz-gla-2025/03.webp",
@@ -15110,6 +15167,7 @@
       "insurance_status": "expired",
       "insurance_note": "",
       "photos": [
+        "assets/photos/cars/mercedes-benz-glc-2017/studio.webp",
         "assets/photos/cars/mercedes-benz-glc-2017/01.webp",
         "assets/photos/cars/mercedes-benz-glc-2017/02.webp",
         "assets/photos/cars/mercedes-benz-glc-2017/03.webp",
@@ -15381,6 +15439,7 @@
       "insurance_until": "2027-03-27",
       "insurance_note": "",
       "photos": [
+        "assets/photos/cars/mercedes-benz-glc-2019/studio.webp",
         "assets/photos/cars/mercedes-benz-glc-2019/01.webp",
         "assets/photos/cars/mercedes-benz-glc-2019/02.webp",
         "assets/photos/cars/mercedes-benz-glc-2019/03.webp",
@@ -15637,6 +15696,7 @@
       "insurance_until": "2027-01-30",
       "insurance_note": "Zero depreciation",
       "photos": [
+        "assets/photos/cars/mercedes-benz-glc-2022/studio.webp",
         "assets/photos/cars/mercedes-benz-glc-2022/01.webp",
         "assets/photos/cars/mercedes-benz-glc-2022/02.webp",
         "assets/photos/cars/mercedes-benz-glc-2022/03.webp",
@@ -15912,6 +15972,7 @@
       "insurance_until": "2027-06-20",
       "insurance_note": "Comprehensive",
       "photos": [
+        "assets/photos/cars/mercedes-benz-gle-2018/studio.webp",
         "assets/photos/cars/mercedes-benz-gle-2018/01.webp",
         "assets/photos/cars/mercedes-benz-gle-2018/02.webp",
         "assets/photos/cars/mercedes-benz-gle-2018/03.webp",
@@ -16709,6 +16770,7 @@
       "insurance_status": "expired",
       "insurance_note": "",
       "photos": [
+        "assets/photos/cars/mercedes-benz-gle-coupe-2019/studio.webp",
         "assets/photos/cars/mercedes-benz-gle-coupe-2019/01.webp",
         "assets/photos/cars/mercedes-benz-gle-coupe-2019/02.webp",
         "assets/photos/cars/mercedes-benz-gle-coupe-2019/03.webp",
@@ -16971,6 +17033,7 @@
       "insurance_until": null,
       "insurance_note": "",
       "photos": [
+        "assets/photos/cars/mercedes-benz-gls-2020/studio.webp",
         "assets/photos/cars/mercedes-benz-gls-2020/01.webp",
         "assets/photos/cars/mercedes-benz-gls-2020/02.webp",
         "assets/photos/cars/mercedes-benz-gls-2020/03.webp",
@@ -17253,6 +17316,7 @@
       "insurance_until": null,
       "insurance_note": "",
       "photos": [
+        "assets/photos/cars/mercedes-benz-maybach-gls-2023/studio.webp",
         "assets/photos/cars/mercedes-benz-maybach-gls-2023/03.webp",
         "assets/photos/cars/mercedes-benz-maybach-gls-2023/01.webp",
         "assets/photos/cars/mercedes-benz-maybach-gls-2023/02.webp",
@@ -17448,6 +17512,7 @@
       "insurance_until": "2028-03-12",
       "insurance_note": "Zero depreciation",
       "photos": [
+        "assets/photos/cars/mercedes-benz-maybach-gls-2025/studio.webp",
         "assets/photos/cars/mercedes-benz-maybach-gls-2025/01.webp",
         "assets/photos/cars/mercedes-benz-maybach-gls-2025/02.webp",
         "assets/photos/cars/mercedes-benz-maybach-gls-2025/03.webp",
@@ -17662,6 +17727,7 @@
       "insurance_until": null,
       "insurance_note": "",
       "photos": [
+        "assets/photos/cars/mercedes-benz-s-class-2019/studio.webp",
         "assets/photos/cars/mercedes-benz-s-class-2019/01.webp",
         "assets/photos/cars/mercedes-benz-s-class-2019/02.webp",
         "assets/photos/cars/mercedes-benz-s-class-2019/03.webp",
@@ -17932,6 +17998,7 @@
       "insurance_until": "2028-05-24",
       "insurance_note": "Zero depreciation",
       "photos": [
+        "assets/photos/cars/mercedes-benz-s-class-2025/studio.webp",
         "assets/photos/cars/mercedes-benz-s-class-2025/01.webp",
         "assets/photos/cars/mercedes-benz-s-class-2025/02.webp",
         "assets/photos/cars/mercedes-benz-s-class-2025/03.webp",
@@ -18201,6 +18268,7 @@
       "insurance_status": "expired",
       "insurance_note": "",
       "photos": [
+        "assets/photos/cars/mg-gloster-2023/studio.webp",
         "assets/photos/cars/mg-gloster-2023/01.webp",
         "assets/photos/cars/mg-gloster-2023/02.webp",
         "assets/photos/cars/mg-gloster-2023/03.webp",
@@ -18488,6 +18556,7 @@
       "insurance_until": null,
       "insurance_note": "Comprehensive",
       "photos": [
+        "assets/photos/cars/mg-hector-plus-2021-sharp-1-5-dct-petrol/studio.webp",
         "assets/photos/cars/mg-hector-plus-2021-sharp-1-5-dct-petrol/01.webp",
         "assets/photos/cars/mg-hector-plus-2021-sharp-1-5-dct-petrol/02.webp",
         "assets/photos/cars/mg-hector-plus-2021-sharp-1-5-dct-petrol/03.webp",
@@ -19064,6 +19133,7 @@
       "insurance_until": "2027-03-08",
       "insurance_note": "",
       "photos": [
+        "assets/photos/cars/mg-hector-plus-2024/studio.webp",
         "assets/photos/cars/mg-hector-plus-2024/01.webp",
         "assets/photos/cars/mg-hector-plus-2024/02.webp",
         "assets/photos/cars/mg-hector-plus-2024/03.webp",
@@ -19254,6 +19324,7 @@
       "insurance_until": "2027-10-21",
       "insurance_note": "Third party",
       "photos": [
+        "assets/photos/cars/mg-windsor-ev-2024/studio.webp",
         "assets/photos/cars/mg-windsor-ev-2024/01.webp",
         "assets/photos/cars/mg-windsor-ev-2024/02.webp",
         "assets/photos/cars/mg-windsor-ev-2024/03.webp",
@@ -19537,6 +19608,7 @@
       "insurance_until": null,
       "insurance_note": "Comprehensive",
       "photos": [
+        "assets/photos/cars/mini-convertible-2017/studio.webp",
         "assets/photos/cars/mini-convertible-2017/01.webp",
         "assets/photos/cars/mini-convertible-2017/02.webp",
         "assets/photos/cars/mini-convertible-2017/03.webp",
@@ -19791,6 +19863,7 @@
       "insurance_until": "2026-12-17",
       "insurance_note": "",
       "photos": [
+        "assets/photos/cars/mini-countryman-2023/studio.webp",
         "assets/photos/cars/mini-countryman-2023/01.webp",
         "assets/photos/cars/mini-countryman-2023/02.webp",
         "assets/photos/cars/mini-countryman-2023/03.webp",
@@ -20068,6 +20141,7 @@
       "insurance_until": "2026-11-25",
       "insurance_note": "",
       "photos": [
+        "assets/photos/cars/skoda-kodiaq-2018/studio.webp",
         "assets/photos/cars/skoda-kodiaq-2018/05.webp",
         "assets/photos/cars/skoda-kodiaq-2018/01.webp",
         "assets/photos/cars/skoda-kodiaq-2018/02.webp",
@@ -20386,6 +20460,7 @@
       "insurance_until": null,
       "insurance_note": "Third party",
       "photos": [
+        "assets/photos/cars/tata-altroz-2024/studio.webp",
         "assets/photos/cars/tata-altroz-2024/01.webp",
         "assets/photos/cars/tata-altroz-2024/02.webp",
         "assets/photos/cars/tata-altroz-2024/03.webp",
@@ -20692,6 +20767,7 @@
       "insurance_until": "2028-02-10",
       "insurance_note": "Comprehensive",
       "photos": [
+        "assets/photos/cars/tata-curvv-ev-2025/studio.webp",
         "assets/photos/cars/tata-curvv-ev-2025/06.webp",
         "assets/photos/cars/tata-curvv-ev-2025/01.webp",
         "assets/photos/cars/tata-curvv-ev-2025/02.webp",
@@ -20958,6 +21034,7 @@
       "insurance_until": null,
       "insurance_note": "",
       "photos": [
+        "assets/photos/cars/tata-harrier-2021/studio.webp",
         "assets/photos/cars/tata-harrier-2021/06.webp",
         "assets/photos/cars/tata-harrier-2021/01.webp",
         "assets/photos/cars/tata-harrier-2021/02.webp",
@@ -21285,6 +21362,7 @@
       "insurance_until": "2028-02-07",
       "insurance_note": "Comprehensive",
       "photos": [
+        "assets/photos/cars/tata-punch-ev-2025/studio.webp",
         "assets/photos/cars/tata-punch-ev-2025/06.webp",
         "assets/photos/cars/tata-punch-ev-2025/01.webp",
         "assets/photos/cars/tata-punch-ev-2025/02.webp",
@@ -21593,6 +21671,7 @@
       "insurance_until": "2028-04-22",
       "insurance_note": "",
       "photos": [
+        "assets/photos/cars/tata-safari-2025/studio.webp",
         "assets/photos/cars/tata-safari-2025/01.webp",
         "assets/photos/cars/tata-safari-2025/02.webp",
         "assets/photos/cars/tata-safari-2025/03.webp",
@@ -21938,6 +22017,7 @@
       "insurance_until": "2029-02-05",
       "insurance_note": "Third party",
       "photos": [
+        "assets/photos/cars/tata-sierra-2026/studio.webp",
         "assets/photos/cars/tata-sierra-2026/01.webp",
         "assets/photos/cars/tata-sierra-2026/02.webp",
         "assets/photos/cars/tata-sierra-2026/03.webp",
@@ -22211,6 +22291,7 @@
       "insurance_status": "expired",
       "insurance_note": "",
       "photos": [
+        "assets/photos/cars/tata-tiago-2023/studio.webp",
         "assets/photos/cars/tata-tiago-2023/01.webp",
         "assets/photos/cars/tata-tiago-2023/02.webp",
         "assets/photos/cars/tata-tiago-2023/03.webp",
@@ -22491,6 +22572,7 @@
       "insurance_status": "expired",
       "insurance_note": "",
       "photos": [
+        "assets/photos/cars/tata-tigor-ev-2022/studio.webp",
         "assets/photos/cars/tata-tigor-ev-2022/01.webp",
         "assets/photos/cars/tata-tigor-ev-2022/02.webp",
         "assets/photos/cars/tata-tigor-ev-2022/03.webp",
@@ -22938,6 +23020,7 @@
       "insurance_until": null,
       "insurance_note": "Comprehensive",
       "photos": [
+        "assets/photos/cars/tesla-model-y-2026/studio.webp",
         "assets/photos/cars/tesla-model-y-2026/01.webp",
         "assets/photos/cars/tesla-model-y-2026/02.webp",
         "assets/photos/cars/tesla-model-y-2026/03.webp",
@@ -23097,6 +23180,7 @@
       "insurance_status": "expired",
       "insurance_note": "",
       "photos": [
+        "assets/photos/cars/toyota-corolla-altis-2018/studio.webp",
         "assets/photos/cars/toyota-corolla-altis-2018/01.webp",
         "assets/photos/cars/toyota-corolla-altis-2018/02.webp",
         "assets/photos/cars/toyota-corolla-altis-2018/03.webp",
@@ -23266,6 +23350,7 @@
       "insurance_status": "expired",
       "insurance_note": "",
       "photos": [
+        "assets/photos/cars/toyota-fortuner-2011/studio.webp",
         "assets/photos/cars/toyota-fortuner-2011/01.webp",
         "assets/photos/cars/toyota-fortuner-2011/02.webp",
         "assets/photos/cars/toyota-fortuner-2011/03.webp",
@@ -23454,6 +23539,7 @@
       "insurance_until": null,
       "insurance_note": "Third party",
       "photos": [
+        "assets/photos/cars/toyota-fortuner-2023/studio.webp",
         "assets/photos/cars/toyota-fortuner-2023/01.webp",
         "assets/photos/cars/toyota-fortuner-2023/02.webp",
         "assets/photos/cars/toyota-fortuner-2023/03.webp",
@@ -23686,6 +23772,7 @@
       "insurance_until": null,
       "insurance_note": "",
       "photos": [
+        "assets/photos/cars/toyota-innova-2012/studio.webp",
         "assets/photos/cars/toyota-innova-2012/01.webp",
         "assets/photos/cars/toyota-innova-2012/02.webp",
         "assets/photos/cars/toyota-innova-2012/03.webp",
@@ -23852,6 +23939,7 @@
       "insurance_status": "expired",
       "insurance_note": "",
       "photos": [
+        "assets/photos/cars/toyota-innova-crysta-2016/studio.webp",
         "assets/photos/cars/toyota-innova-crysta-2016/01.webp",
         "assets/photos/cars/toyota-innova-crysta-2016/02.webp",
         "assets/photos/cars/toyota-innova-crysta-2016/03.webp",
@@ -24092,6 +24180,7 @@
       "insurance_status": "expired",
       "insurance_note": "",
       "photos": [
+        "assets/photos/cars/toyota-urban-cruiser-hyryder-2024/studio.webp",
         "assets/photos/cars/toyota-urban-cruiser-hyryder-2024/01.webp",
         "assets/photos/cars/toyota-urban-cruiser-hyryder-2024/02.webp",
         "assets/photos/cars/toyota-urban-cruiser-hyryder-2024/03.webp",
@@ -24375,6 +24464,7 @@
       "insurance_until": "2027-06-11",
       "insurance_note": "",
       "photos": [
+        "assets/photos/cars/volkswagen-vento-2014/studio.webp",
         "assets/photos/cars/volkswagen-vento-2014/01.webp",
         "assets/photos/cars/volkswagen-vento-2014/02.webp",
         "assets/photos/cars/volkswagen-vento-2014/03.webp",
@@ -24688,6 +24778,7 @@
       "insurance_status": "expired",
       "insurance_note": "",
       "photos": [
+        "assets/photos/cars/volkswagen-vento-2016/studio.webp",
         "assets/photos/cars/volkswagen-vento-2016/01.webp",
         "assets/photos/cars/volkswagen-vento-2016/02.webp",
         "assets/photos/cars/volkswagen-vento-2016/03.webp",
@@ -24981,6 +25072,7 @@
       "insurance_status": "expired",
       "insurance_note": "",
       "photos": [
+        "assets/photos/cars/volvo-xc40-2019/studio.webp",
         "assets/photos/cars/volvo-xc40-2019/01.webp",
         "assets/photos/cars/volvo-xc40-2019/02.webp",
         "assets/photos/cars/volvo-xc40-2019/03.webp",
@@ -25150,6 +25242,7 @@
       "insurance_until": "2029-02-22",
       "insurance_note": "Zero depreciation",
       "photos": [
+        "assets/photos/cars/vw-tiguan-2025/studio.webp",
         "assets/photos/cars/vw-tiguan-2025/01.webp",
         "assets/photos/cars/vw-tiguan-2025/02.webp",
         "assets/photos/cars/vw-tiguan-2025/03.webp",

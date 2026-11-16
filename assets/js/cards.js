@@ -18,21 +18,36 @@
   /* the static cars/<id>/ page is the canonical URL (SEO tags, share image): cards and every in-site link go there, so link equity and shared URLs stay on one address */
   function href(c) { return "cars/" + encodeURIComponent(c.id) + "/"; }
 
-  /* A car whose cut-out passed QA (assets/js/cutouts.js sets window.CA_CUTOUTS = [ids]) shows the car alone on the card's light stage;
-     every other car, and a cut-out file that fails to load, shows its normal cover photo in the same card. Car pages keep the full photos. */
-  function hasCutout(c) { return !!(window.CA_CUTOUTS && window.CA_CUTOUTS.indexOf(c.id) > -1); }
-  function mediaHTML(c) {
+  /* The photo is the car's own listing photo with its background, edge to edge at the top of the card (Nov 2026: the transparent cut-outs
+     are gone). The first photo in c.photos is the car's cover: the importer puts the cover chosen in assets/photos/cars/covers.json first,
+     so a new cover (for example a showroom composite) shows on the card, the car page and the share image with no change here.
+     The frame is 4:3 and fixed (CSS aspect-ratio plus width/height), so a late image never moves the page. A cover that is wider than
+     it is tall fills the frame; an upright phone shot is shown whole over a blurred copy of itself (fit() below), so the car is never cropped away.
+     opts.eager: the first cards of a page load at once, every later one natively lazy. */
+  var CAM_ICON = '<svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h3l1.5-2h7L17 8h3v11H4z"/><circle cx="12" cy="13" r="3.4"/></svg>';
+  function mediaHTML(c, opts) {
+    opts = opts || {};
     var badge = '<span class="car-badge' + (c.status === "SOLD" ? " is-sold" : "") + '">' + (c.status === "SOLD" ? "Sold" : fmt.bodyLabel(c.body)) + '</span>';
     if (c.photos && c.photos.length) {
-      var cut = hasCutout(c);
-      var src = cut ? "assets/photos/cars/" + encodeURIComponent(c.id) + "/cutout.webp" : c.photos[0];
-      var fb = cut ? " data-fb=\"" + esc(c.photos[0]) + "\" onerror=\"this.onerror=null;this.src=window.CA.root(this.dataset.fb);this.parentNode.classList.remove('has-cutout')\"" : "";
-      return '<div class="car-media' + (cut ? " has-cutout" : "") + '">' + badge +
-        '<img src="' + esc(src) + '" alt="' + esc(altFor(c)) + '" width="1110" height="700" loading="lazy" decoding="async"' + fb + ' style="view-transition-name: car-' + esc(c.id) + '"></div>';
+      var n = c.photos.length;
+      return '<div class="car-media">' + badge +
+        (n > 1 ? '<span class="car-photo-count">' + CAM_ICON + n + ' photos</span>' : "") +
+        '<img src="' + esc(c.photos[0]) + '" alt="' + esc(altFor(c)) + '" width="800" height="600" ' +
+        (opts.eager ? 'loading="eager" fetchpriority="' + (opts.eager === 1 ? "high" : "auto") + '"' : 'loading="lazy"') + ' decoding="async" style="view-transition-name: car-' + esc(c.id) + '"></div>';
     }
     return '<div class="car-media is-placeholder">' + badge +
       '<div><span class="ph-label">' + esc(c.make) + '<br>' + esc(c.model) + '</span><span class="ph-note">Photos on request</span></div></div>';
   }
+  /* an upright photo is shown whole over a blurred copy of itself: set the class once the image size is known */
+  function fitOne(img) {
+    var m = img.parentNode;
+    if (!m || !m.classList || !m.classList.contains("car-media") || !img.naturalWidth) return;
+    var upright = img.naturalHeight > img.naturalWidth * 1.05;
+    m.classList.toggle("is-upright", upright);
+    if (upright) m.style.setProperty("--ph", 'url("' + img.currentSrc.replace(/"/g, "%22") + '")');
+  }
+  function fit(root) { [].forEach.call((root || document).querySelectorAll(".car-media > img"), function (i) { if (i.complete) fitOne(i); }); }
+  document.addEventListener("load", function (e) { if (e.target && e.target.tagName === "IMG") fitOne(e.target); }, true);
 
   function specRow(c) {
     var cells = [
@@ -71,7 +86,7 @@
           '<label class="compare-check"><input type="checkbox" name="compare" data-compare="' + esc(c.id) + '" aria-label="Compare ' + esc(label) + '"><span>Compare</span></label>' +
         '</div>' +
         '<a class="car-card-link" href="' + href(c) + '">' +
-          mediaHTML(c) +
+          mediaHTML(c, opts) +
           '<div class="car-body">' +
             '<span class="car-eyebrow">' + esc(c.make) + '</span>' +
             '<h3>' + esc(c.model) + '</h3>' +
@@ -174,5 +189,5 @@
     share(c, at, b);
   });
 
-  window.ClassicAutoCards = { cardHTML: cardHTML, hasCutout: hasCutout, bodyLabel: fmt.bodyLabel, mediaHTML: mediaHTML, esc: esc, href: href, share: share, shareText: shareText, absUrl: absUrl };
+  window.ClassicAutoCards = { cardHTML: cardHTML, fit: fit, bodyLabel: fmt.bodyLabel, mediaHTML: mediaHTML, esc: esc, href: href, share: share, shareText: shareText, absUrl: absUrl };
 })();

@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Stock: pre-owned cars at Classic Auto, Malad West</title>
-<meta name="description" content="Browse Classic Auto's pre-owned cars with real prices, kilometres, owners and EMI estimates. Filter by price band, body type, fuel and gearbox.">
+<meta name="description" content="Browse Classic Auto's pre-owned cars with real prices, kilometres, owners and EMI estimates. Filter by brand, body type, budget, fuel and gearbox.">
 <meta name="theme-color" content="#ffffff">
 <link rel="icon" type="image/png" sizes="32x32" href="assets/brand/favicon-32.png">
 <link rel="icon" type="image/png" sizes="48x48" href="assets/brand/favicon-48.png">
@@ -12,37 +12,46 @@
 <link rel="preload" href="assets/fonts/bebas-neue-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="assets/fonts/manrope-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="assets/vendor/lenis/lenis.css">
-<link rel="stylesheet" href="assets/css/style.css">
-<link rel="stylesheet" href="assets/css/finder.css">
+<link rel="stylesheet" href="assets/css/style.css?v=af529cce">
+<link rel="stylesheet" href="assets/css/finder.css?v=44bf9017">
 <script>(function(){var d=document.documentElement,r=false;try{r=matchMedia("(prefers-reduced-motion: reduce)").matches}catch(e){}d.classList.add(r?"reduce":"motion");setTimeout(function(){if(!(window.CA_MOTION&&window.CA_MOTION.ready))d.classList.remove("motion")},5000)})();</script>
-<script src="assets/js/config.js"></script>
-<script src="assets/js/track.js" defer></script>
+<script src="assets/js/config.js?v=4355687c"></script>
+<script src="assets/js/track.js?v=0b8cd269" defer></script>
 </head>
 <body data-page="stock">
-<script src="assets/js/chrome.js"></script>
+<script src="assets/js/chrome.js?v=59696b70"></script>
 <div class="progress-rail" aria-hidden="true"><i></i></div>
 
 <main id="main">
   <section class="page-head page-head--stock">
     <div class="container">
       <span class="eyebrow" data-hero-in>Full stock</span>
-      <h1 data-hero-in>Every car on the floor</h1>
+      <div class="stock-top">
+        <h1 data-hero-in>Every car on the floor</h1>
+        <a class="btn btn-primary btn-lg stock-request" href="request.html" data-cta="request_car" data-at="stock_top" data-hero-in>Request a car</a>
+      </div>
       <span data-bind="stock-count" hidden></span>
     </div>
   </section>
 
   <section class="brand-strip-wrap" aria-label="Shop by brand">
     <div class="container">
-      <nav class="brand-strip" id="brandStrip" aria-label="Brands in stock"></nav>
+      <p class="strip-label" id="brandLabel">Brand</p>
+      <nav class="brand-strip" id="brandStrip" aria-labelledby="brandLabel"></nav>
+    </div>
+  </section>
+
+  <section class="type-strip-wrap" aria-label="Body type and range">
+    <div class="container">
+      <p class="strip-label" id="typeLabel">Body type and range</p>
+      <nav class="type-strip" id="typeStrip" aria-labelledby="typeLabel"></nav>
     </div>
   </section>
 
   <div class="filter-bar">
-    <div class="container"><details class="filter-disc" id="filterDisc" open><summary><span>Filters</span><span class="filter-sum" id="filterSum"></span></summary><div class="filter-row">
-      <div class="filter-group"><label for="filterBand">Price</label>
-        <select id="filterBand"><option value="all">Any price</option><option value="u20">Under ₹20 L</option><option value="20to50">₹20-50 L</option><option value="50plus">₹50 L and above</option></select></div>
-      <div class="filter-group"><label for="filterBody">Body type</label>
-        <select id="filterBody"><option value="all">Any body type</option><option value="hatchback">Hatchback</option><option value="sedan">Sedan</option><option value="suv">SUV</option><option value="mpv">MPV</option><option value="luxury-sedan">Luxury sedan</option><option value="luxury-suv">Luxury SUV</option></select></div>
+    <div class="container"><details class="filter-disc" id="filterDisc" open><summary><span>More filters</span><span class="filter-sum" id="filterSum"></span></summary><div class="filter-row">
+      <div class="filter-group"><label for="filterBand">Budget</label>
+        <select id="filterBand"><option value="all">Any budget</option><option value="u20">Under ₹20 L</option><option value="20to50">₹20-50 L</option><option value="50plus">₹50 L and above</option></select></div>
       <div class="filter-group" hidden><label for="filterMake">Make</label>
         <select id="filterMake"><option value="all">Any make</option></select></div>
       <div class="filter-group"><label for="filterFuel">Fuel</label>
@@ -53,7 +62,6 @@
         <select id="filterSort"><option value="featured">Featured</option><option value="price-asc">Price: low to high</option><option value="price-desc">Price: high to low</option><option value="year-desc">Year: newest first</option><option value="km-asc">Kilometres: lowest first</option></select></div>
       <div class="filter-toggles" role="group" aria-label="Quick filters">
         <button type="button" class="toggle-chip" id="toggleLowKm" aria-pressed="false">Under 10,000 km <b class="toggle-count">0</b></button>
-        <button type="button" class="toggle-chip" id="toggleElectric" aria-pressed="false">Electric <b class="toggle-count">0</b></button>
         <button type="button" class="toggle-chip" id="toggleDemo" aria-pressed="false">Ex-demo <b class="toggle-count">0</b></button>
       </div>
       <span class="filter-count" id="filterCount" role="status"></span>
@@ -62,13 +70,12 @@
   </div>
 
   <section class="section section--tight">
-    <div class="container">
+    <div class="container container--wide">
       <h2 class="sr-only">Cars on the floor</h2>
-      <div class="grid grid-cars" id="stockGrid" data-pending aria-live="polite"></div>
-      <div class="stock-more" id="stockMore" hidden><button type="button" class="btn btn-outline btn-lg" id="stockMoreBtn">Show more</button></div>
+      <div class="grid grid-cars grid-cars--stock" id="stockGrid" data-pending aria-live="polite"></div>
       <div class="empty-state" id="stockEmpty" style="display:none;">
         <h2 id="emptyTitle">No cars match those filters</h2>
-        <p id="emptyText">Widen the price band or clear the body type, or tell us what you're looking for.</p>
+        <p id="emptyText">Widen the budget or clear the body type, or tell us what you're looking for.</p>
         <div class="cta-row" style="justify-content:center;">
           <a class="btn btn-primary" id="emptyRequest" href="request.html" data-cta="request_car" data-at="stock">Request this car</a>
           <button class="btn btn-outline" id="emptyReset" type="button">Reset filters</button>
@@ -87,16 +94,15 @@
 <script src="assets/vendor/gsap/gsap.min.js" defer></script>
 <script src="assets/vendor/gsap/ScrollTrigger.min.js" defer></script>
 <script src="assets/vendor/lenis/lenis.min.js" defer></script>
-<script src="assets/js/cars.js" defer></script>
-<script src="assets/js/cutouts.js" defer></script>
-<script src="assets/js/main.js" defer></script>
-<script src="assets/js/motion.js" defer></script>
-<script src="assets/js/forms.js" defer></script>
-<script src="assets/js/cards.js" defer></script>
-<script src="assets/js/compare-shortlist.js" defer></script>
-<script src="assets/js/brands.js" defer></script>
-<script src="assets/js/stock.js" defer></script>
-<script src="assets/js/finder.js" defer></script>
-<script src="assets/js/anita.js" defer></script>
+<script src="assets/js/cars.js?v=46a07006" defer></script>
+<script src="assets/js/main.js?v=f38fa76b" defer></script>
+<script src="assets/js/motion.js?v=ba83c9a8" defer></script>
+<script src="assets/js/forms.js?v=bef1ce96" defer></script>
+<script src="assets/js/cards.js?v=8586f50c" defer></script>
+<script src="assets/js/compare-shortlist.js?v=3e8ba0fc" defer></script>
+<script src="assets/js/brands.js?v=cadafd48" defer></script>
+<script src="assets/js/stock.js?v=2a6dacc6" defer></script>
+<script src="assets/js/finder.js?v=db5c38fd" defer></script>
+<script src="assets/js/anita.js?v=b1af6f83" defer></script>
 </body>
 </html>
