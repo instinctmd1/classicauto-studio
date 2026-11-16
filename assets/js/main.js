@@ -236,6 +236,8 @@
         var yrs = new Date().getFullYear() - S.since;
         el.textContent = yrs;
         if (el.hasAttribute("data-count")) el.setAttribute("data-count", String(yrs));
+      } else if (kind === "igfollowers") {
+        el.textContent = S.ig_followers_label;
       } else if (kind === "igposts") {
         el.textContent = Number(S.ig_posts).toLocaleString("en-IN");
       } else if (kind === "igdate") {

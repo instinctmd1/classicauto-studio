@@ -20,7 +20,7 @@
 
   function logo(b, cls) {
     if (LOGOS.indexOf(b.slug) < 0) return '<span class="brand-word ' + cls + '" aria-hidden="true">' + esc(b.make) + '</span>';
-    return '<img class="' + cls + '" src="' + root("assets/brands/" + b.slug + ".webp") + '" alt="" width="64" height="40" loading="lazy" decoding="async">';
+    return '<img class="' + cls + '" src="' + root("assets/brands/" + b.slug + ".webp") + '" alt="" width="150" height="100" loading="lazy" decoding="async">';
   }
   function plural(n) { return n + (n === 1 ? " car" : " cars"); }
 

@@ -14,11 +14,9 @@
 <link rel="preload" as="image" href="assets/photos/cars/mercedes-benz-maybach-gls-2025/01.webp" type="image/webp" fetchpriority="high">
 <link rel="stylesheet" href="assets/vendor/lenis/lenis.css">
 <link rel="stylesheet" href="assets/css/style.css?v=af529cce">
+<link rel="stylesheet" href="assets/css/draft.css?v=50499040">
 <script>(function(){var d=document.documentElement,r=false;try{r=matchMedia("(prefers-reduced-motion: reduce)").matches}catch(e){}d.classList.add(r?"reduce":"motion");setTimeout(function(){if(!(window.CA_MOTION&&window.CA_MOTION.ready))d.classList.remove("motion")},5000)})();</script>
-<script type="importmap">
-{ "imports": { "three": "./assets/vendor/three/build/three.module.min.js", "three/addons/": "./assets/vendor/three/examples/jsm/" } }
-</script>
-<script src="assets/js/config.js?v=4355687c"></script>
+<script src="assets/js/config.js?v=8432d7d9"></script>
 <script src="assets/js/track.js?v=0b8cd269" defer></script>
 <!-- ca:dealer-jsonld -->
 <script type="application/ld+json" id="dealerJsonLd">
@@ -86,30 +84,48 @@
     </div>
   </section>
 
-  <!-- Browse the floor: brand (default), body type, budget, fuel. Only what is in stock, with live counts (assets/js/brands.js) -->
+  <!-- Model range: one tile per body type, a side view of one of our own cars on each. Tap = the stock page filtered to that type (assets/js/model-range.js) -->
+  <section class="section section--types" id="typesSection" aria-labelledby="typesTitle">
+    <div class="container">
+      <div class="sec-head" data-reveal>
+        <span class="eyebrow">Find your perfect match</span>
+        <h2 id="typesTitle">Model range</h2>
+      </div>
+      <ul class="type-grid" id="typeGrid"><li class="brand-fallback"><a class="link-arrow" href="stock.html">Browse all stock</a></li></ul>
+    </div>
+  </section>
+
+  <!-- Select by brand: full-colour logos, live counts (assets/js/brands.js) -->
   <section class="section section--brands" id="brandsSection" aria-labelledby="brandsTitle">
     <div class="container">
-      <div class="section-head section-head--row" data-reveal>
-        <div>
-          <span class="eyebrow">Shop by brand</span>
-          <h2 id="brandsTitle">Browse the floor</h2>
-        </div>
-        <a class="link-arrow" href="stock.html" data-cta="see_stock" data-at="brands">All stock <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+      <div class="sec-head" data-reveal>
+        <span class="eyebrow">Classic Auto</span>
+        <h2 id="brandsTitle">Select by brand</h2>
       </div>
-      <div class="browse-tabs" role="tablist" aria-label="Browse by">
-        <button type="button" role="tab" class="browse-tab" id="tabBrand" aria-selected="true" aria-controls="panelBrand">Brand</button>
-        <button type="button" role="tab" class="browse-tab" id="tabBody" aria-selected="false" aria-controls="panelBody" tabindex="-1">Body type</button>
-        <button type="button" role="tab" class="browse-tab" id="tabBudget" aria-selected="false" aria-controls="panelBudget" tabindex="-1">Budget</button>
-        <button type="button" role="tab" class="browse-tab" id="tabFuel" aria-selected="false" aria-controls="panelFuel" tabindex="-1">Fuel</button>
+      <ul class="brand-grid" id="brandGrid"><li class="brand-fallback"><a class="link-arrow" href="stock.html">Browse all stock</a></li></ul>
+      <div class="brand-more-row"><button type="button" class="btn btn-outline brand-more" id="brandMore" aria-expanded="false" aria-controls="brandGrid" hidden>Show all brands</button></div>
+      <p class="brand-note">Brand names and logos belong to their owners and are shown only to say which makes we sell. Classic Auto is an independent dealer, not affiliated with any of them.</p>
+    </div>
+  </section>
+
+  <!-- Featured cars: a dark band. Coverflow of studio covers + the spec strip (assets/js/coverflow.js) -->
+  <section class="band featured on-navy" id="featured" aria-labelledby="featuredTitle">
+    <div class="container">
+      <div class="featured-head" data-reveal>
+        <h2 id="featuredTitle">Featured <span class="outline">cars</span></h2>
+        <a class="link-arrow" href="stock.html" data-cta="see_stock" data-at="featured">All stock <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
       </div>
-      <div role="tabpanel" id="panelBrand" aria-labelledby="tabBrand">
-        <ul class="brand-grid" id="brandGrid"><li class="brand-fallback"><a class="link-arrow" href="stock.html">Browse all stock</a></li></ul>
-        <button type="button" class="btn btn-outline brand-more" id="brandMore" aria-expanded="false" aria-controls="brandGrid" hidden>Show all brands</button>
-        <p class="brand-note">Brand names and logos belong to their owners and are shown only to say which makes we sell. Classic Auto is an independent dealer, not affiliated with any of them.</p>
+      <div class="cf" id="cf" role="group" aria-roledescription="carousel" aria-label="Featured cars">
+        <div class="cf-stage" id="cfStage"></div>
+        <button type="button" class="cf-arrow cf-prev" id="cfPrev" aria-label="Previous car" hidden><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></button>
+        <button type="button" class="cf-arrow cf-next" id="cfNext" aria-label="Next car" hidden><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg></button>
       </div>
-      <div role="tabpanel" id="panelBody" aria-labelledby="tabBody" hidden><ul class="chip-grid" id="bodyGrid"></ul></div>
-      <div role="tabpanel" id="panelBudget" aria-labelledby="tabBudget" hidden><ul class="chip-grid" id="budgetGrid"></ul></div>
-      <div role="tabpanel" id="panelFuel" aria-labelledby="tabFuel" hidden><ul class="chip-grid" id="fuelGrid"></ul></div>
+      <div class="cf-spec" id="cfSpec" aria-live="polite"></div>
+      <div class="cf-ctrl" id="cfCtrl" hidden>
+        <div class="cf-dots" id="cfDots"></div>
+        <button type="button" class="cf-pause" id="cfPause" aria-label="Pause the slideshow" aria-pressed="false"><svg class="icon icon-pause" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6v12M15 6v12"/></svg><svg class="icon icon-play" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5l11 7-11 7z"/></svg></button>
+      </div>
+      <noscript><p class="cf-noscript"><a class="link-arrow" href="stock.html">See the full stock</a></p></noscript>
     </div>
   </section>
 
@@ -129,6 +145,26 @@
     </div>
   </section>
 
+  <!-- Who we are: a dark band. Jay's photo and words go here when the owner sends them (no placeholder on the live site) -->
+  <section class="band who on-navy" id="whoSection" aria-labelledby="whoTitle">
+    <div class="container who-grid who-grid--solo">
+      <div class="who-copy" data-reveal>
+        <span class="eyebrow">Who we are</span>
+        <h2 id="whoTitle">A family business, <span class="outline">since 1974.</span></h2>
+        <dl class="who-facts">
+          <div><dt>Dealer</dt><dd>Classic Auto</dd></div>
+          <div><dt>Since</dt><dd class="tnum">1974</dd></div>
+          <div><dt>Where</dt><dd>Malad West, Mumbai</dd></div>
+          <div><dt>Run as</dt><dd>A family business</dd></div>
+        </dl>
+        <div class="cta-row">
+          <a class="btn btn-primary btn-lg" href="stock.html" data-cta="see_stock" data-at="who">See the stock</a>
+          <a class="btn btn-outline btn-lg" href="visit.html" data-cta="visit" data-at="who">Visit us</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
   <!-- Why Classic Auto: only things this site really does -->
   <section class="section section--tight" id="whyChapter" aria-labelledby="whyTitle">
     <div class="container">
@@ -142,22 +178,6 @@
         <li data-reveal-item><span class="why-ico"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h12a4 4 0 0 1 4 4v12H8a4 4 0 0 1-4-4z"/><path d="M8 9h8M8 13h6"/></svg></span><b>Know the model</b><p>For the cars we have researched: fuel economy, safety features and what changed between versions, each with a source link.</p></li>
         <li data-reveal-item><span class="why-ico"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3h7l5 5v13H7z"/><path d="M14 3v5h5M10 13h6M10 17h6"/></svg></span><b>Paperwork and EMI</b><p>We handle the RC transfer paperwork, and every car has an EMI estimate so the monthly figure is clear from the start.</p></li>
       </ul>
-    </div>
-  </section>
-
-  <!-- Drive it home: the 3D key handover (handover.js + key3d.js), loaded only when scrolled near; a drawing for reduced motion and low-end phones -->
-  <section class="section section--keys handover" id="handoverChapter" aria-labelledby="handoverTitle">
-    <div class="container handover-grid">
-      <div class="handover-copy" data-reveal>
-        <span class="eyebrow">Drive it home</span>
-        <h2 id="handoverTitle">The keys are yours.</h2>
-        <p class="lead">Pick the car, take it for a drive and agree the price. We handle the RC transfer paperwork, so the last thing left is the keys in your hand.</p>
-        <a class="link-arrow" href="stock.html" data-cta="see_stock" data-at="keys">Find your car <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
-      </div>
-      <div class="handover-stage" id="handoverStage" role="img" aria-label="A Classic Auto car key resting on a leather tray">
-        <div class="orbit orbit--floor" aria-hidden="true"><svg class="orbit-ring o1" viewBox="0 0 200 200" focusable="false"><circle cx="100" cy="100" r="98" stroke-dasharray="1 6"/></svg><svg class="orbit-ring o2" viewBox="0 0 200 200" focusable="false"><circle cx="100" cy="100" r="86" stroke-dasharray="60 14 4 14"/></svg><svg class="orbit-ring o3" viewBox="0 0 200 200" focusable="false"><circle cx="100" cy="100" r="72"/><circle class="orbit-dot" cx="100" cy="28" r="2.4"/></svg><svg class="orbit-ring o4" viewBox="0 0 200 200" focusable="false"><circle cx="100" cy="100" r="58" stroke-dasharray="110 255"/></svg></div>
-        <svg class="handover-fallback" viewBox="0 0 200 200" aria-hidden="true" focusable="false"><rect x="72" y="58" width="56" height="104" rx="22"/><circle cx="100" cy="36" r="20"/><circle cx="100" cy="98" r="7"/><circle cx="100" cy="120" r="7"/><circle class="hf-red" cx="100" cy="142" r="7"/></svg>
-      </div>
     </div>
   </section>
 
@@ -179,6 +199,25 @@
         </ul>
         <div class="sell-cta"><a class="btn btn-white btn-lg" href="sell.html" data-cta="sell" data-at="home">Sell your car today <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a></div>
         <p class="sell-foot"><span>Since 1974</span><span>Malad West</span><span>Buy</span><span>Sell</span><span>Exchange</span><span>Upgrade</span><span>Park &amp; Sell</span></p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Instagram: real handle and counts (public profile, 16 Nov 2026). Latest-posts tiles come back when a feed is wired -->
+  <section class="section section--ig" id="instagram" aria-labelledby="igTitle">
+    <div class="container ig-grid ig-grid--solo">
+      <div class="ig-card" data-reveal>
+        <div class="ig-id">
+          <span class="ig-avatar" aria-hidden="true"><svg class="icon" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1"/></svg></span>
+          <div><span class="eyebrow">On Instagram</span><h2 id="igTitle">@classicauto_1974</h2></div>
+        </div>
+        <ul class="ig-stats">
+          <li><b class="tnum" data-bind="igfollowers">22K</b><span>followers</span></li>
+          <li><b class="tnum" data-bind="igposts">1,473</b><span>posts</span></li>
+        </ul>
+        <p>Follow for new arrivals, deliveries and walkarounds.</p>
+        <a class="btn btn-primary btn-lg" href="https://www.instagram.com/classicauto_1974/" target="_blank" rel="noopener" data-cta="follow_ig" data-at="home">Follow on Instagram</a>
+        <p class="ig-asof">Counts as of <span data-bind="igdate">16 Nov 2026</span>, from the public profile.</p>
       </div>
     </div>
   </section>
@@ -253,17 +292,18 @@
 <script src="assets/vendor/gsap/ScrollTrigger.min.js" defer></script>
 <script src="assets/vendor/lenis/lenis.min.js" defer></script>
 <script src="assets/js/cars.js?v=46a07006" defer></script>
-<script src="assets/js/main.js?v=f38fa76b" defer></script>
+<script src="assets/js/main.js?v=73faa8f8" defer></script>
 <script src="assets/js/motion.js?v=ba83c9a8" defer></script>
 <script src="assets/js/forms.js?v=bef1ce96" defer></script>
 <script src="assets/js/cards.js?v=8586f50c" defer></script>
 <script src="assets/js/featured.js?v=a840f428" defer></script>
-<script src="assets/js/brands.js?v=cadafd48" defer></script>
+<script src="assets/js/model-range.js?v=5b505623" defer></script>
+<script src="assets/js/coverflow.js?v=adac2fd6" defer></script>
+<script src="assets/js/brands.js?v=37213c56" defer></script>
 <script src="assets/js/hero-cars.js?v=cbcfa1e6" defer></script>
 <script src="assets/js/home-hero.js?v=21574a06" defer></script>
 <script src="assets/js/compare-shortlist.js?v=3e8ba0fc" defer></script>
 <script src="assets/js/testdrive.js?v=11e5756a" defer></script>
 <script src="assets/js/anita.js?v=b1af6f83" defer></script>
-<script type="module" src="assets/js/handover.js?v=7cf6cdbb"></script>
 </body>
 </html>

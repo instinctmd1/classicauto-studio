@@ -72,7 +72,8 @@
     electric: '<svg ' + S + '><path d="M36 3L18 18h10l-4 11 18-15H32z"/></svg>'
   };
   function typeTile(v, label) {
-    return '<button type="button" class="type-tile" data-type="' + v + '" aria-pressed="false"><span class="type-ico">' + ICONS[v] + '</span>' +
+    var pic = v === "all" ? ICONS[v] : '<img class="type-ico-img" src="' + (window.CA && window.CA.root ? window.CA.root("assets/types/" + v + ".webp") : "assets/types/" + v + ".webp") + '" alt="" width="80" height="34" loading="lazy" decoding="async">';
+    return '<button type="button" class="type-tile' + (v === "all" ? " type-tile--all" : "") + '" data-type="' + v + '" aria-pressed="false"><span class="type-ico">' + pic + '</span>' +
       '<span class="type-name">' + label + '</span><b class="type-count"></b></button>';
   }
   if (typeStrip) {

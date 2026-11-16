@@ -1,0 +1,4 @@
+dist/
+assets/photos/
+__pycache__/
+*.pyc

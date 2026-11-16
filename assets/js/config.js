@@ -20,7 +20,7 @@ window.CA_SITE = {
   email: "classicauto1974@gmail.com",  // null => no email shown, no mailto:
   whatsapp: null,       // digits only "91XXXXXXXXXX". The current site shows no WhatsApp number, so none is set. null => WhatsApp buttons become "DM @classicauto_1974"
   instagram: "classicauto_1974",
-  ig_followers_label: "20K", ig_posts: 1376, ig_as_of: "2026-10-02",
+  ig_followers_label: "22K", ig_posts: 1473, ig_as_of: "2026-11-16",
   address_lines: ["135/136, 1st Floor, Prabhu Plaza, S.V. Road",
                   "Next to Shankar Mandir, near Malad Railway Station",
                   "Malad West, Mumbai"],
